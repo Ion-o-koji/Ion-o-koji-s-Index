@@ -1,0 +1,2837 @@
+<!DOCTYPE html>
+<!-- Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultimate Hub v3</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0f1220;
+      --bg2: #13172a;
+      --panel: #171b2e;
+      --panel2: #1e2440;
+      --text: #e8eaf6;
+      --muted: #9aa3b2;
+      --brand: #7aa2ff;
+      --brand2: #5f86ff;
+      --ok: #2ecc71;
+      --warn: #f1c40f;
+      --danger: #ff6b6b;
+      --r: 14px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.timer-alert {
+      background: #f6f8fb;
+      color: #0d1321;
+    }
+
+    body.timer-alert header {
+      background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    /* Header */
+    header {
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      transition: background 0.3s ease;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.3px;
+    }
+
+    .logo-pill {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: var(--shadow);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      background: var(--panel2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      border: none;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .btn-pin {
+      padding: 6px 10px;
+      font-size: 12px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-pin.pinned {
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      border: none;
+      color: #fff;
+    }
+
+    .hamburger {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: var(--text);
+    }
+
+    .hamburger span {
+      width: 24px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(8px, 8px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -7px);
+    }
+
+    /* Navigation Menu */
+    .nav-menu {
+      position: fixed;
+      top: 56px;
+      right: 0;
+      background: var(--panel2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top: none;
+      border-right: none;
+      width: 250px;
+      max-height: calc(100vh - 56px);
+      overflow-y: auto;
+      z-index: 99;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .nav-menu.active {
+      transform: translateX(0);
+    }
+
+    .nav-item {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--muted);
+    }
+
+    .nav-item:hover {
+      background: rgba(122, 162, 255, 0.1);
+      color: var(--text);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sections */
+    .section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      background: var(--panel2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .card h4 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: var(--text);
+      margin-top: 16px;
+    }
+
+    .card h4:first-child {
+      margin-top: 0;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(122, 162, 255, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    /* Tasks Section */
+    .task-item {
+      background: var(--panel);
+      border-left: 4px solid var(--brand2);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .task-item:hover {
+      background: rgba(122, 162, 255, 0.1);
+    }
+
+    .task-item.high {
+      border-left-color: #ff6b6b;
+    }
+
+    .task-item.medium {
+      border-left-color: #f1c40f;
+    }
+
+    .task-item.low {
+      border-left-color: #2ecc71;
+    }
+
+    .task-priority-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+
+    .task-priority-badge.high {
+      background: rgba(255, 107, 107, 0.2);
+      color: #ff6b6b;
+    }
+
+    .task-priority-badge.medium {
+      background: rgba(241, 196, 15, 0.2);
+      color: #f1c40f;
+    }
+
+    .task-priority-badge.low {
+      background: rgba(46, 204, 113, 0.2);
+      color: #2ecc71;
+    }
+
+    .task-content {
+      flex: 1;
+      min-width: 0;
+      word-wrap: break-word;
+    }
+
+    .task-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      word-wrap: break-word;
+    }
+
+    .task-meta {
+      font-size: 12px;
+      color: var(--muted);
+      word-wrap: break-word;
+      margin-bottom: 6px;
+    }
+
+    .task-notes {
+      font-size: 12px;
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.2);
+      padding: 8px;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      line-height: 1.5;
+      margin-top: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .task-notes::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .task-notes::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .task-notes::-webkit-scrollbar-thumb {
+      background: rgba(122, 162, 255, 0.3);
+      border-radius: 2px;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-small {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .btn-delete {
+      background: rgba(255, 107, 107, 0.2);
+      color: #ff6b6b;
+      border: 1px solid #ff6b6b;
+    }
+
+    .btn-delete:hover {
+      background: rgba(255, 107, 107, 0.3);
+    }
+
+    /* Habits Section */
+    .habit-container {
+      margin-bottom: 20px;
+    }
+
+    .habit-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .day-box {
+      width: 100%;
+      padding-bottom: 100%;
+      position: relative;
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .day-box-content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      text-align: center;
+      padding: 2px;
+    }
+
+    .day-box:hover {
+      background: var(--panel2);
+      box-shadow: 0 0 8px rgba(122, 162, 255, 0.3);
+    }
+
+    .day-box.completed .day-box-content {
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      color: #fff;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+
+    .day-box.today .day-box-content {
+      border: 2px solid var(--brand);
+      border-radius: 4px;
+    }
+
+    .day-number {
+      font-weight: bold;
+      font-size: 12px;
+    }
+
+    .day-status {
+      font-size: 10px;
+      margin-top: 1px;
+    }
+
+    /* Habit Quick View */
+    .habit-quick-view {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--panel);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .habit-quick-view-name {
+      flex: 1;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .habit-quick-box {
+      width: 40px;
+      height: 40px;
+      background: var(--panel2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .habit-quick-box:hover {
+      background: rgba(122, 162, 255, 0.1);
+    }
+
+    .habit-quick-box.completed {
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      border-color: var(--brand);
+      color: #fff;
+      font-weight: bold;
+    }
+
+    /* Calendar Section */
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 8px;
+    }
+
+    .calendar-header button {
+      flex-shrink: 0;
+    }
+
+    .calendar-wrapper {
+      overflow-x: auto;
+      border-radius: 8px;
+    }
+
+    .calendar-main {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(120px, 1fr));
+      gap: 8px;
+      min-width: 100%;
+      padding: 8px;
+    }
+
+    .calendar-day {
+      min-height: 140px;
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      font-size: 10px;
+      overflow-y: auto;
+    }
+
+    .calendar-day::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .calendar-day::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .calendar-day::-webkit-scrollbar-thumb {
+      background: rgba(122, 162, 255, 0.3);
+      border-radius: 2px;
+    }
+
+    .calendar-day.other-month {
+      opacity: 0.3;
+    }
+
+    .calendar-day.today {
+      background: linear-gradient(135deg, rgba(122, 162, 255, 0.2), rgba(95, 134, 255, 0.2));
+      border: 2px solid var(--brand);
+    }
+
+    .calendar-day-number {
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .calendar-event {
+      font-size: 9px;
+      color: #fff;
+      padding: 3px 4px;
+      border-radius: 3px;
+      margin-bottom: 2px;
+      word-break: break-word;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+
+    .calendar-event.high {
+      background: rgba(255, 107, 107, 0.85);
+    }
+
+    .calendar-event.medium {
+      background: rgba(241, 196, 15, 0.85);
+    }
+
+    .calendar-event.low {
+      background: rgba(46, 204, 113, 0.85);
+    }
+
+    /* Notes Section */
+    .note-item {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      word-wrap: break-word;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .note-item:hover {
+      background: var(--panel2);
+      border-color: var(--brand);
+    }
+
+    .note-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .note-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      word-wrap: break-word;
+    }
+
+    .note-preview {
+      font-size: 12px;
+      color: var(--muted);
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.4;
+    }
+
+    .note-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .pinned-note-item {
+      background: var(--panel);
+      border: 1px solid rgba(122, 162, 255, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      word-wrap: break-word;
+      border-left: 4px solid var(--brand);
+    }
+
+    .pinned-note-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      word-wrap: break-word;
+      color: var(--brand);
+    }
+
+    .pinned-note-text {
+      font-size: 12px;
+      color: var(--text);
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+
+    /* Timer Section */
+    .timer-display {
+      font-size: 72px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--brand);
+      margin: 20px 0 10px 0;
+      font-family: 'Courier New', monospace;
+    }
+
+    .timer-progress {
+      width: 100%;
+      height: 8px;
+      background: var(--bg2);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .timer-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand), var(--brand2));
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .timer-presets {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .preset-btn {
+      padding: 12px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .preset-add {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .preset-add input {
+      flex: 1;
+    }
+
+    .custom-timer-input {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .custom-timer-input input {
+      flex: 1;
+    }
+
+    .custom-timer-input button {
+      flex: 0 0 auto;
+    }
+
+    /* Settings Section */
+    .settings-group {
+      margin-bottom: 24px;
+    }
+
+    .settings-group h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text);
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .setting-item {
+      margin-bottom: 12px;
+    }
+
+    .setting-label {
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .color-picker-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .color-picker-group label {
+      flex: 1;
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .color-picker-group input[type="color"] {
+      width: 50px;
+      height: 40px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+    }
+
+    .reset-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--muted);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: rgba(122, 162, 255, 0.2);
+      color: var(--brand);
+    }
+
+    .font-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .font-options button {
+      padding: 10px;
+    }
+
+    .data-management {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .data-management button {
+      padding: 12px;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--panel2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 20px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      justify-content: flex-end;
+    }
+
+    .toggle-btn {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-btn.active {
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      border: none;
+      color: #fff;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .timer-display {
+        font-size: 48px;
+      }
+
+      .nav-menu {
+        width: 100%;
+      }
+
+      .font-options {
+        grid-template-columns: 1fr;
+      }
+
+      .data-management {
+        grid-template-columns: 1fr;
+      }
+
+      .calendar-main {
+        grid-template-columns: repeat(7, minmax(80px, 1fr));
+      }
+
+      .calendar-day {
+        min-height: 100px;
+      }
+    }
+
+    /* Light theme */
+    body.light-theme {
+      --bg: #f6f8fb;
+      --bg2: #eef2f7;
+      --panel: #ffffff;
+      --panel2: #f2f5fb;
+      --text: #0d1321;
+      --muted: #4a5568;
+    }
+
+    body.light-theme header {
+      background: rgba(255, 255, 255, 0.85);
+      border-bottom-color: rgba(0, 0, 0, 0.08);
+    }
+
+    /* Print */
+    @media print {
+
+      header,
+      .header-actions,
+      .hamburger,
+      .nav-menu {
+        display: none !important;
+      }
+
+      main {
+        padding: 0;
+      }
+
+      .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-pill">U</div>
+      <span>Ultimate Hub</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="quickAddBtn" title="Quick Add">➕</button>
+      <button class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Menu -->
+  <nav class="nav-menu" id="navMenu">
+    <div class="nav-item" data-section="home">🏠 Home</div>
+    <div class="nav-item" data-section="habits">🔥 Habits</div>
+    <div class="nav-item" data-section="tasks">✅ Tasks</div>
+    <div class="nav-item" data-section="calendar">📅 Calendar</div>
+    <div class="nav-item" data-section="notes">📝 Notes</div>
+    <div class="nav-item" data-section="timer">⏱️ Timer</div>
+    <div class="nav-item" data-section="settings">⚙️ Settings</div>
+  </nav>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Home Section -->
+    <section id="home" class="section active">
+      <h2 style="margin-bottom: 16px;">Dashboard</h2>
+      <div class="card">
+        <h3>Quick Habits</h3>
+        <div id="quickHabitsContainer"></div>
+      </div>
+      <div id="pinnedNotesCard" class="card" style="display: none;">
+        <h3>Pinned Notes</h3>
+        <div id="pinnedNotesContainer"></div>
+      </div>
+      <div class="card">
+        <h4>Tasks Remaining</h4>
+        <div id="tasksRemainingList"></div>
+      </div>
+    </section>
+
+    <!-- Tasks Section -->
+    <section id="tasks" class="section">
+      <div class="card">
+        <h3>Create Task</h3>
+        <div class="form-group">
+          <label>Task Title</label>
+          <input type="text" id="taskTitle" placeholder="Enter task title">
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="taskPriority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" id="taskDueDate">
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="taskNotes" placeholder="Add notes for this task"></textarea>
+        </div>
+        <button class="btn btn-primary" id="addTaskBtn" style="width: 100%;">Add Task</button>
+      </div>
+
+      <div class="card">
+        <h4>Uncompleted Tasks</h4>
+        <div id="tasksList"></div>
+      </div>
+
+      <div class="card">
+        <h4>Completed Tasks</h4>
+        <div id="completedTasksList"></div>
+      </div>
+    </section>
+
+    <!-- Habits Section -->
+    <section id="habits" class="section">
+      <div class="card">
+        <h3>Add Habit</h3>
+        <div class="form-group">
+          <label>Habit Name</label>
+          <input type="text" id="habitName" placeholder="Enter habit name">
+        </div>
+        <button class="btn btn-primary" id="addHabitBtn" style="width: 100%;">Add Habit</button>
+      </div>
+
+      <div id="habitsList"></div>
+    </section>
+
+    <!-- Calendar Section -->
+    <section id="calendar" class="section">
+      <div class="card">
+        <div class="calendar-header">
+          <button class="btn btn-small" id="prevMonth">◀</button>
+          <div id="monthYear" style="font-weight: 600; font-size: 16px; flex: 1; text-align: center;"></div>
+          <button class="btn btn-small" id="todayBtn">Today</button>
+          <button class="btn btn-small" id="nextMonth">▶</button>
+          <button class="toggle-btn active" id="toggleCompleted" style="margin-left: 8px;">Hide Completed</button>
+        </div>
+        <div class="calendar-wrapper">
+          <div class="calendar-main" id="calendarGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notes Section -->
+    <section id="notes" class="section">
+      <div class="card">
+        <h3>Create Note</h3>
+        <div class="form-group">
+          <label>Note Title</label>
+          <input type="text" id="noteTitle" placeholder="Enter note title">
+        </div>
+        <div class="form-group">
+          <label>Note Content</label>
+          <textarea id="noteContent" placeholder="Write your note here..."></textarea>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary" id="addNoteBtn" style="flex: 1;">Save Note</button>
+          <button class="btn" id="cancelNoteBtn" style="flex: 1; display: none;">Cancel</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>My Notes</h3>
+        <div id="notesList"></div>
+      </div>
+    </section>
+
+    <!-- Timer Section -->
+    <section id="timer" class="section">
+      <div class="card">
+        <h3>Focus Timer</h3>
+        <div class="timer-display" id="timerDisplay">00:00</div>
+        <div class="timer-progress">
+          <div class="timer-progress-bar" id="timerProgressBar"></div>
+        </div>
+
+        <div class="custom-timer-input">
+          <input type="number" id="customMinutes" placeholder="Minutes" min="1" max="120">
+          <button class="btn btn-primary" id="setCustomBtn">Set</button>
+        </div>
+
+        <div class="preset-add">
+          <input type="text" id="presetName" placeholder="Preset name" style="flex: 1;">
+          <input type="number" id="presetTime" placeholder="Minutes" min="1" max="120" style="width: 80px;">
+          <button class="btn" id="addPresetBtn">Add</button>
+        </div>
+        <div class="timer-presets" id="presetsContainer"></div>
+        <div class="form-group">
+          <button class="btn btn-primary" id="startBtn" style="width: 100%; margin-bottom: 8px;">Start</button>
+          <button class="btn" id="pauseBtn" style="width: 100%; margin-bottom: 8px;">Pause</button>
+          <button class="btn" id="resetBtn" style="width: 100%;">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>To Do</h3>
+        <div class="kanban-tasks" id="kanbanTodo"></div>
+      </div>
+    </section>
+
+    <!-- Settings Section -->
+    <section id="settings" class="section">
+      <div class="card">
+        <div class="settings-group">
+          <h4>Visual Appearance</h4>
+
+          <div class="setting-item">
+            <label class="setting-label">
+              Theme
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <button class="btn" id="darkThemeBtn">Dark Theme</button>
+              <button class="btn" id="lightThemeBtn">Light Theme</button>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <label class="setting-label">
+              Font Family
+            </label>
+            <div class="font-options">
+              <button class="btn" id="fontSystemBtn">System UI</button>
+              <button class="btn" id="fontSerifBtn">Serif</button>
+              <button class="btn" id="fontMonoBtn">Monospace</button>
+              <button class="btn" id="fontGeorgiaBtn">Georgia</button>
+              <button class="btn" id="fontVerdanaBtn">Verdana</button>
+              <button class="btn" id="fontCourierBtn">Courier</button>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <label class="setting-label">
+              Base Text Size: <span id="textSizeValue">16</span>px
+              <button class="reset-btn" onclick="resetTextSize()">Reset</button>
+            </label>
+            <input type="range" id="textSize" min="12" max="20" value="16" style="width: 100%;">
+          </div>
+
+          <div class="setting-item">
+            <label class="setting-label">
+              Letter Spacing: <span id="letterSpacingValue">0</span>px
+              <button class="reset-btn" onclick="resetLetterSpacing()">Reset</button>
+            </label>
+            <input type="range" id="letterSpacing" min="0" max="5" value="0" style="width: 100%;">
+          </div>
+
+          <div class="setting-item">
+            <label class="setting-label">
+              Line Height: <span id="lineHeightValue">1.5</span>
+              <button class="reset-btn" onclick="resetLineHeight()">Reset</button>
+            </label>
+            <input type="range" id="lineHeight" min="1" max="2" step="0.1" value="1.5" style="width: 100%;">
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h4>Colors</h4>
+
+          <div class="color-picker-group">
+            <label>Primary Brand Color</label>
+            <input type="color" id="brandColor" value="#7aa2ff">
+            <button class="reset-btn" onclick="resetBrandColor()">Reset</button>
+          </div>
+
+          <div class="color-picker-group">
+            <label>Secondary Brand Color</label>
+            <input type="color" id="brand2Color" value="#5f86ff">
+            <button class="reset-btn" onclick="resetBrand2Color()">Reset</button>
+          </div>
+
+          <div class="color-picker-group">
+            <label>Background Color</label>
+            <input type="color" id="bgColor" value="#0f1220">
+            <button class="reset-btn" onclick="resetBgColor()">Reset</button>
+          </div>
+
+          <div class="color-picker-group">
+            <label>Background Secondary</label>
+            <input type="color" id="bg2Color" value="#13172a">
+            <button class="reset-btn" onclick="resetBg2Color()">Reset</button>
+          </div>
+
+          <div class="color-picker-group">
+            <label>Panel Color</label>
+            <input type="color" id="panelColor" value="#171b2e">
+            <button class="reset-btn" onclick="resetPanelColor()">Reset</button>
+          </div>
+
+          <div class="color-picker-group">
+            <label>Panel Secondary</label>
+            <input type="color" id="panel2Color" value="#1e2440">
+            <button class="reset-btn" onclick="resetPanel2Color()">Reset</button>
+          </div>
+
+          <div class="color-picker-group">
+            <label>Text Color</label>
+            <input type="color" id="textColor" value="#e8eaf6">
+            <button class="reset-btn" onclick="resetTextColor()">Reset</button>
+          </div>
+
+          <div class="color-picker-group">
+            <label>Muted Text Color</label>
+            <input type="color" id="mutedColor" value="#9aa3b2">
+            <button class="reset-btn" onclick="resetMutedColor()">Reset</button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h4>Data Management</h4>
+          <div class="data-management">
+            <button class="btn btn-primary" id="exportBtn">Export Data</button>
+            <button class="btn btn-primary" id="importBtn">Import Data</button>
+          </div>
+          <div style="margin-top: 8px; display: grid; gap: 8px;">
+            <button class="btn btn-primary" id="copyDataBtn">Copy to Clipboard</button>
+            <button class="btn" id="clearDataBtn" style="background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border-color: #ff6b6b;">Clear All Data</button>
+          </div>
+          <input type="file" id="importFile" accept=".json" style="display: none;">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Quick Add Modal -->
+  <div class="modal" id="quickAddModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Quick Add
+        <button class="modal-close" onclick="closeModal('quickAddModal')">✕</button>
+      </div>
+      <div class="form-group">
+        <button class="btn" style="width: 100%; margin-bottom: 8px; justify-content: flex-start; padding: 12px;" onclick="openQuickAddTask()">➕ Add Task</button>
+        <button class="btn" style="width: 100%; margin-bottom: 8px; justify-content: flex-start; padding: 12px;" onclick="openQuickAddNote()">📝 Add Note</button>
+        <button class="btn" style="width: 100%; margin-bottom: 8px; justify-content: flex-start; padding: 12px;" onclick="openQuickAddHabit()">🔥 Add Habit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Quick Add Modal -->
+  <div class="modal" id="quickTaskModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Quick Add Task
+        <button class="modal-close" onclick="closeModal('quickTaskModal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Task Title</label>
+        <input type="text" id="quickTaskTitle" placeholder="Enter task title">
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="quickTaskPriority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Due Date (Optional)</label>
+        <input type="date" id="quickTaskDue">
+      </div>
+      <div class="form-group">
+        <label>Notes (Optional)</label>
+        <textarea id="quickTaskNotes" placeholder="Add notes"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('quickTaskModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="quickAddTask()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note Quick Add Modal -->
+  <div class="modal" id="quickNoteModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Quick Add Note
+        <button class="modal-close" onclick="closeModal('quickNoteModal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Note Title</label>
+        <input type="text" id="quickNoteTitle" placeholder="Enter note title">
+      </div>
+      <div class="form-group">
+        <label>Note Content</label>
+        <textarea id="quickNoteContent" placeholder="Enter note content"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('quickNoteModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="quickAddNote()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Habit Quick Add Modal -->
+  <div class="modal" id="quickHabitModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Quick Add Habit
+        <button class="modal-close" onclick="closeModal('quickHabitModal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Habit Name</label>
+        <input type="text" id="quickHabitName" placeholder="Enter habit name">
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('quickHabitModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="quickAddHabit()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Task Modal -->
+  <div class="modal" id="editTaskModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Edit Task
+        <button class="modal-close" onclick="closeModal('editTaskModal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Task Title</label>
+        <input type="text" id="editTaskTitle" placeholder="Enter task title">
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="editTaskPriority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Due Date</label>
+        <input type="date" id="editTaskDueDate">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="editTaskNotes"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('editTaskModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditedTask()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Note Modal -->
+  <div class="modal" id="editNoteModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Edit Note
+        <button class="modal-close" onclick="closeModal('editNoteModal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Note Title</label>
+        <input type="text" id="editNoteTitle" placeholder="Enter note title">
+      </div>
+      <div class="form-group">
+        <label>Note Content</label>
+        <textarea id="editNoteContent" placeholder="Enter note content"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('editNoteModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditedNote()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Default Colors =====
+    const DEFAULT_COLORS = {
+      brand: '#7aa2ff',
+      brand2: '#5f86ff',
+      bg: '#0f1220',
+      bg2: '#13172a',
+      panel: '#171b2e',
+      panel2: '#1e2440',
+      text: '#e8eaf6',
+      muted: '#9aa3b2',
+      textSize: 16,
+      letterSpacing: 0,
+      lineHeight: 1.5
+    };
+
+    // ===== State Management =====
+    const STATE_KEY = 'ultimateHub:v3';
+    let state = {
+      tasks: [],
+      notes: [],
+      habits: [],
+      pinnedNotes: [],
+      timerPresets: [{
+          id: 1,
+          name: 'Focus',
+          minutes: 25
+        },
+        {
+          id: 2,
+          name: 'Short Break',
+          minutes: 5
+        },
+        {
+          id: 3,
+          name: 'Long Break',
+          minutes: 15
+        }
+      ],
+      theme: 'dark',
+      brandColor: '#7aa2ff',
+      brand2Color: '#5f86ff',
+      bgColor: '#0f1220',
+      bg2Color: '#13172a',
+      panelColor: '#171b2e',
+      panel2Color: '#1e2440',
+      textColor: '#e8eaf6',
+      mutedColor: '#9aa3b2',
+      font: 'system-ui',
+      textSize: 16,
+      letterSpacing: 0,
+      lineHeight: 1.5,
+      currentMonth: new Date(),
+      showCompletedOnCalendar: true,
+      timerState: {
+        running: false,
+        paused: false,
+        remainingSeconds: 0,
+        totalSeconds: 0,
+        currentPresetId: null
+      },
+      editingNoteId: null,
+      editingTaskId: null,
+      originalTheme: 'dark'
+    };
+
+    // ===== Utility Functions =====
+    function saveState() {
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STATE_KEY);
+      if (saved) {
+        state = {
+          ...state,
+          ...JSON.parse(saved)
+        };
+      }
+      state.currentMonth = new Date(state.currentMonth);
+      state.originalTheme = state.theme;
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+      document.getElementById('navMenu').classList.remove('active');
+      closeAllModals();
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    function closeAllModals() {
+      document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
+
+    function sortTasks(tasks) {
+      return tasks.slice().sort((a, b) => {
+        if (a.completed !== b.completed) {
+          return a.completed ? 1 : -1;
+        }
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      });
+    }
+
+    // ===== Theme & Customization =====
+    function applyTheme() {
+      document.body.classList.toggle('light-theme', state.theme === 'light');
+      document.body.classList.remove('timer-alert');
+      document.documentElement.style.setProperty('--brand', state.brandColor);
+      document.documentElement.style.setProperty('--brand2', state.brand2Color);
+      document.documentElement.style.setProperty('--bg', state.bgColor);
+      document.documentElement.style.setProperty('--bg2', state.bg2Color);
+      document.documentElement.style.setProperty('--panel', state.panelColor);
+      document.documentElement.style.setProperty('--panel2', state.panel2Color);
+      document.documentElement.style.setProperty('--text', state.textColor);
+      document.documentElement.style.setProperty('--muted', state.mutedColor);
+      document.body.style.fontFamily = state.font;
+      document.body.style.fontSize = state.textSize + 'px';
+      document.body.style.letterSpacing = state.letterSpacing + 'px';
+      document.body.style.lineHeight = state.lineHeight;
+    }
+
+    // ===== Reset Functions =====
+    function resetBrandColor() {
+      state.brandColor = DEFAULT_COLORS.brand;
+      saveState();
+      applyTheme();
+      document.getElementById('brandColor').value = state.brandColor;
+    }
+
+    function resetBrand2Color() {
+      state.brand2Color = DEFAULT_COLORS.brand2;
+      saveState();
+      applyTheme();
+      document.getElementById('brand2Color').value = state.brand2Color;
+    }
+
+    function resetBgColor() {
+      state.bgColor = DEFAULT_COLORS.bg;
+      saveState();
+      applyTheme();
+      document.getElementById('bgColor').value = state.bgColor;
+    }
+
+    function resetBg2Color() {
+      state.bg2Color = DEFAULT_COLORS.bg2;
+      saveState();
+      applyTheme();
+      document.getElementById('bg2Color').value = state.bg2Color;
+    }
+
+    function resetPanelColor() {
+      state.panelColor = DEFAULT_COLORS.panel;
+      saveState();
+      applyTheme();
+      document.getElementById('panelColor').value = state.panelColor;
+    }
+
+    function resetPanel2Color() {
+      state.panel2Color = DEFAULT_COLORS.panel2;
+      saveState();
+      applyTheme();
+      document.getElementById('panel2Color').value = state.panel2Color;
+    }
+
+    function resetTextColor() {
+      state.textColor = DEFAULT_COLORS.text;
+      saveState();
+      applyTheme();
+      document.getElementById('textColor').value = state.textColor;
+    }
+
+    function resetMutedColor() {
+      state.mutedColor = DEFAULT_COLORS.muted;
+      saveState();
+      applyTheme();
+      document.getElementById('mutedColor').value = state.mutedColor;
+    }
+
+    function resetTextSize() {
+      state.textSize = DEFAULT_COLORS.textSize;
+      document.getElementById('textSize').value = state.textSize;
+      document.getElementById('textSizeValue').textContent = state.textSize;
+      saveState();
+      applyTheme();
+    }
+
+    function resetLetterSpacing() {
+      state.letterSpacing = DEFAULT_COLORS.letterSpacing;
+      document.getElementById('letterSpacing').value = state.letterSpacing;
+      document.getElementById('letterSpacingValue').textContent = state.letterSpacing;
+      saveState();
+      applyTheme();
+    }
+
+    function resetLineHeight() {
+      state.lineHeight = DEFAULT_COLORS.lineHeight;
+      document.getElementById('lineHeight').value = state.lineHeight;
+      document.getElementById('lineHeightValue').textContent = state.lineHeight;
+      saveState();
+      applyTheme();
+    }
+
+    // ===== Navigation =====
+    document.getElementById('hamburger').addEventListener('click', () => {
+      const hamburger = document.getElementById('hamburger');
+      const navMenu = document.getElementById('navMenu');
+      hamburger.classList.toggle('active');
+      navMenu.classList.toggle('active');
+    });
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        showSection(item.dataset.section);
+        document.getElementById('hamburger').classList.remove('active');
+      });
+    });
+
+    // ===== Quick Add =====
+    function openQuickAddTask() {
+      closeModal('quickAddModal');
+      openModal('quickTaskModal');
+    }
+
+    function openQuickAddNote() {
+      closeModal('quickAddModal');
+      openModal('quickNoteModal');
+    }
+
+    function openQuickAddHabit() {
+      closeModal('quickAddModal');
+      openModal('quickHabitModal');
+    }
+
+    function quickAddTask() {
+      const title = document.getElementById('quickTaskTitle').value.trim();
+      const priority = document.getElementById('quickTaskPriority').value;
+      const dueDate = document.getElementById('quickTaskDue').value;
+      const notes = document.getElementById('quickTaskNotes').value.trim();
+
+      if (!title) {
+        alert('Please enter a task title');
+        return;
+      }
+
+      state.tasks.push({
+        id: generateId(),
+        title,
+        priority,
+        dueDate: dueDate || null,
+        notes,
+        completed: false,
+        createdAt: new Date().toISOString()
+      });
+
+      saveState();
+      closeModal('quickTaskModal');
+      document.getElementById('quickTaskTitle').value = '';
+      document.getElementById('quickTaskPriority').value = 'medium';
+      document.getElementById('quickTaskDue').value = '';
+      document.getElementById('quickTaskNotes').value = '';
+      showSection('tasks');
+      renderTasks();
+      updateHome();
+      renderCalendar();
+      renderKanban();
+    }
+
+    function quickAddNote() {
+      const title = document.getElementById('quickNoteTitle').value.trim();
+      const content = document.getElementById('quickNoteContent').value.trim();
+
+      if (!title) {
+        alert('Please enter a note title');
+        return;
+      }
+
+      state.notes.unshift({
+        id: generateId(),
+        title,
+        content,
+        createdAt: new Date().toISOString()
+      });
+
+      saveState();
+      closeModal('quickNoteModal');
+      document.getElementById('quickNoteTitle').value = '';
+      document.getElementById('quickNoteContent').value = '';
+      renderNotes();
+    }
+
+    function quickAddHabit() {
+      const name = document.getElementById('quickHabitName').value.trim();
+
+      if (!name) {
+        alert('Please enter a habit name');
+        return;
+      }
+
+      state.habits.unshift({
+        id: generateId(),
+        name,
+        createdAt: new Date().toISOString(),
+        completedDays: {}
+      });
+
+      saveState();
+      closeModal('quickHabitModal');
+      document.getElementById('quickHabitName').value = '';
+      renderHabits();
+    }
+
+    // ===== Tasks =====
+    function addTask() {
+      const title = document.getElementById('taskTitle').value.trim();
+      const priority = document.getElementById('taskPriority').value;
+      const dueDate = document.getElementById('taskDueDate').value;
+      const notes = document.getElementById('taskNotes').value.trim();
+
+      if (!title) {
+        alert('Please enter a task title');
+        return;
+      }
+
+      state.tasks.push({
+        id: generateId(),
+        title,
+        priority,
+        dueDate: dueDate || null,
+        notes,
+        completed: false,
+        createdAt: new Date().toISOString()
+      });
+
+      saveState();
+      document.getElementById('taskTitle').value = '';
+      document.getElementById('taskDueDate').value = '';
+      document.getElementById('taskNotes').value = '';
+      document.getElementById('taskPriority').value = 'medium';
+      renderTasks();
+      updateHome();
+      renderCalendar();
+      renderKanban();
+    }
+
+    function deleteTask(id) {
+      state.tasks = state.tasks.filter(t => t.id !== id);
+      saveState();
+      renderTasks();
+      updateHome();
+      renderCalendar();
+      renderKanban();
+    }
+
+    function toggleTaskComplete(id) {
+      const task = state.tasks.find(t => t.id === id);
+      if (task) {
+        task.completed = !task.completed;
+        saveState();
+        renderTasks();
+        updateHome();
+        renderCalendar();
+        renderKanban();
+      }
+    }
+
+    function editTask(id) {
+      const task = state.tasks.find(t => t.id === id);
+      if (task) {
+        state.editingTaskId = id;
+        document.getElementById('editTaskTitle').value = task.title;
+        document.getElementById('editTaskPriority').value = task.priority;
+        document.getElementById('editTaskDueDate').value = task.dueDate || '';
+        document.getElementById('editTaskNotes').value = task.notes;
+        openModal('editTaskModal');
+      }
+    }
+
+    function saveEditedTask() {
+      if (!state.editingTaskId) return;
+
+      const task = state.tasks.find(t => t.id === state.editingTaskId);
+      if (task) {
+        task.title = document.getElementById('editTaskTitle').value.trim();
+        task.priority = document.getElementById('editTaskPriority').value;
+        task.dueDate = document.getElementById('editTaskDueDate').value || null;
+        task.notes = document.getElementById('editTaskNotes').value.trim();
+
+        saveState();
+        state.editingTaskId = null;
+        closeModal('editTaskModal');
+        renderTasks();
+        updateHome();
+        renderCalendar();
+        renderKanban();
+      }
+    }
+
+    function renderTaskItem(task, editableOnly = false) {
+      const el = document.createElement('div');
+      el.className = `task-item ${task.priority}`;
+
+      let notesHTML = '';
+      if (task.notes) {
+        notesHTML = `<div class="task-notes">${task.notes}</div>`;
+      }
+
+      el.innerHTML = `
+                <div class="task-content">
+                    <div class="task-title" style="text-decoration: ${task.completed ? 'line-through' : 'none'}; opacity: ${task.completed ? '0.6' : '1'};">
+                        ${task.title}
+                        <span class="task-priority-badge ${task.priority}">${task.priority}</span>
+                    </div>
+                    <div class="task-meta">
+                        ${task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleDateString()}` : 'No due date'}
+                    </div>
+                    ${notesHTML}
+                </div>
+                <div class="task-actions">
+                    ${editableOnly && !task.completed ? `<button class="btn btn-small" onclick="editTask('${task.id}')">✏️</button>` : ''}
+                    <button class="btn btn-small" onclick="toggleTaskComplete('${task.id}')">${task.completed ? '↩️' : '✓'}</button>
+                    ${editableOnly ? `<button class="btn btn-small btn-delete" onclick="deleteTask('${task.id}')">🗑️</button>` : ''}
+                </div>
+            `;
+      return el;
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('tasksList');
+      const completedContainer = document.getElementById('completedTasksList');
+
+      container.innerHTML = '';
+      completedContainer.innerHTML = '';
+
+      const uncompleted = state.tasks.filter(t => !t.completed).sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      });
+
+      const completed = state.tasks.filter(t => t.completed);
+
+      if (uncompleted.length === 0) {
+        container.innerHTML = '<p style="color: var(--muted);">No uncompleted tasks</p>';
+      } else {
+        uncompleted.forEach(task => {
+          container.appendChild(renderTaskItem(task, true));
+        });
+      }
+
+      if (completed.length === 0) {
+        completedContainer.innerHTML = '<p style="color: var(--muted);">No completed tasks</p>';
+      } else {
+        completed.forEach(task => {
+          completedContainer.appendChild(renderTaskItem(task, true));
+        });
+      }
+    }
+
+    // ===== Kanban =====
+    function renderKanban() {
+      const todoContainer = document.getElementById('kanbanTodo');
+
+      todoContainer.innerHTML = '';
+
+      const uncompleted = state.tasks.filter(t => !t.completed);
+
+      if (uncompleted.length === 0) {
+        todoContainer.innerHTML = '<p style="color: var(--muted); text-align: center;">No tasks</p>';
+        return;
+      }
+
+      uncompleted.forEach(task => {
+        const el = document.createElement('div');
+        el.className = `task-item ${task.priority}`;
+        el.style.marginBottom = '8px';
+        el.innerHTML = `
+                    <div class="task-content">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-meta">${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}</div>
+                    </div>
+                    <button class="btn btn-small" onclick="toggleTaskComplete('${task.id}')">✓</button>
+                `;
+
+        todoContainer.appendChild(el);
+      });
+
+      if (todoContainer.innerHTML === '') {
+        todoContainer.innerHTML = '<p style="color: var(--muted); text-align: center;">No tasks</p>';
+      }
+    }
+
+    // ===== Habits =====
+    function addHabit() {
+      const name = document.getElementById('habitName').value.trim();
+
+      if (!name) {
+        alert('Please enter a habit name');
+        return;
+      }
+
+      state.habits.push({
+        id: generateId(),
+        name,
+        createdAt: new Date().toISOString(),
+        completedDays: {}
+      });
+
+      saveState();
+      document.getElementById('habitName').value = '';
+      renderHabits();
+      updateHome();
+    }
+
+    function deleteHabit(id) {
+      state.habits = state.habits.filter(h => h.id !== id);
+      saveState();
+      renderHabits();
+      updateHome();
+    }
+
+    function toggleHabitDay(habitId, day) {
+      const habit = state.habits.find(h => h.id === habitId);
+      if (habit) {
+        const key = String(day);
+        habit.completedDays[key] = !habit.completedDays[key];
+        saveState();
+        renderHabits();
+        updateHome();
+      }
+    }
+
+    function renderHabits() {
+      const container = document.getElementById('habitsList');
+      container.innerHTML = '';
+
+      if (state.habits.length === 0) {
+        container.innerHTML = '<div class="card"><p style="color: var(--muted);">No habits yet. Create one to get started!</p></div>';
+        return;
+      }
+
+      state.habits.forEach(habit => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const today = now.getDate();
+
+        let html = `<div class="card habit-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div class="habit-title">${habit.name}</div>
+                        <button class="btn btn-small btn-delete" onclick="deleteHabit('${habit.id}')">🗑️</button>
+                    </div>
+                    <div class="calendar-grid">`;
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const key = String(day);
+          const isCompleted = habit.completedDays[key];
+          const isToday = day === today;
+
+          html += `<div class="day-box ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''}" onclick="toggleHabitDay('${habit.id}', ${day})">
+                        <div class="day-box-content">
+                            <div class="day-number">${day}</div>
+                            <div class="day-status">${isCompleted ? '✓' : ''}</div>
+                        </div>
+                    </div>`;
+        }
+
+        html += `</div></div>`;
+        container.insertAdjacentHTML('beforeend', html);
+      });
+    }
+
+    // ===== Calendar =====
+    function goToToday() {
+      state.currentMonth = new Date();
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const container = document.getElementById('calendarGrid');
+      const monthYear = document.getElementById('monthYear');
+      const now = new Date();
+      const currentMonth = state.currentMonth.getMonth();
+      const currentYear = state.currentMonth.getFullYear();
+
+      monthYear.textContent = state.currentMonth.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric'
+      });
+
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+      container.innerHTML = '';
+
+      // Previous month days
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const day = daysInPrevMonth - i;
+        const el = document.createElement('div');
+        el.className = 'calendar-day other-month';
+        el.innerHTML = `<div class="calendar-day-number">${day}</div>`;
+        container.appendChild(el);
+      }
+
+      // Current month days
+      for (let day = 1; day <= daysInMonth; day++) {
+        const el = document.createElement('div');
+        const isToday = day === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
+        el.className = `calendar-day ${isToday ? 'today' : ''}`;
+
+        const dayStr = String(day).padStart(2, '0');
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${dayStr}`;
+
+        let content = `<div class="calendar-day-number">${day}</div>`;
+
+        // Show tasks due on this day
+        const tasksOnDay = state.tasks.filter(t => {
+          if (state.showCompletedOnCalendar) {
+            return t.dueDate === dateStr;
+          } else {
+            return t.dueDate === dateStr && !t.completed;
+          }
+        });
+
+        tasksOnDay.forEach(task => {
+          content += `<div class="calendar-event ${task.priority}">${task.title}</div>`;
+        });
+
+        el.innerHTML = content;
+        container.appendChild(el);
+      }
+
+      // Next month days
+      const remainingDays = (7 - ((firstDay + daysInMonth) % 7)) % 7;
+      for (let day = 1; day <= remainingDays; day++) {
+        const el = document.createElement('div');
+        el.className = 'calendar-day other-month';
+        el.innerHTML = `<div class="calendar-day-number">${day}</div>`;
+        container.appendChild(el);
+      }
+    }
+
+    // ===== Notes =====
+    function addNote() {
+      const title = document.getElementById('noteTitle').value.trim();
+      const content = document.getElementById('noteContent').value.trim();
+
+      if (!title) {
+        alert('Please enter a note title');
+        return;
+      }
+
+      if (state.editingNoteId) {
+        const note = state.notes.find(n => n.id === state.editingNoteId);
+        if (note) {
+          note.title = title;
+          note.content = content;
+        }
+        state.editingNoteId = null;
+      } else {
+        state.notes.unshift({
+          id: generateId(),
+          title,
+          content,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      saveState();
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteContent').value = '';
+      closeModal('editNoteModal');
+      renderNotes();
+      updateHome();
+    }
+
+    function editNote(id) {
+      const note = state.notes.find(n => n.id === id);
+      if (note) {
+        state.editingNoteId = id;
+        document.getElementById('editNoteTitle').value = note.title;
+        document.getElementById('editNoteContent').value = note.content;
+        openModal('editNoteModal');
+      }
+    }
+
+    function saveEditedNote() {
+      if (!state.editingNoteId) return;
+
+      const title = document.getElementById('editNoteTitle').value.trim();
+      const content = document.getElementById('editNoteContent').value.trim();
+
+      if (!title) {
+        alert('Please enter a note title');
+        return;
+      }
+
+      const note = state.notes.find(n => n.id === state.editingNoteId);
+      if (note) {
+        note.title = title;
+        note.content = content;
+        saveState();
+        state.editingNoteId = null;
+        closeModal('editNoteModal');
+        renderNotes();
+        updateHome();
+      }
+    }
+
+    function deleteNote(id) {
+      state.notes = state.notes.filter(n => n.id !== id);
+      if (state.pinnedNotes.includes(id)) {
+        state.pinnedNotes = state.pinnedNotes.filter(pId => pId !== id);
+      }
+      saveState();
+      renderNotes();
+      updateHome();
+    }
+
+    function togglePin(id) {
+      if (state.pinnedNotes.includes(id)) {
+        state.pinnedNotes = state.pinnedNotes.filter(pId => pId !== id);
+      } else {
+        state.pinnedNotes.push(id);
+      }
+      saveState();
+      renderNotes();
+      updateHome();
+    }
+
+    function renderNotes() {
+      const container = document.getElementById('notesList');
+      container.innerHTML = '';
+
+      if (state.notes.length === 0) {
+        container.innerHTML = '<p style="color: var(--muted);">No notes yet. Create one to get started!</p>';
+        return;
+      }
+
+      state.notes.forEach(note => {
+        const el = document.createElement('div');
+        el.className = 'note-item';
+        const isPinned = state.pinnedNotes.includes(note.id);
+        el.innerHTML = `
+                    <div class="note-content" onclick="editNote('${note.id}')">
+                        <div class="note-title">${note.title}</div>
+                        <div class="note-preview">${note.content}</div>
+                    </div>
+                    <div class="note-actions">
+                        <button class="btn-pin ${isPinned ? 'pinned' : ''}" onclick="togglePin('${note.id}')" title="Pin note">📌</button>
+                        <button class="btn btn-small btn-delete" onclick="deleteNote('${note.id}')">🗑️</button>
+                    </div>
+                `;
+        container.appendChild(el);
+      });
+    }
+
+    function renderPinnedNotes() {
+      const container = document.getElementById('pinnedNotesContainer');
+      const card = document.getElementById('pinnedNotesCard');
+      container.innerHTML = '';
+
+      const pinnedNotes = state.notes.filter(n => state.pinnedNotes.includes(n.id));
+
+      if (pinnedNotes.length === 0) {
+        card.style.display = 'none';
+        return;
+      }
+
+      card.style.display = 'block';
+
+      pinnedNotes.forEach(note => {
+        const el = document.createElement('div');
+        el.className = 'pinned-note-item';
+        el.innerHTML = `
+                    <div class="pinned-note-content">
+                        <div class="pinned-note-title">${note.title}</div>
+                        <div class="pinned-note-text">${note.content}</div>
+                    </div>
+                `;
+        container.appendChild(el);
+      });
+    }
+
+    // ===== Timer =====
+    let timerInterval = null;
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(state.timerState.remainingSeconds / 60);
+      const secs = state.timerState.remainingSeconds % 60;
+      document.getElementById('timerDisplay').textContent =
+        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+      // Update progress bar
+      const percent = state.timerState.totalSeconds > 0 ?
+        ((state.timerState.totalSeconds - state.timerState.remainingSeconds) / state.timerState.totalSeconds) * 100 :
+        0;
+      document.getElementById('timerProgressBar').style.width = percent + '%';
+    }
+
+    function startTimer() {
+      if (state.timerState.running) return;
+
+      if (state.timerState.remainingSeconds === 0) {
+        alert('Please select a timer preset or set a custom time first');
+        return;
+      }
+
+      state.timerState.running = true;
+      state.timerState.paused = false;
+      document.getElementById('pauseBtn').textContent = 'Pause';
+
+      timerInterval = setInterval(() => {
+        if (state.timerState.remainingSeconds > 0) {
+          state.timerState.remainingSeconds--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerInterval);
+          state.timerState.running = false;
+          // Switch to light theme or inverse of current
+          state.originalTheme = state.theme;
+          state.theme = state.theme === 'dark' ? 'light' : 'dark';
+          document.body.classList.add('timer-alert');
+          alert('Timer finished! Press OK to dismiss.');
+          resetTimer();
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      if (state.timerState.running) {
+        state.timerState.running = false;
+        state.timerState.paused = true;
+        clearInterval(timerInterval);
+        document.getElementById('pauseBtn').textContent = 'Resume';
+      } else if (state.timerState.paused) {
+        state.timerState.running = true;
+        state.timerState.paused = false;
+        document.getElementById('pauseBtn').textContent = 'Pause';
+        startTimer();
+      }
+    }
+
+    function resetTimer() {
+      state.timerState.running = false;
+      state.timerState.paused = false;
+      state.timerState.remainingSeconds = 0;
+      state.timerState.totalSeconds = 0;
+      state.timerState.currentPresetId = null;
+      clearInterval(timerInterval);
+      document.getElementById('pauseBtn').textContent = 'Pause';
+
+      // Return to original theme
+      state.theme = state.originalTheme;
+      document.body.classList.remove('timer-alert');
+      applyTheme();
+
+      updateTimerDisplay();
+      renderPresets();
+    }
+
+    function setCustomTimer() {
+      const minutes = parseInt(document.getElementById('customMinutes').value);
+      if (!minutes || minutes < 1) {
+        alert('Please enter a valid number of minutes');
+        return;
+      }
+
+      state.timerState.currentPresetId = null;
+      state.timerState.totalSeconds = minutes * 60;
+      state.timerState.remainingSeconds = minutes * 60;
+      state.timerState.running = false;
+      state.timerState.paused = false;
+      clearInterval(timerInterval);
+      document.getElementById('pauseBtn').textContent = 'Pause';
+      document.getElementById('customMinutes').value = '';
+      updateTimerDisplay();
+      renderPresets();
+    }
+
+    function addPreset() {
+      const name = document.getElementById('presetName').value.trim();
+      const minutes = parseInt(document.getElementById('presetTime').value);
+
+      if (!name || !minutes || minutes < 1) {
+        alert('Please enter valid preset name and minutes');
+        return;
+      }
+
+      state.timerPresets.push({
+        id: generateId(),
+        name,
+        minutes
+      });
+
+      saveState();
+      document.getElementById('presetName').value = '';
+      document.getElementById('presetTime').value = '';
+      renderPresets();
+    }
+
+    function setTimerPreset(presetId) {
+      const preset = state.timerPresets.find(p => p.id === presetId);
+      if (preset) {
+        state.timerState.currentPresetId = presetId;
+        state.timerState.totalSeconds = preset.minutes * 60;
+        state.timerState.remainingSeconds = preset.minutes * 60;
+        state.timerState.running = false;
+        state.timerState.paused = false;
+        clearInterval(timerInterval);
+        document.getElementById('pauseBtn').textContent = 'Pause';
+        updateTimerDisplay();
+        renderPresets();
+      }
+    }
+
+    function deletePreset(presetId) {
+      state.timerPresets = state.timerPresets.filter(p => p.id !== presetId);
+      saveState();
+      renderPresets();
+    }
+
+    function renderPresets() {
+      const container = document.getElementById('presetsContainer');
+      container.innerHTML = '';
+
+      state.timerPresets.forEach(preset => {
+        const isSelected = state.timerState.currentPresetId === preset.id;
+        const btn = document.createElement('button');
+        btn.className = `preset-btn ${isSelected ? 'btn-primary' : 'btn'}`;
+        btn.innerHTML = `<div>${preset.name}</div><div style="font-size: 12px; opacity: 0.8;">${preset.minutes}m</div>`;
+        btn.onclick = () => setTimerPreset(preset.id);
+
+        if (preset.id > 3) {
+          btn.style.position = 'relative';
+          const deleteBtn = document.createElement('span');
+          deleteBtn.textContent = '✕';
+          deleteBtn.style.cssText = 'position: absolute; top: -8px; right: -8px; background: #ff6b6b; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px;';
+          deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            deletePreset(preset.id);
+          };
+          btn.appendChild(deleteBtn);
+        }
+
+        container.appendChild(btn);
+      });
+    }
+
+    // ===== Home Dashboard =====
+    function updateHome() {
+      // Remaining tasks
+      const remainingList = document.getElementById('tasksRemainingList');
+      remainingList.innerHTML = '';
+      const remainingTasksList = state.tasks.filter(t => !t.completed).sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      });
+      if (remainingTasksList.length === 0) {
+        remainingList.innerHTML = '<p style="color: var(--muted);">All tasks completed!</p>';
+      } else {
+        remainingTasksList.forEach(task => {
+          const el = document.createElement('div');
+          el.className = `task-item ${task.priority}`;
+
+          let notesHTML = '';
+          if (task.notes) {
+            notesHTML = `<div class="task-notes">${task.notes}</div>`;
+          }
+
+          el.innerHTML = `
+                        <div class="task-content">
+                            <div class="task-title">${task.title}</div>
+                            <div class="task-meta">Due: ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}</div>
+                            ${notesHTML}
+                        </div>
+                        <button class="btn btn-small" onclick="toggleTaskComplete('${task.id}')">✓</button>
+                    `;
+          remainingList.appendChild(el);
+        });
+      }
+
+      // Quick habits
+      renderQuickHabits();
+
+      // Pinned notes
+      renderPinnedNotes();
+    }
+
+    function renderQuickHabits() {
+      const container = document.getElementById('quickHabitsContainer');
+      container.innerHTML = '';
+
+      if (state.habits.length === 0) {
+        container.innerHTML = '<p style="color: var(--muted);">No habits yet. Create one to get started!</p>';
+        return;
+      }
+
+      const now = new Date();
+      const today = now.getDate();
+
+      state.habits.forEach(habit => {
+        const key = String(today);
+        const isCompleted = habit.completedDays[key];
+
+        const habitView = document.createElement('div');
+        habitView.className = 'habit-quick-view';
+        habitView.innerHTML = `
+                    <div class="habit-quick-view-name">${habit.name}</div>
+                    <div class="habit-quick-box ${isCompleted ? 'completed' : ''}" onclick="toggleHabitDay('${habit.id}', ${today})">
+                        ${isCompleted ? '✓' : today}
+                    </div>
+                `;
+        container.appendChild(habitView);
+      });
+    }
+
+    // ===== Export/Import =====
+    async function exportData() {
+      const fullContent = JSON.stringify(state, null, 2);
+      const fileName = `ultimate-hub-backup-${new Date().toISOString().split('T')[0]}.json`;
+
+      const blob = new Blob([fullContent], {
+        type: 'application/json;charset=utf-8;'
+      });
+
+      // 1️⃣ Try File System Access API first
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{
+              description: "JSON Files",
+              accept: {
+                "application/json": [".json"]
+              }
+            }],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          console.log("File saved using File System Access API.");
+          alert('File saved successfully!');
+          return;
+        } catch (err) {
+          console.warn("File System Access API failed:", err);
+        }
+      }
+
+      // 2️⃣ Fallback to regular download
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        console.log("File saved via regular download fallback.");
+        alert('File downloaded successfully!');
+        return;
+      } catch (err) {
+        console.warn("Regular download fallback failed:", err);
+      }
+
+      // 3️⃣ Final fallback: Web Share API
+      try {
+        const file = new File([blob], fileName, {
+          type: "application/json"
+        });
+        if (navigator.canShare && navigator.canShare({
+            files: [file]
+          })) {
+          await navigator.share({
+            files: [file],
+            title: fileName
+          });
+          console.log("File shared successfully via Web Share API.");
+          alert('File shared successfully!');
+          return;
+        }
+      } catch (err) {
+        console.error("Unable to save or share the file on this device.", err);
+        alert('Could not export file. Try Copy to Clipboard instead.');
+      }
+    }
+
+    function copyDataToClipboard() {
+      const fullContent = JSON.stringify(state, null, 2);
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullContent).then(() => {
+          alert('Data copied to clipboard! You can paste it in a text file.');
+        }).catch(() => {
+          fallbackCopyToClipboard(fullContent);
+        });
+      } else {
+        fallbackCopyToClipboard(fullContent);
+      }
+    }
+
+    function fallbackCopyToClipboard(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        alert('Data copied to clipboard! You can paste it in a text file.');
+      } catch (e) {
+        alert('Could not copy to clipboard. Try using the Export button instead.');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function importData() {
+      document.getElementById('importFile').click();
+    }
+
+    document.getElementById('importFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          state = {
+            ...state,
+            ...imported
+          };
+          state.currentMonth = new Date(state.currentMonth);
+          saveState();
+          alert('Data imported successfully!');
+          location.reload();
+        } catch (err) {
+          alert('Error importing file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // ===== Event Listeners =====
+    document.getElementById('quickAddBtn').addEventListener('click', () => openModal('quickAddModal'));
+
+    // Tasks
+    document.getElementById('addTaskBtn').addEventListener('click', addTask);
+
+    // Habits
+    document.getElementById('addHabitBtn').addEventListener('click', addHabit);
+
+    // Calendar
+    document.getElementById('prevMonth').addEventListener('click', () => {
+      state.currentMonth.setMonth(state.currentMonth.getMonth() - 1);
+      renderCalendar();
+    });
+
+    document.getElementById('todayBtn').addEventListener('click', goToToday);
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+      state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
+      renderCalendar();
+    });
+
+    document.getElementById('toggleCompleted').addEventListener('click', () => {
+      state.showCompletedOnCalendar = !state.showCompletedOnCalendar;
+      const btn = document.getElementById('toggleCompleted');
+      btn.classList.toggle('active');
+      btn.textContent = state.showCompletedOnCalendar ? 'Hide Completed' : 'Show Completed';
+      saveState();
+      renderCalendar();
+    });
+
+    // Notes
+    document.getElementById('addNoteBtn').addEventListener('click', addNote);
+    document.getElementById('cancelNoteBtn').addEventListener('click', cancelEditNote);
+
+    function cancelEditNote() {
+      state.editingNoteId = null;
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteContent').value = '';
+      closeModal('editNoteModal');
+    }
+
+    // Timer
+    document.getElementById('startBtn').addEventListener('click', startTimer);
+    document.getElementById('pauseBtn').addEventListener('click', pauseTimer);
+    document.getElementById('resetBtn').addEventListener('click', resetTimer);
+    document.getElementById('addPresetBtn').addEventListener('click', addPreset);
+    document.getElementById('setCustomBtn').addEventListener('click', setCustomTimer);
+
+    // Settings - Theme
+    document.getElementById('darkThemeBtn').addEventListener('click', () => {
+      state.theme = 'dark';
+      state.originalTheme = 'dark';
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('lightThemeBtn').addEventListener('click', () => {
+      state.theme = 'light';
+      state.originalTheme = 'light';
+      saveState();
+      applyTheme();
+    });
+
+    // Settings - Colors
+    document.getElementById('brandColor').addEventListener('change', (e) => {
+      state.brandColor = e.target.value;
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('brand2Color').addEventListener('change', (e) => {
+      state.brand2Color = e.target.value;
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('bgColor').addEventListener('change', (e) => {
+      state.bgColor = e.target.value;
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('bg2Color').addEventListener('change', (e) => {
+      state.bg2Color = e.target.value;
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('panelColor').addEventListener('change', (e) => {
+      state.panelColor = e.target.value;
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('panel2Color').addEventListener('change', (e) => {
+      state.panel2Color = e.target.value;
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('textColor').addEventListener('change', (e) => {
+      state.textColor = e.target.value;
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('mutedColor').addEventListener('change', (e) => {
+      state.mutedColor = e.target.value;
+      saveState();
+      applyTheme();
+    });
+
+    // Settings - Font
+    document.getElementById('fontSystemBtn').addEventListener('click', () => {
+      state.font = 'system-ui';
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('fontSerifBtn').addEventListener('click', () => {
+      state.font = 'serif';
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('fontMonoBtn').addEventListener('click', () => {
+      state.font = 'monospace';
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('fontGeorgiaBtn').addEventListener('click', () => {
+      state.font = 'Georgia, serif';
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('fontVerdanaBtn').addEventListener('click', () => {
+      state.font = 'Verdana, sans-serif';
+      saveState();
+      applyTheme();
+    });
+
+    document.getElementById('fontCourierBtn').addEventListener('click', () => {
+      state.font = 'Courier New, monospace';
+      saveState();
+      applyTheme();
+    });
+
+    // Settings - Text Size
+    document.getElementById('textSize').addEventListener('change', (e) => {
+      state.textSize = e.target.value;
+      document.getElementById('textSizeValue').textContent = state.textSize;
+      saveState();
+      applyTheme();
+    });
+
+    // Settings - Letter Spacing
+    document.getElementById('letterSpacing').addEventListener('change', (e) => {
+      state.letterSpacing = e.target.value;
+      document.getElementById('letterSpacingValue').textContent = state.letterSpacing;
+      saveState();
+      applyTheme();
+    });
+
+    // Settings - Line Height
+    document.getElementById('lineHeight').addEventListener('change', (e) => {
+      state.lineHeight = e.target.value;
+      document.getElementById('lineHeightValue').textContent = state.lineHeight;
+      saveState();
+      applyTheme();
+    });
+
+    // Settings - Export/Import
+    document.getElementById('exportBtn').addEventListener('click', exportData);
+    document.getElementById('copyDataBtn').addEventListener('click', copyDataToClipboard);
+    document.getElementById('importBtn').addEventListener('click', importData);
+
+    // Settings - Clear Data
+    document.getElementById('clearDataBtn').addEventListener('click', () => {
+      if (confirm('Are you sure? This will delete all data permanently.')) {
+        localStorage.removeItem(STATE_KEY);
+        location.reload();
+      }
+    });
+
+    // ===== Initialize =====
+    document.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      applyTheme();
+      updateHome();
+      renderTasks();
+      renderHabits();
+      renderCalendar();
+      renderNotes();
+      renderKanban();
+      renderPresets();
+      updateTimerDisplay();
+
+      // Update color pickers
+      document.getElementById('brandColor').value = state.brandColor;
+      document.getElementById('brand2Color').value = state.brand2Color;
+      document.getElementById('bgColor').value = state.bgColor;
+      document.getElementById('bg2Color').value = state.bg2Color;
+      document.getElementById('panelColor').value = state.panelColor;
+      document.getElementById('panel2Color').value = state.panel2Color;
+      document.getElementById('textColor').value = state.textColor;
+      document.getElementById('mutedColor').value = state.mutedColor;
+      document.getElementById('textSize').value = state.textSize;
+      document.getElementById('letterSpacing').value = state.letterSpacing;
+      document.getElementById('lineHeight').value = state.lineHeight;
+      document.getElementById('textSizeValue').textContent = state.textSize;
+      document.getElementById('letterSpacingValue').textContent = state.letterSpacing;
+      document.getElementById('lineHeightValue').textContent = state.lineHeight;
+
+      // Set toggle button state
+      const toggleBtn = document.getElementById('toggleCompleted');
+      if (!state.showCompletedOnCalendar) {
+        toggleBtn.classList.remove('active');
+        toggleBtn.textContent = 'Show Completed';
+      }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('header') && !e.target.closest('.nav-menu')) {
+        document.getElementById('hamburger').classList.remove('active');
+        document.getElementById('navMenu').classList.remove('active');
+      }
+    });
+
+    (() => {
+      const ENTRY = 'Ultimate Hub v3',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
