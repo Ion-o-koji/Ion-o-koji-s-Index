@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timezone Clock v1</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f4f8;
+      /* Light blue-gray background */
+      color: #333;
+      /* Dark gray text color */
+    }
+
+    .time {
+      font-size: 24px;
+      margin-bottom: 5px;
+      color: #1e90ff;
+      /* Friendly blue for time display */
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dark-mode {
+      background-color: #333;
+      color: #fff;
+    }
+
+    .dark-mode .time-container {
+      background-color: #444;
+    }
+
+    .dark-mode .location {
+      color: #fff;
+    }
+
+    .dark-mode .date {
+      color: #ccc;
+    }
+
+    .dark-mode .time {
+      color: #fff;
+    }
+
+    .dark-mode button {
+      background-color: #444;
+      color: #fff;
+    }
+
+    .dark-mode button:hover {
+      background-color: #555;
+    }
+
+    .arrow {
+      font-size: 16px;
+
+      margin-right: 10px;
+    }
+
+    h1 {
+      margin-top: 20px;
+      color: #1e90ff;
+      /* Friendly blue for headers */
+    }
+
+    .time-container {
+      margin: 10px auto;
+      width: 80%;
+      background-color: #f7f7f7;
+      /* Very light gray box */
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .location {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #1e90ff;
+      /* Friendly blue for location labels */
+      text-align: left;
+    }
+
+    .date {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    button {
+      background-color: #1e90ff;
+      /* Friendly blue for buttons */
+      color: white;
+      /* White text color for buttons */
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #007acc;
+      /* Darker blue on hover */
+    }
+
+  </style>
+</head>
+
+<body class="dark-mode">
+  <button id="dark-mode-toggle" style="position: absolute; top: 10px; right: 10px; padding: 5px 10px; font-size: 12px;">Light Mode</button>
+  <h1>Current Times</h1>
+  <div class="time-container">
+    <div class="location">Family (Oregon)</div>
+    <div class="date" id="family-date"></div>
+    <div class="time"><span id="family-arrow" class="arrow"></span><span id="family-time"></span></div>
+  </div>
+  <div class="time-container">
+    <div class="location">Extended Family (Arizona)</div>
+    <div class="date" id="extended-family-date"></div>
+    <div class="time"><span id="extended-family-arrow" class="arrow"></span><span id="extended-family-time"></span></div>
+  </div>
+  <div class="time-container">
+    <div class="location">Elder Anderson (Peru)</div>
+    <div class="date" id="elder-anderson-date"></div>
+    <div class="time"><span id="elder-anderson-arrow" class="arrow"></span><span id="elder-anderson-time"></span></div>
+  </div>
+  <div class="time-container">
+    <div class="location">Elder Curtis (Mongolia)</div>
+    <div class="date" id="elder-curtis-date"></div>
+    <div class="time"><span id="elder-curtis-arrow" class="arrow"></span><span id="elder-curtis-time"></span></div>
+  </div>
+  <div class="time-container">
+    <div class="location">Sister Willingham (Philippines)</div>
+    <div class="date" id="sister-willingham-date"></div>
+    <div class="time"><span id="sister-willingham-arrow" class="arrow"></span><span id="sister-willingham-time"></span></div>
+  </div>
+  <div class="time-container">
+    <div class="location">Elder Olsen Me (Cambodia)</div>
+    <div class="date" id="elder-olsen-date"></div>
+    <div class="time"><span id="elder-olsen-arrow" class="arrow"></span><span id="elder-olsen-time"></span></div>
+  </div>
+  <button onclick="toggleTimeFormat()">Change Time Format</button>
+  <script>
+    document.getElementById('dark-mode-toggle').addEventListener('click', function() {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        this.textContent = 'Light Mode';
+      } else {
+        this.textContent = 'Dark Mode';
+      }
+    });
+    var is24HourFormat = false;
+
+    function updateTime() {
+      var now = new Date();
+      var options = {
+        hour12: !is24HourFormat
+      };
+
+      var familyDate = now.toLocaleDateString('en-US', {
+        timeZone: 'America/Los_Angeles'
+      });
+      document.getElementById('family-date').textContent = familyDate;
+      var familyTime = now.toLocaleTimeString('en-US', {
+        timeZone: 'America/Los_Angeles',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: !is24HourFormat
+      });
+      document.getElementById('family-time').textContent = familyTime;
+      var familyArrow = getArrow(now, 'America/Los_Angeles');
+      document.getElementById('family-arrow').textContent = familyArrow;
+
+      var extendedFamilyDate = now.toLocaleDateString('en-US', {
+        timeZone: 'America/Phoenix'
+      });
+      document.getElementById('extended-family-date').textContent = extendedFamilyDate;
+      var extendedFamilyTime = now.toLocaleTimeString('en-US', {
+        timeZone: 'America/Phoenix',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: !is24HourFormat
+      });
+      document.getElementById('extended-family-time').textContent = extendedFamilyTime;
+      document.getElementById('extended-family-time').textContent = extendedFamilyTime;
+      var extendedFamilyArrow = getArrow(now, 'America/Phoenix');
+      document.getElementById('extended-family-arrow').textContent = extendedFamilyArrow;
+
+      var elderAndersonDate = now.toLocaleDateString('en-US', {
+        timeZone: 'America/Lima'
+      });
+      document.getElementById('elder-anderson-date').textContent = elderAndersonDate;
+      var elderAndersonTime = now.toLocaleTimeString('en-US', {
+        timeZone: 'America/Lima',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: !is24HourFormat
+      });
+      document.getElementById('elder-anderson-time').textContent = elderAndersonTime;
+      var elderAndersonArrow = getArrow(now, 'America/Lima');
+      document.getElementById('elder-anderson-arrow').textContent = elderAndersonArrow;
+
+      var elderCurtisDate = now.toLocaleDateString('en-US', {
+        timeZone: 'Asia/Ulaanbaatar'
+      });
+      document.getElementById('elder-curtis-date').textContent = elderCurtisDate;
+      var elderCurtisTime = now.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Ulaanbaatar',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: !is24HourFormat
+      });
+      document.getElementById('elder-curtis-time').textContent = elderCurtisTime;
+      var elderCurtisArrow = getArrow(now, 'Asia/Ulaanbaatar');
+      document.getElementById('elder-curtis-arrow').textContent = elderCurtisArrow;
+
+      var sisterWillinghamDate = now.toLocaleDateString('en-US', {
+        timeZone: 'Asia/Manila'
+      });
+      document.getElementById('sister-willingham-date').textContent = sisterWillinghamDate;
+      var sisterWillinghamTime = now.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Manila',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: !is24HourFormat
+      });
+      document.getElementById('sister-willingham-time').textContent = sisterWillinghamTime;
+      var sisterWillinghamArrow = getArrow(now, 'Asia/Manila');
+      document.getElementById('sister-willingham-arrow').textContent = sisterWillinghamArrow;
+
+      var elderOlsenDate = now.toLocaleDateString('en-US', {
+        timeZone: 'Asia/Phnom_Penh'
+      });
+      document.getElementById('elder-olsen-date').textContent = elderOlsenDate;
+      var elderOlsenTime = now.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Phnom_Penh',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: !is24HourFormat
+      });
+      document.getElementById('elder-olsen-time').textContent = elderOlsenTime;
+      document.getElementById('elder-olsen-arrow').textContent = '=';
+
+    }
+
+    function toggleTimeFormat() {
+      is24HourFormat = !is24HourFormat;
+      updateTime();
+    }
+
+    function getArrow(now, timeZone) {
+      var elderOlsenTime = new Date(now.toLocaleString("en-US", {
+        timeZone: 'Asia/Phnom_Penh'
+      }));
+      var time = new Date(now.toLocaleString("en-US", {
+        timeZone: timeZone
+      }));
+
+      var offset = (time.getTime() - elderOlsenTime.getTime()) / (1000 * 60 * 60);
+      var arrowText = '';
+      if (offset > 0) {
+        arrowText = '+' + Math.round(offset) + '▲';
+      } else if (offset < 0) {
+        arrowText = Math.round(offset) + '▼';
+      } else {
+        arrowText = '=0';
+      }
+
+      return arrowText;
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    (() => {
+      const ENTRY = 'Timezone Clock v1',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
