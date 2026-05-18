@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learn Everything v3</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a2f;
+      --panel-2: #0e1528;
+      --text: #e9eefb;
+      --muted: #9fb0d9;
+      --primary: #6ea8fe;
+      --accent: #7ef0c5;
+      --danger: #ff6b6b;
+      --warn: #ffd166;
+      --ok: #95d47b;
+      --shadow: 0 10px 25px rgba(0, 0, 0, .35);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: linear-gradient(180deg, #0b0f1e 0%, #0a1330 100%);
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none
+    }
+
+    a:hover {
+      text-decoration: underline
+    }
+
+    header {
+      top: 0;
+      z-index: 50;
+      backdrop-filter: saturate(140%) blur(10px);
+      background: rgba(10, 18, 40, .65);
+      border-bottom: 1px solid rgba(255, 255, 255, .06)
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px
+    }
+
+    .resultBox {
+      max-height: 600px;
+      overflow-y: auto;
+      border-top: 1px solid #eee;
+      padding-top: 15px;
+      line-height: 1.6;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center
+    }
+
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: conic-gradient(from 180deg, var(--primary), var(--accent), #9d7bff, var(--primary));
+      box-shadow: 0 6px 18px rgba(110, 168, 254, .36)
+    }
+
+    .title {
+      font-weight: 800;
+      letter-spacing: .3px
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 16px;
+      padding: 18px;
+      max-width: 1200px;
+      margin: 0 auto
+    }
+
+    nav {
+      position: sticky;
+      top: 74px;
+      align-self: start;
+      background: var(--panel);
+      padding: 14px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, .06)
+    }
+
+    nav h3 {
+      margin: 8px 8px 12px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600
+    }
+
+    .navbtn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer
+    }
+
+    .navbtn:hover {
+      background: var(--panel-2);
+      border-color: rgba(255, 255, 255, .06)
+    }
+
+    .navbtn.active {
+      background: linear-gradient(180deg, rgba(126, 240, 197, .08), rgba(110, 168, 254, .08));
+      border-color: rgba(255, 255, 255, .12)
+    }
+
+    main {
+      min-height: 60vh
+    }
+
+    section {
+      display: none
+    }
+
+    section.active {
+      display: block
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow)
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px
+    }
+
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--panel-2);
+      border: 1px solid rgba(255, 255, 255, .06);
+      padding: 6px 10px;
+      border-radius: 30px;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      background: #0c142b;
+      border: 1px solid rgba(255, 255, 255, .12);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      outline: 0
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      color: #091022;
+      font-weight: 700
+    }
+
+    .btn.primary {
+      background: var(--primary)
+    }
+
+    .btn.accent {
+      background: var(--accent)
+    }
+
+    .btn.ghost {
+      background: transparent;
+      color: var(--text);
+      border-color: rgba(255, 255, 255, .18)
+    }
+
+    .btn.warn {
+      background: var(--warn)
+    }
+
+    .btn.danger {
+      background: var(--danger)
+    }
+
+    .btn.ok {
+      background: var(--ok)
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .chip {
+      background: var(--panel-2);
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px
+    }
+
+    .list {
+      display: grid;
+      gap: 10px
+    }
+
+    .item {
+      background: var(--panel-2);
+      border: 1px solid rgba(255, 255, 255, .06);
+      padding: 12px;
+      border-radius: 12px
+    }
+
+    .flex {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .right {
+      margin-left: auto
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .kbd {
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .2);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 12px
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr
+      }
+
+      nav {
+        position: static
+      }
+
+      .row,
+      .row-3 {
+        grid-template-columns: 1fr
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="wrap flex">
+      <div class="brand">
+        <div>
+          <div class="title">Everything Learner</div>
+          <div class="small">Get summarized information from Wikipedia</div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="grid">
+    <nav>
+      <h3>Navigate</h3>
+      <div class="list" role="tablist" aria-label="Sections">
+        <button class="navbtn active" data-tab="explore" role="tab" aria-selected="true"><span>1</span> Explore a Topic</button>
+        <button class="navbtn" data-tab="notes" role="tab"><span>2</span> Notes</button>
+      </div>
+    </nav>
+    <main>
+      <!-- Explore -->
+      <section id="explore" class="active" aria-labelledby="Explore a Topic">
+        <div class="card">
+          <h2>Explore a Topic</h2>
+          <p class="small">Pulls a short summary & related concepts from Wikipedia. You can ask stuff like "JavaScript" or "Aerospace" or even "Elon Musk"</p>
+          <div class="row">
+            <div>
+              <label for="topic">Topic:</label>
+              <input id="topic" placeholder="Type here..." />
+            </div>
+            <div class="flex">
+              <button class="btn primary" id="searchBtn">Search</button>
+              <button class="btn ghost" id="luckyBtn" title="I'm curious">I'm Curious</button>
+              <span class="small" id="exploreStatus"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:16px">
+          <div class="card" id="summaryCard">
+            <h3>Summary:</h3>
+            <div id="summary" class="resultBox">
+              The summary will appear here...
+            </div>
+          </div>
+          <div class="card" id="fullNoteCard">
+            <h3>Full Page:</h3>
+            <div id="fullNote" class="resultBox">
+              The full page will appear here...
+            </div>
+          </div>
+          <div class="card">
+            <h3>Related concepts:</h3>
+            <p class="small">Have a deep dive on a topic and see where your questions take you</p>
+            <div id="related" class="list small"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notes -->
+      <section id="notes">
+        <div class="card">
+          <h2>Notes</h2>
+          <p class="small">A notebook saved locally. Make sure to save</p>
+          <textarea id="notesArea" placeholder="Type here..."></textarea>
+          <div class="flex" style="margin-top:10px">
+            <button class="btn ok" id="saveNotes">Save</button>
+            <button class="btn ghost" id="clearNotes">Clear</button>
+            <span class="right small" id="notesStatus"></span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+  <script>
+    // 1. Helper functions
+    const $ = function(sel) {
+      return document.querySelector(sel);
+    };
+    const $$ = function(sel) {
+      return Array.from(document.querySelectorAll(sel));
+    };
+
+    // 2. The missing "store" object
+    const store = {
+      get(k, fallback) {
+        try {
+          return JSON.parse(localStorage.getItem(k)) ?? fallback
+        } catch (e) {
+          return fallback
+        }
+      },
+      set(k, v) {
+        localStorage.setItem(k, JSON.stringify(v));
+      }
+    };
+
+    // 3. Navigation Logic
+    const tabs = ["explore", "notes"];
+
+    function show(tab) {
+      $$("section").forEach(function(s) {
+        s.classList.remove("active");
+      });
+      var target = $('#' + tab);
+      if (target) target.classList.add("active");
+      $$(".navbtn").forEach(function(b) {
+        var isActive = (b.dataset.tab === tab);
+        b.classList.toggle("active", isActive);
+        b.setAttribute('aria-selected', isActive);
+      });
+    }
+
+    $$(".navbtn").forEach(function(b) {
+      b.addEventListener("click", function() {
+        show(b.dataset.tab);
+      });
+    });
+
+    // 4. Wiki Fetching Logic
+    async function fetchWiki(q) {
+      var status = $('#exploreStatus');
+      if (status) status.textContent = 'Searching...';
+
+      var url = 'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(q);
+      var linksUrl = 'https://en.wikipedia.org/w/api.php?action=query&prop=links&titles=' + encodeURIComponent(q) + '&pllimit=20&format=json&origin=*';
+      var fullUrl = 'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&titles=' + encodeURIComponent(q) + '&format=json&origin=*';
+
+      try {
+        const responses = await Promise.all([
+          fetch(url).then(function(r) {
+            return r.json();
+          }),
+          fetch(linksUrl).then(function(r) {
+            return r.json();
+          }),
+          fetch(fullUrl).then(function(r) {
+            return r.json();
+          })
+        ]);
+
+        var s = responses[0];
+        var l = responses[1];
+        var f = responses[2];
+
+        // Handle Summary
+        if (s.extract) {
+          $('#summary').innerHTML = '<div>' + s.extract + '</div><div class="small" style="margin-top:8px">Source: Wikipedia</div>';
+        } else {
+          $('#summary').textContent = 'No summary found.';
+        }
+
+        // Handle Full Page
+        var pages = f.query ? f.query.pages : {};
+        var pageData = Object.values(pages)[0];
+        if (pageData && pageData.extract) {
+          $('#fullNoteCard').style.display = 'block';
+          $('#fullNote').innerHTML = pageData.extract;
+        } else {
+          $('#fullNoteCard').style.display = 'none';
+        }
+
+        // Handle Related Links
+        var rl = $('#related');
+        rl.innerHTML = '';
+        var linkPages = l.query ? l.query.pages : {};
+        var firstPage = Object.values(linkPages)[0];
+        var links = firstPage.links || [];
+
+        links.slice(0, 20).forEach(function(p) {
+          var a = document.createElement('a');
+          a.href = '#';
+          a.textContent = p.title;
+          a.className = 'chip';
+          a.style.display = 'inline-block';
+          a.style.margin = '4px';
+          a.addEventListener('click', function(ev) {
+            ev.preventDefault();
+            $('#topic').value = p.title;
+            fetchWiki(p.title);
+          });
+          rl.appendChild(a);
+        });
+
+        if (status) status.textContent = '';
+      } catch (err) {
+        console.error(err);
+        if (status) status.textContent = 'Error fetching content.';
+      }
+    }
+
+    // 5. Event Listeners
+    $('#searchBtn').addEventListener('click', function() {
+      var q = $('#topic').value.trim();
+      if (q) fetchWiki(q);
+    });
+
+    $('#luckyBtn').addEventListener('click', function() {
+      var ideas = ['Cardiology', 'Neurology', 'Genetics', 'Photosynthesis'];
+      var pick = ideas[Math.floor(Math.random() * ideas.length)];
+      $('#topic').value = pick;
+      fetchWiki(pick);
+    });
+
+    // --- Notes ---
+    function saveNotes() {
+      store.set('notes', {
+        text: $('#notesArea').value,
+        ts: Date.now()
+      });
+      $('#notesStatus').textContent = 'Saved.';
+      setTimeout(() => $('#notesStatus').textContent = '', 1500);
+    }
+    $('#saveNotes').addEventListener('click', saveNotes);
+    $('#clearNotes').addEventListener('click', () => {
+      if (confirm('Clear notes?')) {
+        $('#notesArea').value = '';
+        saveNotes();
+      }
+    });
+
+    // init notes
+    (function init() {
+      const n = store.get('notes', {
+        text: ''
+      });
+      $('#notesArea').value = n.text || '';
+    })();
+
+    (() => {
+      const ENTRY = 'Learn Everything v3',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
