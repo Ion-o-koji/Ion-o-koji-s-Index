@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ScryDeck v2</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --accent: #ff3e3e;
+      --surface: #1e1e1e;
+      --surface-2: #2d2d2d;
+      --text: #e0e0e0;
+      --muted: #a0a0a0;
+      --price-gold: #ffd700;
+      --w: #f0f2c0;
+      --u: #b5cde3;
+      --b: #aca29a;
+      --r: #db8664;
+      --g: #93b483;
+      --c: #ccc;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* --- Header --- */
+    .header {
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      padding: 15px;
+      z-index: 500;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      display: flex;
+      gap: 10px;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      flex: 1;
+    }
+
+    input,
+    select,
+    textarea {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #333;
+      color: white;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button.secondary {
+      background: #444;
+    }
+
+    button.danger {
+      background: #c0392b;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    /* --- Search Results --- */
+    #results {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .card-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .card-thumb {
+      width: 100%;
+      border-radius: 4.5%;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      display: block;
+    }
+
+    .flip-flag {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #000;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      pointer-events: none;
+    }
+
+    /* --- Overlays --- */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      z-index: 1000;
+      flex-direction: column;
+    }
+
+    #inspectOverlay {
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.96);
+    }
+
+    .close-bar {
+      background: var(--surface);
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      z-index: 10;
+    }
+
+    .bar-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* --- Library View --- */
+    #libraryView {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .deck-item {
+      background: var(--surface);
+      padding: 15px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #333;
+    }
+
+    .deck-meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mana-pip {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 2px;
+    }
+
+    /* --- Board View --- */
+    #boardView {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #boardScrollContainer {
+      flex: 1;
+      display: flex;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 10px;
+      gap: 10px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .deck-column {
+      background: var(--surface);
+      border-radius: 8px;
+      border: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 10px);
+      transition: min-width 0.2s ease;
+    }
+
+    .mode-single {
+      min-width: 85vw;
+      scroll-snap-align: center;
+    }
+
+    .mode-double {
+      min-width: 42vw;
+      scroll-snap-align: start;
+    }
+
+    @media(min-width: 600px) {
+      .mode-single {
+        min-width: 320px;
+      }
+
+      .mode-double {
+        min-width: 180px;
+      }
+    }
+
+    .col-header {
+      padding: 10px;
+      background: var(--surface-2);
+      font-weight: bold;
+      display: flex;
+      flex-direction: column;
+      border-radius: 8px 8px 0 0;
+      border-bottom: 1px solid #444;
+    }
+
+    .col-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .col-price {
+      font-size: 0.8rem;
+      color: var(--price-gold);
+      margin-top: 4px;
+    }
+
+    .col-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      padding-bottom: 40px;
+    }
+
+    .stack-wrap {
+      position: relative;
+      width: 100%;
+      margin-top: -125%;
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+
+    .stack-wrap:first-child {
+      margin-top: 0;
+    }
+
+    .stack-wrap:active {
+      transform: translateY(-15px);
+      z-index: 100;
+    }
+
+    .stack-img {
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.5);
+      display: block;
+    }
+
+    .stack-qty {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      border: 1px solid var(--accent);
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: bold;
+      z-index: 5;
+    }
+
+    /* --- Stats View --- */
+    #statsView {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .chart-section {
+      margin-bottom: 40px;
+      background: var(--surface);
+      padding: 15px;
+      border-radius: 12px;
+    }
+
+    .curve-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 150px;
+      padding-top: 30px;
+      border-bottom: 2px solid #555;
+    }
+
+    .curve-bar {
+      flex: 1;
+      background: var(--accent);
+      position: relative;
+      border-radius: 4px 4px 0 0;
+      min-width: 15px;
+    }
+
+    .curve-num-top {
+      position: absolute;
+      top: -22px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .curve-label-bot {
+      position: absolute;
+      bottom: -25px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .pie-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-around;
+    }
+
+    .pie-box {
+      width: 45%;
+      min-width: 140px;
+    }
+
+    .pie-bar {
+      height: 20px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding-left: 6px;
+      color: #111;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+
+    /* --- Modals (Import/Export) --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 3000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--surface);
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* --- Inspect UI --- */
+    .inspect-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
+
+    .inspect-img {
+      max-width: 90%;
+      border-radius: 14px;
+      margin-bottom: 10px;
+    }
+
+    .inspect-controls {
+      width: 100%;
+      max-width: 320px;
+      margin: 15px 0;
+    }
+
+    .qty-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+
+    .qty-val {
+      font-size: 1.4rem;
+      font-weight: bold;
+      width: 40px;
+      text-align: center;
+    }
+
+    /* --- Footer --- */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid #333;
+      text-align: center;
+      padding: 20px;
+      margin-top: auto;
+    }
+
+    .footer-link {
+      color: #0084ff;
+      text-decoration: none;
+      font-weight: bold;
+      display: block;
+      margin: 10px 0;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .loader {
+      text-align: center;
+      padding: 20px;
+      display: none;
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .bg-w {
+      background: var(--w);
+    }
+
+    .bg-u {
+      background: var(--u);
+    }
+
+    .bg-b {
+      background: var(--b);
+    }
+
+    .bg-r {
+      background: var(--r);
+    }
+
+    .bg-g {
+      background: var(--g);
+    }
+
+    .bg-c {
+      background: var(--c);
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search Scryfall..." onkeypress="if(event.key==='Enter') doSearch()">
+      <button onclick="doSearch()">Go</button>
+    </div>
+    <button class="secondary" onclick="openDeckOverlay()">Deck</button>
+  </div>
+
+  <div id="loader" class="loader">Consulting the archives...</div>
+  <div id="results"></div>
+
+  <footer>
+    <!--
+      <a href="https://docs.google.com/document/d/10kBpv9tODFhQA_gk85PoRd0A2vdzvxm8_1S3htZHhFs/edit?usp=drivesdk" target="_blank" style="text-decoration:none;">
+        <button class="secondary" style="width:100%; margin-bottom:10px;">Full Search Guide</button>
+      </a>
+      -->
+  </footer>
+
+  <div id="deckOverlay" class="overlay">
+    <div class="close-bar">
+      <div style="display:flex; flex-direction:column;">
+        <span id="deckTitle" style="font-weight:bold; font-size:1.1rem;">Library</span>
+        <span id="deckPriceTotal" style="font-size:0.8rem; color:var(--price-gold); display:none;">$0.00</span>
+      </div>
+      <div class="bar-group">
+        <button id="navLib" class="secondary hidden" onclick="showLibrary()">Lib</button>
+        <button id="navStats" class="secondary hidden" onclick="showStats()">Stats</button>
+        <button id="navBoard" class="secondary hidden" onclick="showBoard()">Board</button>
+        <button id="navExport" class="secondary hidden" onclick="openExportModal()">Export</button>
+        <button onclick="closeDeckOverlay()">Close</button>
+      </div>
+    </div>
+
+    <div id="libraryView">
+      <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <button onclick="createNewDeck()" style="flex:1; padding:20px; border:2px dashed #555; background:transparent; color:var(--text);">+ New Deck</button>
+        <button onclick="openImportModal()" style="flex:1; padding:20px; border:2px dashed #555; background:transparent; color:var(--text);">↓ Import</button>
+      </div>
+      <div id="deckListContainer"></div>
+    </div>
+
+    <div id="boardView" class="hidden">
+      <div style="padding:10px; background:var(--surface); display:flex; gap:10px; align-items:center;">
+        <input type="text" id="newCatInput" placeholder="New Category...">
+        <button class="secondary" onclick="addCategory()">+</button>
+        <button class="secondary" id="viewToggleBtn" onclick="toggleBoardView()" style="width:50px;">[ 1 ]</button>
+      </div>
+      <div id="boardScrollContainer"></div>
+    </div>
+
+    <div id="statsView" class="hidden">
+      <div class="chart-section">
+        <h4 style="margin:0 0 10px 0;">Mana Curve (CMC)</h4>
+        <div id="curveChart" class="curve-container"></div>
+      </div>
+      <div class="pie-row">
+        <div class="chart-section pie-box">
+          <h4 style="margin:0 0 10px 0;">Mana Pips</h4>
+          <div id="manaPie"></div>
+        </div>
+        <div class="chart-section pie-box">
+          <h4 style="margin:0 0 10px 0;">Land Colors</h4>
+          <div id="landPie"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="importModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Import Deck</h3>
+      <p style="font-size:0.8rem; color:var(--muted);">Paste list (e.g. "4 Lightning Bolt"). One card per line.</p>
+      <textarea id="importText" rows="10" placeholder="1 Sol Ring&#10;1 Command Tower"></textarea>
+      <div id="importStatus" style="font-size:0.8rem; color:var(--accent);"></div>
+      <div style="display:flex; gap:10px;">
+        <button onclick="processImport()" style="flex:1;">Import</button>
+        <button onclick="getEl('importModal').style.display='none'" class="secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="exportModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Export Deck</h3>
+      <textarea id="exportText" rows="10" readonly></textarea>
+      <div style="display:flex; gap:10px;">
+        <button onclick="copyExportText()" style="flex:1;">Copy to Clipboard</button>
+        <button onclick="getEl('exportModal').style.display='none'" class="secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="inspectOverlay" class="overlay">
+    <div class="close-bar">
+      <span id="inspectTitle" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%;">Card Name</span>
+      <button onclick="closeInspect()">Close</button>
+    </div>
+    <div class="inspect-body">
+      <div id="inspectImagesContainer" style="width:100%; text-align:center;"></div>
+      <div id="inspectControls" class="inspect-controls"></div>
+      <div id="inspectPrices" class="inspect-controls" style="background:var(--surface); padding:15px; border-radius:8px;"></div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'scryfall_master_v3';
+    let savedDecks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    let currentDeckId = null;
+    let currentInspectCard = null;
+    let boardViewMode = 'single';
+    const DEFAULT_CATS = ["Commander", "Creatures", "Instants", "Sorceries", "Artifacts", "Enchantments", "Lands", "Planeswalkers"];
+
+    const getEl = (id) => document.getElementById(id);
+
+    // --- SEARCH ---
+    async function doSearch() {
+      const query = getEl('searchInput').value.trim();
+      if (!query) return;
+      getEl('results').innerHTML = '';
+      getEl('loader').style.display = 'block';
+      try {
+        const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        getEl('loader').style.display = 'none';
+        if (data.data) {
+          data.data.forEach(card => {
+            const img = card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal;
+            if (img) {
+              const div = document.createElement('div');
+              div.className = 'card-wrapper';
+              const safeCard = JSON.stringify(card).replace(/'/g, "&apos;");
+              div.innerHTML = `<img src="${img}" class="card-thumb" onclick='openInspect(${safeCard})'>${card.card_faces?`<div class="flip-flag">⟳ DFC</div>`:''}`;
+              getEl('results').appendChild(div);
+            }
+          });
+        }
+      } catch (e) {
+        getEl('loader').style.display = 'none';
+        alert("Error fetching cards.");
+      }
+    }
+
+    // --- DECK CORE ---
+    function openDeckOverlay() {
+      getEl('deckOverlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      currentDeckId ? showBoard() : showLibrary();
+    }
+
+    function closeDeckOverlay() {
+      getEl('deckOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function saveDecks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(savedDecks));
+    }
+
+    function createNewDeck() {
+      const name = prompt("Deck Name:");
+      if (!name) return;
+      const id = "d_" + Date.now();
+      savedDecks[id] = {
+        id,
+        name,
+        categories: [...DEFAULT_CATS],
+        cards: []
+      };
+      saveDecks();
+      loadDeck(id);
+    }
+
+    function loadDeck(id) {
+      currentDeckId = id;
+      showBoard();
+    }
+
+    function deleteDeck(id, e) {
+      e.stopPropagation();
+      if (confirm("Delete deck?")) {
+        delete savedDecks[id];
+        if (currentDeckId === id) currentDeckId = null;
+        saveDecks();
+        showLibrary();
+      }
+    }
+
+    // --- VIEWS ---
+    function hideAll() {
+      ['libraryView', 'boardView', 'statsView', 'navLib', 'navStats', 'navBoard', 'navExport'].forEach(id => getEl(id).classList.add('hidden'));
+      getEl('deckPriceTotal').style.display = 'none';
+    }
+
+    function showLibrary() {
+      hideAll();
+      getEl('libraryView').classList.remove('hidden');
+      getEl('deckTitle').innerText = "Library";
+      const con = getEl('deckListContainer');
+      con.innerHTML = '';
+      Object.values(savedDecks).forEach(d => {
+        const count = d.cards.reduce((s, c) => s + c.qty, 0);
+        const div = document.createElement('div');
+        div.className = 'deck-item';
+        div.onclick = () => loadDeck(d.id);
+        div.innerHTML = `<div><strong>${d.name}</strong><br><span style="color:var(--muted); font-size:0.8rem">${count} cards</span></div><button class="danger" onclick="deleteDeck('${d.id}', event)">✕</button>`;
+        con.appendChild(div);
+      });
+    }
+
+    function showBoard() {
+      hideAll();
+      getEl('boardView').classList.remove('hidden');
+      ['navLib', 'navStats', 'navExport'].forEach(id => getEl(id).classList.remove('hidden'));
+      updateDeckHeader();
+      renderBoardColumns();
+    }
+
+    function showStats() {
+      hideAll();
+      getEl('statsView').classList.remove('hidden');
+      ['navLib', 'navBoard'].forEach(id => getEl(id).classList.remove('hidden'));
+      renderStats();
+    }
+
+    function updateDeckHeader() {
+      const d = savedDecks[currentDeckId];
+      const count = d.cards.reduce((s, c) => s + c.qty, 0);
+      let total = 0;
+      d.cards.forEach(c => total += (parseFloat(c.prices?.usd || 0) * c.qty));
+      getEl('deckTitle').innerText = `${d.name} (${count})`;
+      const pTag = getEl('deckPriceTotal');
+      pTag.innerText = `$${total.toFixed(2)}`;
+      pTag.style.display = 'block';
+    }
+
+    // --- BOARD ---
+    function toggleBoardView() {
+      boardViewMode = boardViewMode === 'single' ? 'double' : 'single';
+      renderBoardColumns();
+    }
+
+    function renderBoardColumns() {
+      const con = getEl('boardScrollContainer');
+      con.innerHTML = '';
+      const d = savedDecks[currentDeckId];
+      getEl('viewToggleBtn').innerText = boardViewMode === 'single' ? '[ 1 ]' : '[ 2 ]';
+      const modeClass = boardViewMode === 'single' ? 'mode-single' : 'mode-double';
+
+      d.categories.forEach(cat => {
+        const cards = d.cards.filter(c => c.category === cat);
+        const count = cards.reduce((s, c) => s + c.qty, 0);
+        let price = 0;
+        cards.forEach(c => price += (parseFloat(c.prices?.usd || 0) * c.qty));
+
+        const col = document.createElement('div');
+        col.className = `deck-column ${modeClass}`;
+        col.innerHTML = `
+                <div class="col-header">
+                    <div class="col-top-row"><span>${cat}</span><span style="background:#444; padding:0 6px; border-radius:4px; font-size:0.8rem;">${count}</span></div>
+                    <div class="col-price">$${price.toFixed(2)}</div>
+                </div>
+                <div class="col-content"></div>`;
+        const content = col.querySelector('.col-content');
+        cards.forEach(c => {
+          const img = c.image_uris?.normal || c.card_faces?.[0]?.image_uris?.normal;
+          const div = document.createElement('div');
+          div.className = 'stack-wrap';
+          div.onclick = () => openInspect(c);
+          div.innerHTML = `<img src="${img}" class="stack-img">${c.qty>1?`<div class="stack-qty">${c.qty}</div>`:''}`;
+          content.appendChild(div);
+        });
+        con.appendChild(col);
+      });
+    }
+
+    function addCategory() {
+      const val = getEl('newCatInput').value.trim();
+      if (val && currentDeckId) {
+        savedDecks[currentDeckId].categories.push(val);
+        saveDecks();
+        getEl('newCatInput').value = '';
+        renderBoardColumns();
+      }
+    }
+
+    // --- EXPORT LOGIC (FIXED) ---
+    function openExportModal() {
+      const d = savedDecks[currentDeckId];
+      let text = "";
+      d.cards.forEach(c => text += `${c.qty} ${c.name}\n`);
+
+      const ta = getEl('exportText');
+      ta.value = text;
+      getEl('exportModal').style.display = 'flex';
+    }
+
+    function copyExportText() {
+      const copyText = getEl("exportText");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999); /* For mobile devices */
+
+      // Try clipboard API, fallback if fails
+      try {
+        navigator.clipboard.writeText(copyText.value).then(() => {
+          alert("Copied to clipboard!");
+        }).catch(err => {
+          document.execCommand('copy'); // Legacy fallback
+          alert("Copied!");
+        });
+      } catch (err) {
+        document.execCommand('copy');
+        alert("Copied!");
+      }
+    }
+
+    // --- IMPORT LOGIC ---
+    function openImportModal() {
+      getEl('importModal').style.display = 'flex';
+      getEl('importText').value = '';
+      getEl('importStatus').innerText = '';
+    }
+
+    async function processImport() {
+      const text = getEl('importText').value.trim();
+      if (!text) return;
+      const lines = text.split('\n');
+
+      const name = prompt("Name for imported deck:") || "Imported Deck";
+      const id = "d_" + Date.now();
+      const newDeck = {
+        id,
+        name,
+        categories: [...DEFAULT_CATS],
+        cards: []
+      };
+
+      const status = getEl('importStatus');
+      status.innerText = "Fetching cards...";
+
+      for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        // Parse "1 Sol Ring" or just "Sol Ring"
+        let qty = 1;
+        let cardName = line;
+        const match = line.match(/^(\d+)\s+(.+)/);
+        if (match) {
+          qty = parseInt(match[1]);
+          cardName = match[2];
+        }
+
+        try {
+          // Fetch specific card
+          const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
+          if (res.ok) {
+            const card = await res.json();
+            // Auto-categorize
+            let cat = "Lands";
+            const type = card.type_line.toLowerCase();
+            if (type.includes("creature")) cat = "Creatures";
+            else if (type.includes("instant")) cat = "Instants";
+            else if (type.includes("sorcery")) cat = "Sorceries";
+            else if (type.includes("artifact")) cat = "Artifacts";
+            else if (type.includes("enchantment")) cat = "Enchantments";
+            else if (type.includes("planeswalker")) cat = "Planeswalkers";
+            else if (card.type_line.includes("Commander")) cat = "Commander";
+
+            newDeck.cards.push({
+              ...card,
+              qty,
+              category: cat
+            });
+          }
+        } catch (e) {
+          console.log("Failed to fetch", cardName);
+        }
+        await new Promise(r => setTimeout(r, 50));
+      }
+
+      savedDecks[id] = newDeck;
+      saveDecks();
+      getEl('importModal').style.display = 'none';
+      loadDeck(id);
+    }
+
+    // --- STATS ---
+    function renderStats() {
+      const d = savedDecks[currentDeckId];
+      const curve = Array(8).fill(0);
+      const pips = {
+        W: 0,
+        U: 0,
+        B: 0,
+        R: 0,
+        G: 0,
+        C: 0
+      };
+      const lands = {
+        W: 0,
+        U: 0,
+        B: 0,
+        R: 0,
+        G: 0,
+        C: 0
+      };
+
+      d.cards.forEach(c => {
+        const isLand = c.type_line.toLowerCase().includes("land");
+        if (!isLand) {
+          let cmc = Math.floor(c.cmc || 0);
+          if (cmc > 7) cmc = 7;
+          curve[cmc] += c.qty;
+          const cost = c.mana_cost || c.card_faces?.[0]?.mana_cost || "";
+          (cost.match(/{([WUBRGC])}/g) || []).forEach(m => {
+            const s = m.replace(/[{}]/g, '');
+            if (pips[s] !== undefined) pips[s] += c.qty;
+          });
+        } else {
+          (c.color_identity || []).forEach(co => {
+            if (lands[co] !== undefined) lands[co] += c.qty;
+          });
+          if (!c.color_identity?.length) lands['C'] += c.qty;
+        }
+      });
+
+      const max = Math.max(...curve, 1);
+      getEl('curveChart').innerHTML = curve.map((v, i) => `<div class="curve-bar" style="height:${(v/max)*100}%"><div class="curve-num-top">${v||''}</div><div class="curve-label-bot">${i===7?'7+':i}</div></div>`).join('');
+      const drawPie = (data, id) => {
+        const tot = Object.values(data).reduce((a, b) => a + b, 0);
+        getEl(id).innerHTML = tot === 0 ? 'No Data' : Object.entries(data).filter(e => e[1] > 0).map(([k, v]) => `<div class="pie-bar bg-${k.toLowerCase()}" style="width:${(v/tot)*100}%">${k} ${v}</div>`).join('');
+      };
+      drawPie(pips, 'manaPie');
+      drawPie(lands, 'landPie');
+    }
+
+    // --- INSPECT ---
+    function openInspect(card) {
+      currentInspectCard = card;
+      getEl('inspectTitle').innerText = card.name;
+      const imgCon = getEl('inspectImagesContainer');
+      imgCon.innerHTML = '';
+      const faces = card.image_uris ? [card] : (card.card_faces || []);
+      faces.forEach(f => imgCon.innerHTML += `<img src="${f.image_uris?.normal}" class="inspect-img">`);
+
+      const p = card.prices || {};
+      getEl('inspectPrices').innerHTML = `
+            <div style="display:flex; justify-content:space-between;"><span>USD</span> <span style="color:var(--price-gold)">$${p.usd||'--'}</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Foil</span> <span style="color:var(--price-gold)">$${p.usd_foil||'--'}</span></div>`;
+
+      updateInspectControls();
+      getEl('inspectOverlay').style.display = 'flex';
+    }
+
+    function updateInspectControls() {
+      const con = getEl('inspectControls');
+      con.innerHTML = '';
+      if (!currentDeckId) {
+        con.innerHTML = `<button onclick="openDeckOverlay()" style="width:100%">Open Library to Add</button>`;
+        return;
+      }
+      const d = savedDecks[currentDeckId];
+      const exist = d.cards.find(c => c.id === currentInspectCard.id);
+      if (exist) {
+        con.innerHTML = `
+                <div style="text-align:center; margin-bottom:10px; color:var(--muted);">In: ${exist.category}</div>
+                <div class="qty-row">
+                    <button class="danger" onclick="modQty('${exist.id}',-1)">-</button>
+                    <span class="qty-val">${exist.qty}</span>
+                    <button style="background:#28a745;" onclick="modQty('${exist.id}',1)">+</button>
+                </div>`;
+      } else {
+        const opts = d.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        con.innerHTML = `<div style="display:flex; gap:10px;"><select id="inspectCatSel">${opts}</select><button style="background:#28a745; flex:1;" onclick="addToDeck()">Add</button></div>`;
+      }
+    }
+
+    function addToDeck() {
+      const cat = getEl('inspectCatSel').value;
+      savedDecks[currentDeckId].cards.push({
+        ...currentInspectCard,
+        category: cat,
+        qty: 1
+      });
+      saveDecks();
+      updateInspectControls();
+      updateDeckHeader();
+    }
+
+    function modQty(id, delta) {
+      const d = savedDecks[currentDeckId];
+      const i = d.cards.findIndex(c => c.id === id);
+      if (i > -1) {
+        d.cards[i].qty += delta;
+        if (d.cards[i].qty <= 0) d.cards.splice(i, 1);
+      }
+      saveDecks();
+      updateInspectControls();
+      updateDeckHeader();
+      if (!getEl('boardView').classList.contains('hidden')) renderBoardColumns();
+    }
+
+    function closeInspect() {
+      getEl('inspectOverlay').style.display = 'none';
+      if (currentDeckId && !getEl('boardView').classList.contains('hidden')) renderBoardColumns();
+    }
+
+    (() => {
+      const ENTRY = 'ScryDeck v2',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
