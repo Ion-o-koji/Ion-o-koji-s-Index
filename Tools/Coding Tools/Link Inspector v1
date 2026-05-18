@@ -1,0 +1,321 @@
+<!DOCTYPE HTML>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Link Inspector v1</title>
+  <style>
+    :root {
+      --bg: #041426;
+      --card: #06172a;
+      --muted: #94a3b8;
+      --accent: #06b6d4;
+      --text: #e6eef8;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: linear-gradient(180deg, #021021 0%, #041426 100%);
+      color: var(--text)
+    }
+
+    .wrap {
+      max-width: 880px;
+      margin: 28px auto;
+      padding: 18px
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.005));
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      padding: 14px;
+      border-radius: 12px
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.05rem
+    }
+
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-size: 14px;
+      resize: vertical;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px
+    }
+
+    button {
+      background: var(--accent);
+      border: 0;
+      color: #012;
+      padding: 8px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 700
+    }
+
+    button.ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-weight: 600
+    }
+
+    .results {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    .item {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      padding: 10px;
+      border-radius: 9px
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px
+    }
+
+    .url {
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 75%
+    }
+
+    .meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px
+    }
+
+    pre {
+      white-space: pre-wrap;
+      overflow: auto;
+      background: #021220;
+      color: var(--text);
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      font-size: 13px;
+      max-height: 360px
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px
+    }
+
+    a.open {
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      font-size: 13px
+    }
+
+    .error {
+      color: #fb7185
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Link inspector</h1>
+      <textarea id="multi" rows="6" placeholder="Paste links (one per line)"></textarea>
+      <div class="controls">
+        <button id="analyze">Analyze</button>
+        <button id="clearBox" class="ghost">Clear box</button>
+        <button id="clear" class="ghost">Clear results</button>
+      </div>
+      <div id="results" class="results" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script>
+    const elMulti = document.getElementById('multi');
+    const elAnalyze = document.getElementById('analyze');
+    const elClear = document.getElementById('clear');
+    const elClearBox = document.getElementById('clearBox');
+    const elResults = document.getElementById('results');
+
+    elAnalyze.addEventListener('click', run);
+    elClear.addEventListener('click', () => elResults.innerHTML = '');
+    elClearBox.addEventListener('click', () => elMulti.value = '');
+
+    async function run() {
+      const links = elMulti.value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (links.length === 0) return;
+      for (const l of links) analyzeLink(l);
+    }
+
+    function makeItem(url) {
+      const item = document.createElement('section');
+      item.className = 'item';
+      const row = document.createElement('div');
+      row.className = 'row';
+      const u = document.createElement('div');
+      u.className = 'url';
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = url;
+      a.style.color = 'inherit';
+      a.style.textDecoration = 'none';
+      u.appendChild(a);
+      row.appendChild(u);
+      item.appendChild(row);
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = 'Fetching…';
+      item.appendChild(meta);
+      elResults.prepend(item);
+      return {
+        item,
+        meta
+      };
+    }
+
+    async function analyzeLink(url) {
+      const {
+        item,
+        meta
+      } = makeItem(url);
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+        const resp = await fetch(url, {
+          mode: 'cors',
+          cache: 'no-cache',
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (!resp.ok) {
+          meta.textContent = `HTTP ${resp.status}`;
+          meta.classList.add('error');
+          return;
+        }
+        const ct = (resp.headers.get('content-type') || '').toLowerCase();
+        const ext = (new URL(url)).pathname.split('.').pop().toLowerCase();
+
+        if (ext === 'js' || ct.includes('javascript') || ct.includes('ecmascript') || ext === 'mjs' || ext === 'cjs') {
+          const txt = await resp.text();
+          meta.textContent = 'JavaScript';
+          showCode(item, txt);
+          return;
+        }
+
+        if (ext === 'css' || ct.includes('css')) {
+          const txt = await resp.text();
+          meta.textContent = 'CSS';
+          showCode(item, txt);
+          return;
+        }
+
+        if (ct.includes('json') || ext === 'json') {
+          const txt = await resp.text();
+          showCode(item, prettyJson(txt));
+          meta.textContent = 'JSON';
+          return;
+        }
+
+        if (ct.includes('text') || ct.includes('html') || ['html', 'txt'].includes(ext)) {
+          const txt = await resp.text();
+          showCode(item, txt);
+          meta.textContent = 'Text';
+          return;
+        }
+
+        meta.textContent = `Type: ${ct || 'unknown'}`;
+      } catch (err) {
+        let msg = err.name === 'AbortError' ? 'Timeout' : (err.message || 'Fetch error');
+        if (msg.toLowerCase().includes('cors')) msg = 'CORS or network error';
+        meta.textContent = msg;
+        meta.classList.add('error');
+      }
+    }
+
+    function showCode(container, text) {
+      const pre = document.createElement('pre');
+      pre.textContent = text;
+      container.appendChild(pre);
+
+      const btnWrap = document.createElement('div');
+      btnWrap.style.display = 'flex';
+      btnWrap.style.gap = '8px';
+      const copyBtn = document.createElement('button');
+      copyBtn.textContent = 'Copy';
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          copyBtn.textContent = 'Copied';
+          setTimeout(() => copyBtn.textContent = 'Copy', 1200);
+        } catch (e) {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand('copy');
+            copyBtn.textContent = 'Copied';
+          } catch (e2) {
+            alert('Copy failed');
+          }
+          ta.remove();
+          setTimeout(() => copyBtn.textContent = 'Copy', 1200);
+        }
+      });
+      btnWrap.appendChild(copyBtn);
+      container.appendChild(btnWrap);
+    }
+
+    function prettyJson(text) {
+      try {
+        return JSON.stringify(JSON.parse(text), null, 2);
+      } catch (e) {
+        return text;
+      }
+    }
+
+    (() => {
+      const ENTRY = 'Link Inspector v1',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
