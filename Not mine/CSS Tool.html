@@ -1,0 +1,3054 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Tool</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%236366f1'/><stop offset='50%25' stop-color='%23a855f7'/><stop offset='100%25' stop-color='%23ec4899'/></linearGradient></defs><rect width='32' height='32' rx='4' fill='%230a0a0b'/><path d='M10 12l-4 4 4 4' stroke='url(%23g)' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M22 12l4 4-4 4' stroke='url(%23g)' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M18 8l-4 16' stroke='url(%23g)' stroke-width='2.5' fill='none' stroke-linecap='round'/></svg>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #141416;
+            --bg-tertiary: #1c1c1f;
+            --bg-hover: #252529;
+            --border-color: #2a2a2e;
+            --text-primary: #f0f0f2;
+            --text-secondary: #a0a0a8;
+            --text-muted: #6a6a72;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --success: #22c55e;
+            --radius: 4px;
+            --radius-lg: 6px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 16px 0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar nav {
+            flex: 1;
+        }
+
+        .github-link {
+            margin: auto 16px 0;
+            padding: 10px 0;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.15s;
+        }
+
+        .github-link:hover {
+            color: var(--text-primary);
+        }
+
+        .github-link svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .logo {
+            padding: 0 16px 16px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899, #f97316, #eab308, #22c55e, #06b6d4, #6366f1);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-flow 3s linear infinite;
+        }
+
+        @keyframes gradient-flow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        .nav-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+            border-left: 3px solid transparent;
+            font-size: 13px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-left-color: var(--accent);
+        }
+
+        .nav-item svg {
+            width: 16px;
+            height: 16px;
+            opacity: 0.7;
+            flex-shrink: 0;
+        }
+
+        .nav-item.active svg {
+            opacity: 1;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            gap: 24px;
+        }
+
+        .controls {
+            width: 300px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .preview-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+
+        .card-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .control-group {
+            margin-bottom: 14px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .control-value {
+            color: var(--text-primary);
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 11px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 36px;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            background: var(--bg-tertiary);
+            padding: 3px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+
+        .btn-copy {
+            background: none;
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .btn-copy:hover {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
+        .btn-copy svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .preview-box {
+            flex: 1;
+            min-height: 200px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: stretch;
+            justify-content: stretch;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-box.centered {
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-fill {
+            flex: 1;
+            border-radius: var(--radius-lg);
+        }
+
+        .code-output {
+            background: #1d1f21;
+            border-radius: var(--radius);
+            padding: 12px;
+            font-family: 'SF Mono', Monaco, 'Fira Code', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .code-output code {
+            background: none;
+            padding: 0;
+            font-size: inherit;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .radio-btn {
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .radio-btn:hover {
+            border-color: var(--accent);
+        }
+
+        .radio-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .radio-btn-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 6px;
+            width: 58px;
+        }
+
+        .radio-btn-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        .radio-btn-icon span {
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .corner-shape-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .corner-shape-grid .radio-btn-icon {
+            width: auto;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .checkbox-label input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+        }
+
+        .tool-section {
+            display: none;
+        }
+
+        .tool-section.active {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .copy-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 10px 16px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .copy-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .inline-controls {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .inline-controls .control-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* Angle Dial */
+        .angle-dial-wrap {
+            text-align: center;
+        }
+
+        .angle-dial-value {
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .angle-dial {
+            width: 100%;
+            aspect-ratio: 1;
+            max-width: 160px;
+            margin: 0 auto;
+            position: relative;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            cursor: crosshair;
+        }
+
+        .angle-dial::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+        }
+
+        .angle-dial-inner {
+            position: absolute;
+            inset: 15%;
+            border: 1px dashed var(--border-color);
+            border-radius: 50%;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .angle-dial-inner2 {
+            position: absolute;
+            inset: 35%;
+            border: 1px dashed var(--border-color);
+            border-radius: 50%;
+            opacity: 0.25;
+            pointer-events: none;
+        }
+
+        .angle-dial-cross {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .angle-dial-cross::before,
+        .angle-dial-cross::after {
+            content: '';
+            position: absolute;
+            background: var(--border-color);
+            opacity: 0.5;
+        }
+
+        .angle-dial-cross::before {
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            transform: translateX(-50%);
+        }
+
+        .angle-dial-cross::after {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            transform: translateY(-50%);
+        }
+
+        .angle-dial-line {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 42%;
+            height: 2px;
+            background: white;
+            transform-origin: left center;
+            border-radius: 1px;
+            pointer-events: none;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+        }
+
+        .angle-dial-dot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 10px;
+            height: 10px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        /* Gradient Strip */
+        .gradient-strip-container {
+            margin-bottom: 16px;
+        }
+
+        .gradient-strip {
+            height: 32px;
+            border-radius: var(--radius);
+            position: relative;
+            cursor: crosshair;
+            border: 1px solid var(--border-color);
+            margin-bottom: 32px;
+        }
+
+        .gradient-stop {
+            position: absolute;
+            top: 100%;
+            width: 16px;
+            height: 20px;
+            transform: translateX(-50%);
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        .gradient-stop::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 7px solid transparent;
+            border-bottom-color: var(--border-color);
+            border-top: none;
+        }
+
+        .gradient-stop::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            border: 2px solid var(--border-color);
+            background: var(--stop-color);
+        }
+
+        .gradient-stop.active::before {
+            border-bottom-color: var(--accent);
+        }
+
+        .gradient-stop.active::after {
+            border-color: var(--accent);
+        }
+
+        .gradient-stop-delete {
+            position: absolute;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            display: none;
+            cursor: pointer;
+        }
+
+        .gradient-stop-delete svg {
+            width: 100%;
+            height: 100%;
+            stroke: #ef4444;
+            stroke-width: 2.5;
+        }
+
+        .gradient-stop-delete:hover svg {
+            stroke: #dc2626;
+        }
+
+        .gradient-stop.active .gradient-stop-delete {
+            display: block;
+        }
+
+        .gradient-stop-color-input {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 2px;
+            width: 20px;
+            height: 20px;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Light Position with dots */
+        .light-position {
+            width: 100%;
+            aspect-ratio: 1;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            position: relative;
+            cursor: crosshair;
+            background-image: radial-gradient(circle, var(--border-color) 1px, transparent 1px);
+            background-size: 12px 12px;
+        }
+
+        .light-dot {
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border: 2px solid white;
+            border-radius: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Corner Grid Control */
+        .corner-grid-wrap {
+            display: flex;
+            justify-content: center;
+        }
+
+        .corner-grid {
+            width: 75%;
+            aspect-ratio: 1;
+            position: relative;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            margin: 0 auto;
+        }
+
+        .corner-grid::before {
+            content: '';
+            position: absolute;
+            inset: 20%;
+            border: 1px dashed var(--border-color);
+            opacity: 0.4;
+            border-radius: 6px;
+            pointer-events: none;
+        }
+
+        .corner-grid::after {
+            content: '';
+            position: absolute;
+            inset: 35%;
+            border: 1px dashed var(--border-color);
+            opacity: 0.25;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        .corner-grid-cross {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .corner-grid-cross::before,
+        .corner-grid-cross::after {
+            content: '';
+            position: absolute;
+            background: var(--border-color);
+            opacity: 0.3;
+        }
+
+        .corner-grid-cross::before {
+            left: 50%;
+            top: 20%;
+            bottom: 20%;
+            width: 1px;
+            transform: translateX(-50%);
+        }
+
+        .corner-grid-cross::after {
+            top: 50%;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            transform: translateY(-50%);
+        }
+
+        .corner-grid-corner {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--border-color);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .corner-grid-corner.tl {
+            top: 8px;
+            left: 8px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 4px 0 0 0;
+        }
+
+        .corner-grid-corner.tr {
+            top: 8px;
+            right: 8px;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 4px 0 0;
+        }
+
+        .corner-grid-corner.bl {
+            bottom: 8px;
+            left: 8px;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 4px;
+        }
+
+        .corner-grid-corner.br {
+            bottom: 8px;
+            right: 8px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 4px 0;
+        }
+
+        .corner-val {
+            position: absolute;
+            color: var(--text-muted);
+            font-size: 10px;
+            font-family: 'SF Mono', Monaco, monospace;
+            cursor: text;
+            min-width: 16px;
+            z-index: 3;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            padding: 2px 4px;
+            text-align: center;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .corner-val:hover {
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+
+        .corner-val:focus {
+            color: var(--accent);
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .corner-tl {
+            top: 12px;
+            left: 12px;
+        }
+
+        .corner-tr {
+            top: 12px;
+            right: 12px;
+        }
+
+        .corner-bl {
+            bottom: 12px;
+            left: 12px;
+        }
+
+        .corner-br {
+            bottom: 12px;
+            right: 12px;
+        }
+
+        .corner-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            color: var(--text-primary);
+            font-size: 12px;
+            text-align: center;
+            padding: 4px 8px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-weight: 500;
+            z-index: 2;
+            min-width: 20px;
+            cursor: text;
+        }
+
+        .corner-center:hover {
+            border-color: var(--accent);
+        }
+
+        .corner-center:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        /* Color Pair (side by side squares) */
+        .color-pair {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .color-square {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .color-square input[type="color"] {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .color-square span {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Transition preview */
+        .transition-demo {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .transition-box {
+            width: 80px;
+            height: 80px;
+            background: var(--accent);
+            border-radius: var(--radius);
+        }
+
+        /* Layout Grid */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .layout-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .layout-item:hover {
+            border-color: var(--accent);
+        }
+
+        .layout-item.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        }
+
+        .layout-item-preview {
+            height: 80px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            padding: 6px;
+            overflow: hidden;
+        }
+
+        .layout-item-name {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .layout-item-preview>div {
+            background: var(--accent);
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+
+        /* Snippets List */
+        .snippets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .snippet-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .snippet-item:hover {
+            border-color: var(--accent);
+            background: var(--bg-hover);
+        }
+
+        .snippet-item.active {
+            border-color: var(--accent);
+            background: var(--bg-hover);
+        }
+
+        .snippet-name {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .snippet-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Rainbow button */
+        .rainbow-btn {
+            position: relative;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .rainbow-btn::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            background: conic-gradient(from var(--angle), #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff0080, #ff0000);
+            border-radius: 10px;
+            z-index: -2;
+            animation: rainbow-spin 3s linear infinite;
+        }
+
+        .rainbow-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            z-index: -1;
+        }
+
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @keyframes rainbow-spin {
+            to {
+                --angle: 360deg;
+            }
+        }
+
+        .rainbow-glow {
+            filter: blur(8px);
+            opacity: 0.6;
+            position: absolute;
+            inset: -3px;
+            background: conic-gradient(from var(--angle), #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff0080, #ff0000);
+            border-radius: 10px;
+            z-index: -3;
+            animation: rainbow-spin 3s linear infinite;
+        }
+
+        /* Metal Button */
+        .metal-btn {
+            position: relative;
+            padding: 12px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            background: linear-gradient(180deg, #f0f0f0 0%, #d4d4d4 50%, #c0c0c0 51%, #e8e8e8 100%);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 1px 0 #fff inset, 0 -1px 0 #999 inset, 0 4px 8px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .metal-btn::before {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            border-radius: 5px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .metal-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 6px;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) inset, 0 0 0 2px rgba(0, 0, 0, 0.1) inset;
+            pointer-events: none;
+        }
+
+        /* Layout preview items */
+        .layout-preview-item {
+            background: var(--accent);
+            border-radius: 4px;
+            opacity: 0.7;
+            min-height: 20px;
+        }
+
+        /* Max-width button demo */
+        .max-width-btn {
+            display: grid;
+            padding: 10px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .max-width-btn>* {
+            grid-area: 1 / 1;
+            text-align: center;
+        }
+
+        .max-width-btn .loader {
+            visibility: hidden;
+        }
+
+        .max-width-btn .label {
+            visibility: visible;
+        }
+
+        .max-width-btn.loading .loader {
+            visibility: visible;
+        }
+
+        .max-width-btn.loading .label {
+            visibility: hidden;
+        }
+
+        /* Animated underline demo */
+        .animated-underline-demo {
+            position: relative;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-size: 16px;
+            display: inline-block;
+        }
+
+        .animated-underline-demo::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .animated-underline-demo:hover::after {
+            width: 100%;
+        }
+
+        /* Custom scrollbar demo */
+        .custom-scrollbar-demo::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar-demo::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar-demo::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar-demo::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Anchor tooltip demo */
+        .anchor-tooltip-trigger:hover+.anchor-tooltip-content {
+            opacity: 1;
+        }
+
+        /* Dialog demo */
+        .dialog-demo::backdrop {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        .dialog-demo[open] {
+            animation: dialog-in 0.2s ease-out;
+        }
+
+        @keyframes dialog-in {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="logo"><svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="url(#logo-grad)"
+                stroke-width="2">
+                <defs>
+                    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="50%" stop-color="#a855f7" />
+                        <stop offset="100%" stop-color="#ec4899" />
+                    </linearGradient>
+                </defs>
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <path d="M8 10l-2 2 2 2" />
+                <path d="M16 10l2 2-2 2" />
+                <path d="M14 8l-4 8" />
+            </svg>
+            <h1 class="logo-text">CSS Tool</h1>
+        </div>
+        <nav>
+            <div class="nav-item active" data-tool="gradient">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="3" />
+                    <line x1="7" y1="7" x2="17" y2="17" />
+                    <circle cx="7" cy="7" r="2" fill="currentColor" stroke="none" />
+                    <circle cx="17" cy="17" r="2" fill="currentColor" stroke="none" />
+                </svg>
+                Gradient Generator
+            </div>
+            <div class="nav-item" data-tool="shadow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M21 15l-5-5L5 21" />
+                </svg>
+                Shadow Generator
+            </div>
+            <div class="nav-item" data-tool="border">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                </svg>
+                Border Shape
+            </div>
+            <div class="nav-item" data-tool="transition">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+                </svg>
+                Transition Builder
+            </div>
+            <div class="nav-item" data-tool="filter">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46" />
+                </svg>
+                Filter Playground
+            </div>
+            <div class="nav-item" data-tool="pattern">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                BG Pattern Editor
+            </div>
+            <div class="nav-item" data-tool="glass">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" opacity="0.5" />
+                    <rect x="7" y="7" width="10" height="10" rx="1" />
+                </svg>
+                Glassmorphism
+            </div>
+            <div class="nav-item" data-tool="clip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
+                </svg>
+                Clip-Path Editor
+            </div>
+            <div class="nav-item" data-tool="textshadow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><text x="4" y="18"
+                        font-size="16" fill="currentColor">A</text></svg>
+                Text Shadow
+            </div>
+            <div class="nav-item" data-tool="layouts">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="18" height="7" />
+                </svg>
+                Flexbox & Grid
+            </div>
+            <div class="nav-item" data-tool="snippets">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 18l6-6-6-6" />
+                    <path d="M8 6l-6 6 6 6" />
+                </svg>
+                Snippets
+            </div>
+        </nav>
+        <a href="https://github.com/tcboni/css-tool" target="_blank" class="github-link" title="View on GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+        </a>
+    </aside>
+
+    <main class="main">
+        <!-- GRADIENT GENERATOR -->
+        <section class="tool-section active" id="gradient-section">
+            <div class="header">
+                <h2>Gradient Generator</h2>
+                <p>Create beautiful CSS gradients with visual color stop editing</p>
+            </div>
+            <div class="content">
+                <div class="controls">
+                    <div class="card">
+                        <div class="card-title">Gradient Type</div>
+                        <div class="radio-group" id="gradient-type">
+                            <div class="radio-btn radio-btn-icon active" data-value="linear"><svg viewBox="0 0 24 24">
+                                    <rect x="4" y="4" width="16" height="16" rx="2" />
+                                    <line x1="8" y1="16" x2="16" y2="8" />
+                                    <line x1="8" y1="12" x2="12" y2="8" />
+                                    <line x1="12" y1="16" x2="16" y2="12" />
+                                </svg><span>Linear</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="radial"><svg viewBox="0 0 24 24">
+                                    <rect x="4" y="4" width="16" height="16" rx="2" />
+                                    <circle cx="12" cy="12" r="2" />
+                                    <circle cx="12" cy="12" r="4" fill="none" />
+                                    <circle cx="12" cy="12" r="6" fill="none" />
+                                </svg><span>Radial</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="conic"><svg viewBox="0 0 24 24">
+                                    <rect x="4" y="4" width="16" height="16" rx="2" />
+                                    <circle cx="12" cy="12" r="5" fill="none" />
+                                    <line x1="12" y1="12" x2="12" y2="7" />
+                                    <line x1="12" y1="12" x2="16" y2="10" />
+                                    <line x1="12" y1="12" x2="16" y2="14" />
+                                    <line x1="12" y1="12" x2="12" y2="17" />
+                                </svg><span>Conic</span></div>
+                        </div>
+                        <div class="control-group" style="margin-top: 12px;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="gradient-repeating">
+                                <span>Repeating gradient</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Angle</div>
+                        <div class="angle-dial-wrap">
+                            <div class="angle-dial-value" id="gradient-angle-val">90deg</div>
+                            <div class="angle-dial" id="gradient-angle-dial">
+                                <div class="angle-dial-inner"></div>
+                                <div class="angle-dial-inner2"></div>
+                                <div class="angle-dial-cross"></div>
+                                <div class="angle-dial-line" id="gradient-angle-line"></div>
+                                <div class="angle-dial-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Color Stops</div>
+                        <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">Click strip to add · Click
+                            stop to select · Double-click to edit color</p>
+                        <div class="gradient-strip-container">
+                            <div class="gradient-strip" id="gradient-strip"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box">
+                            <div class="preview-fill" id="gradient-preview"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('gradient')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="gradient-code"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SHADOW GENERATOR -->
+        <section class="tool-section" id="shadow-section">
+            <div class="header">
+                <h2>Shadow Generator</h2>
+                <p>Create realistic, layered CSS box shadows</p>
+            </div>
+            <div class="content">
+                <div class="controls">
+                    <div class="card">
+                        <div class="card-title">Shadow Properties</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Intensity</span><span class="control-value"
+                                    id="shadow-oomph-val">0.4</span></div><input type="range" id="shadow-oomph" min="0"
+                                max="1" step="0.01" value="0.4">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Sharpness</span><span class="control-value"
+                                    id="shadow-crispy-val">0.5</span></div><input type="range" id="shadow-crispy"
+                                min="0" max="1" step="0.01" value="0.5">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Layers</span><span class="control-value"
+                                    id="shadow-layers-val">4</span></div><input type="range" id="shadow-layers" min="1"
+                                max="8" value="4">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Distance</span><span class="control-value"
+                                    id="shadow-distance-val">40px</span></div><input type="range" id="shadow-distance"
+                                min="10" max="100" value="40">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Light Position</div>
+                        <div class="light-position" id="light-position">
+                            <div class="light-dot" id="light-dot"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Colors</div>
+                        <div class="control-group">
+                            <div class="control-label">Background</div><input type="color" id="shadow-bg"
+                                value="#1c1c1f">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">Element</div><input type="color" id="shadow-element"
+                                value="#2a2a2e">
+                        </div>
+                        <div class="control-group"><label class="checkbox-label"><input type="checkbox" id="shadow-tint"
+                                    checked><span>Tint shadow</span></label></div>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box centered" id="shadow-preview-box">
+                            <div id="shadow-preview" style="width:160px;height:160px;border-radius:12px;"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('shadow')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="shadow-code"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BORDER SHAPE -->
+        <section class="tool-section" id="border-section">
+            <div class="header">
+                <h2>Border Shape Generator</h2>
+                <p>Create modern corner shapes with native CSS corner-shape</p>
+            </div>
+            <div class="content">
+                <div class="controls">
+                    <div class="card">
+                        <div class="card-title">Corner Shape</div>
+                        <div class="radio-group corner-shape-grid" id="corner-shape-type">
+                            <div class="radio-btn radio-btn-icon" data-value="square"><svg viewBox="0 0 24 24">
+                                    <rect x="4" y="4" width="16" height="16" />
+                                </svg><span>Square</span></div>
+                            <div class="radio-btn radio-btn-icon active" data-value="round"><svg viewBox="0 0 24 24">
+                                    <rect x="4" y="4" width="16" height="16" rx="8" />
+                                </svg><span>Round</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="squircle"><svg viewBox="0 0 24 24">
+                                    <path d="M4 8 Q4 4 8 4 L16 4 Q20 4 20 8 L20 16 Q20 20 16 20 L8 20 Q4 20 4 16 Z" />
+                                </svg><span>Squircle</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="bevel"><svg viewBox="0 0 24 24">
+                                    <path d="M8 4 L16 4 L20 8 L20 16 L16 20 L8 20 L4 16 L4 8 Z" />
+                                </svg><span>Bevel</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="scoop"><svg viewBox="0 0 24 24">
+                                    <path d="M4 8 Q8 8 8 4 L16 4 Q16 8 20 8 L20 16 Q16 16 16 20 L8 20 Q8 16 4 16 Z" />
+                                </svg><span>Scoop</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="notch"><svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M8 4 L16 4 L16 8 L20 8 L20 16 L16 16 L16 20 L8 20 L8 16 L4 16 L4 8 L8 8 Z" />
+                                </svg><span>Notch</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="superellipse"><svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M4 10 Q4 4 10 4 L14 4 Q20 4 20 10 L20 14 Q20 20 14 20 L10 20 Q4 20 4 14 Z" />
+                                </svg><span>Super</span></div>
+                        </div>
+                        <div class="control-group" style="margin-top:12px;display:none;" id="superellipse-control">
+                            <div class="control-label"><span>Exponent</span><span class="control-value"
+                                    id="superellipse-val">2</span></div>
+                            <input type="range" id="superellipse" min="0.5" max="8" step="0.1" value="2">
+                        </div>
+                        <p style="font-size:10px;color:var(--text-muted);margin-top:10px;">Note: corner-shape is
+                            experimental CSS with limited browser support. Preview uses border-radius only.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Corner Radius</div>
+                        <div class="corner-grid-wrap">
+                            <div class="corner-grid" id="corner-grid">
+                                <div class="corner-grid-cross"></div>
+                                <div class="corner-grid-corner tl"></div>
+                                <div class="corner-grid-corner tr"></div>
+                                <div class="corner-grid-corner bl"></div>
+                                <div class="corner-grid-corner br"></div>
+                                <span class="corner-val corner-tl" id="br-tl" contenteditable="plaintext-only">24</span>
+                                <span class="corner-val corner-tr" id="br-tr" contenteditable="plaintext-only">24</span>
+                                <span class="corner-val corner-bl" id="br-bl" contenteditable="plaintext-only">24</span>
+                                <span class="corner-val corner-br" id="br-br" contenteditable="plaintext-only">24</span>
+                                <span class="corner-center" id="border-radius" contenteditable="plaintext-only"
+                                    title="All corners">24</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Size</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Size</span><span class="control-value"
+                                    id="border-size-val">180px</span></div><input type="range" id="border-size" min="80"
+                                max="280" value="180">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Colors</div>
+                        <div class="color-pair">
+                            <div class="color-square"><input type="color" id="border-color"
+                                    value="#6366f1"><span>Shape</span></div>
+                            <div class="color-square"><input type="color" id="border-bg" value="#1c1c1f"><span>BG</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box centered" id="border-preview-box">
+                            <div id="border-preview"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('border')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="border-code"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRANSITION BUILDER -->
+        <section class="tool-section" id="transition-section">
+            <div class="header">
+                <h2>Transition Builder</h2>
+                <p>Design smooth CSS transitions with custom timing</p>
+            </div>
+            <div class="content">
+                <div class="controls">
+                    <div class="card">
+                        <div class="card-title">Properties</div>
+                        <div class="control-group">
+                            <div class="control-label">Property</div><select id="transition-property">
+                                <option value="all">all</option>
+                                <option value="transform">transform</option>
+                                <option value="opacity">opacity</option>
+                                <option value="background-color">background-color</option>
+                                <option value="box-shadow">box-shadow</option>
+                                <option value="filter">filter</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Duration</span><span class="control-value"
+                                    id="transition-duration-val">300ms</span></div><input type="range"
+                                id="transition-duration" min="100" max="2000" step="50" value="300">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Delay</span><span class="control-value"
+                                    id="transition-delay-val">0ms</span></div><input type="range" id="transition-delay"
+                                min="0" max="1000" step="50" value="0">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Timing Function</div>
+                        <div class="radio-group" id="timing-function">
+                            <div class="radio-btn" data-value="linear">linear</div>
+                            <div class="radio-btn" data-value="ease">ease</div>
+                            <div class="radio-btn" data-value="ease-in">ease-in</div>
+                            <div class="radio-btn" data-value="ease-out">ease-out</div>
+                            <div class="radio-btn active" data-value="ease-in-out">ease-in-out</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Hover Effect</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Scale</span><span class="control-value"
+                                    id="hover-scale-val">1.1</span></div><input type="range" id="hover-scale" min="0.5"
+                                max="2" step="0.05" value="1.1">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Rotate</span><span class="control-value"
+                                    id="hover-rotate-val">0°</span></div><input type="range" id="hover-rotate"
+                                min="-180" max="180" value="0">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Opacity</span><span class="control-value"
+                                    id="hover-opacity-val">1</span></div><input type="range" id="hover-opacity" min="0"
+                                max="1" step="0.1" value="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview (Hover the box)</div>
+                        <div class="preview-box centered transition-demo">
+                            <div id="transition-preview" class="transition-box"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('transition')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="transition-code"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FILTER PLAYGROUND -->
+        <section class="tool-section" id="filter-section">
+            <div class="header">
+                <h2>Filter Playground</h2>
+                <p>Experiment with CSS filter effects</p>
+            </div>
+            <div class="content">
+                <div class="controls">
+                    <div class="card">
+                        <div class="card-title">Filters</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Blur</span><span class="control-value"
+                                    id="filter-blur-val">0px</span></div><input type="range" id="filter-blur" min="0"
+                                max="20" value="0">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Brightness</span><span class="control-value"
+                                    id="filter-brightness-val">100%</span></div><input type="range"
+                                id="filter-brightness" min="0" max="200" value="100">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Contrast</span><span class="control-value"
+                                    id="filter-contrast-val">100%</span></div><input type="range" id="filter-contrast"
+                                min="0" max="200" value="100">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Grayscale</span><span class="control-value"
+                                    id="filter-grayscale-val">0%</span></div><input type="range" id="filter-grayscale"
+                                min="0" max="100" value="0">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Hue Rotate</span><span class="control-value"
+                                    id="filter-hue-val">0°</span></div><input type="range" id="filter-hue" min="0"
+                                max="360" value="0">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Saturate</span><span class="control-value"
+                                    id="filter-saturate-val">100%</span></div><input type="range" id="filter-saturate"
+                                min="0" max="200" value="100">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Sepia</span><span class="control-value"
+                                    id="filter-sepia-val">0%</span></div><input type="range" id="filter-sepia" min="0"
+                                max="100" value="0">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Invert</span><span class="control-value"
+                                    id="filter-invert-val">0%</span></div><input type="range" id="filter-invert" min="0"
+                                max="100" value="0">
+                        </div>
+                        <button class="btn btn-secondary" id="reset-filters" style="width:100%;margin-top:8px;">Reset
+                            All</button>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box centered"><img id="filter-preview" src="https://placecats.com/300/200"
+                                alt="Cat" style="max-width:100%;max-height:100%;border-radius:12px;object-fit:cover;">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('filter')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="filter-code"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BG PATTERN EDITOR -->
+        <section class="tool-section" id="pattern-section">
+            <div class="header">
+                <h2>BG Pattern Editor</h2>
+                <p>Create repeating CSS background patterns</p>
+            </div>
+            <div class="content">
+                <div class="controls">
+                    <div class="card">
+                        <div class="card-title">Pattern Type</div>
+                        <div class="radio-group" id="pattern-type">
+                            <div class="radio-btn radio-btn-icon active" data-value="dots"><svg viewBox="0 0 24 24">
+                                    <circle cx="6" cy="6" r="1.5" fill="currentColor" stroke="none" />
+                                    <circle cx="12" cy="6" r="1.5" fill="currentColor" stroke="none" />
+                                    <circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none" />
+                                    <circle cx="6" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                                    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                                    <circle cx="18" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                                    <circle cx="6" cy="18" r="1.5" fill="currentColor" stroke="none" />
+                                    <circle cx="12" cy="18" r="1.5" fill="currentColor" stroke="none" />
+                                    <circle cx="18" cy="18" r="1.5" fill="currentColor" stroke="none" />
+                                </svg><span>Dots</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="stripes"><svg viewBox="0 0 24 24">
+                                    <line x1="4" y1="6" x2="20" y2="6" />
+                                    <line x1="4" y1="12" x2="20" y2="12" />
+                                    <line x1="4" y1="18" x2="20" y2="18" />
+                                </svg><span>Stripes</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="grid"><svg viewBox="0 0 24 24">
+                                    <line x1="4" y1="8" x2="20" y2="8" />
+                                    <line x1="4" y1="16" x2="20" y2="16" />
+                                    <line x1="8" y1="4" x2="8" y2="20" />
+                                    <line x1="16" y1="4" x2="16" y2="20" />
+                                </svg><span>Grid</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="noise"><svg viewBox="0 0 24 24">
+                                    <circle cx="5" cy="7" r="1" fill="currentColor" stroke="none" />
+                                    <circle cx="11" cy="5" r="1" fill="currentColor" stroke="none" />
+                                    <circle cx="18" cy="8" r="1" fill="currentColor" stroke="none" />
+                                    <circle cx="7" cy="12" r="1" fill="currentColor" stroke="none" />
+                                    <circle cx="14" cy="11" r="1" fill="currentColor" stroke="none" />
+                                    <circle cx="19" cy="14" r="1" fill="currentColor" stroke="none" />
+                                    <circle cx="4" cy="17" r="1" fill="currentColor" stroke="none" />
+                                    <circle cx="10" cy="18" r="1" fill="currentColor" stroke="none" />
+                                    <circle cx="16" cy="19" r="1" fill="currentColor" stroke="none" />
+                                </svg><span>Noise</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="text"><svg viewBox="0 0 24 24"><text
+                                        x="12" y="16" text-anchor="middle" font-size="14" fill="currentColor"
+                                        stroke="none">Aa</text></svg><span>Text</span></div>
+                        </div>
+                    </div>
+                    <div class="card pattern-controls" id="dots-controls">
+                        <div class="card-title">Dots Settings</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Size</span><span class="control-value"
+                                    id="dots-size-val">4px</span></div><input type="range" id="dots-size" min="1"
+                                max="20" value="4">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Spacing</span><span class="control-value"
+                                    id="dots-spacing-val">20px</span></div><input type="range" id="dots-spacing"
+                                min="10" max="60" value="20">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">Color</div><input type="color" id="dots-color" value="#6366f1">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Opacity</span><span class="control-value"
+                                    id="dots-opacity-val">50%</span></div><input type="range" id="dots-opacity" min="10"
+                                max="100" value="50">
+                        </div>
+                    </div>
+                    <div class="card pattern-controls" id="stripes-controls" style="display:none;">
+                        <div class="card-title">Stripes Settings</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Width</span><span class="control-value"
+                                    id="stripes-width-val">10px</span></div><input type="range" id="stripes-width"
+                                min="1" max="50" value="10">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Gap</span><span class="control-value"
+                                    id="stripes-gap-val">10px</span></div><input type="range" id="stripes-gap" min="1"
+                                max="50" value="10">
+                        </div>
+                        <div class="card-title" style="margin-top:12px;">Angle</div>
+                        <div class="angle-dial-wrap">
+                            <div class="angle-dial-value" id="stripes-angle-val">45deg</div>
+                            <div class="angle-dial" id="stripes-angle-dial" style="max-width:120px;">
+                                <div class="angle-dial-inner"></div>
+                                <div class="angle-dial-inner2"></div>
+                                <div class="angle-dial-cross"></div>
+                                <div class="angle-dial-line" id="stripes-angle-line"></div>
+                                <div class="angle-dial-dot"></div>
+                            </div>
+                        </div>
+                        <div class="control-group" style="margin-top:12px;">
+                            <div class="control-label">Color</div><input type="color" id="stripes-color"
+                                value="#6366f1">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Opacity</span><span class="control-value"
+                                    id="stripes-opacity-val">30%</span></div><input type="range" id="stripes-opacity"
+                                min="10" max="100" value="30">
+                        </div>
+                    </div>
+                    <div class="card pattern-controls" id="grid-controls" style="display:none;">
+                        <div class="card-title">Grid Settings</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Cell Size</span><span class="control-value"
+                                    id="grid-size-val">30px</span></div><input type="range" id="grid-size" min="10"
+                                max="80" value="30">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Thickness</span><span class="control-value"
+                                    id="grid-thickness-val">1px</span></div><input type="range" id="grid-thickness"
+                                min="1" max="5" value="1">
+                        </div>
+                        <div class="card-title" style="margin-top:12px;">Angle</div>
+                        <div class="angle-dial-wrap">
+                            <div class="angle-dial-value" id="grid-angle-val">0deg</div>
+                            <div class="angle-dial" id="grid-angle-dial" style="max-width:120px;">
+                                <div class="angle-dial-inner"></div>
+                                <div class="angle-dial-inner2"></div>
+                                <div class="angle-dial-cross"></div>
+                                <div class="angle-dial-line" id="grid-angle-line"></div>
+                                <div class="angle-dial-dot"></div>
+                            </div>
+                        </div>
+                        <div class="control-group" style="margin-top:12px;">
+                            <div class="control-label">Color</div><input type="color" id="grid-color" value="#6366f1">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Opacity</span><span class="control-value"
+                                    id="grid-opacity-val">30%</span></div><input type="range" id="grid-opacity" min="10"
+                                max="100" value="30">
+                        </div>
+                    </div>
+                    <div class="card pattern-controls" id="noise-controls" style="display:none;">
+                        <div class="card-title">Noise Settings</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Size</span><span class="control-value"
+                                    id="noise-size-val">100px</span></div><input type="range" id="noise-size" min="50"
+                                max="300" value="100">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Opacity</span><span class="control-value"
+                                    id="noise-opacity-val">15%</span></div><input type="range" id="noise-opacity"
+                                min="5" max="50" value="15">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Density</span><span class="control-value"
+                                    id="noise-density-val">50%</span></div><input type="range" id="noise-density"
+                                min="10" max="90" value="50">
+                        </div>
+                    </div>
+                    <div class="card pattern-controls" id="text-controls" style="display:none;">
+                        <div class="card-title">Text Settings</div>
+                        <div class="control-group">
+                            <div class="control-label">Text</div><input type="text" id="text-content" value="💩"
+                                style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius);padding:8px 12px;color:var(--text-primary);font-size:14px;width:100%;">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Font Size</span><span class="control-value"
+                                    id="text-size-val">20px</span></div><input type="range" id="text-size" min="10"
+                                max="60" value="20">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Spacing</span><span class="control-value"
+                                    id="text-spacing-val">60px</span></div><input type="range" id="text-spacing"
+                                min="30" max="150" value="60">
+                        </div>
+                        <div class="card-title" style="margin-top:12px;">Angle</div>
+                        <div class="angle-dial-wrap">
+                            <div class="angle-dial-value" id="text-angle-val">-15deg</div>
+                            <div class="angle-dial" id="text-angle-dial" style="max-width:120px;">
+                                <div class="angle-dial-inner"></div>
+                                <div class="angle-dial-inner2"></div>
+                                <div class="angle-dial-cross"></div>
+                                <div class="angle-dial-line" id="text-angle-line"></div>
+                                <div class="angle-dial-dot"></div>
+                            </div>
+                        </div>
+                        <div class="control-group" style="margin-top:12px;">
+                            <div class="control-label">Color</div><input type="color" id="text-color" value="#6366f1">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Opacity</span><span class="control-value"
+                                    id="text-opacity-val">20%</span></div><input type="range" id="text-opacity" min="5"
+                                max="100" value="20">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Background</div>
+                        <div class="control-group">
+                            <div class="control-label">Color</div><input type="color" id="pattern-bg" value="#0a0a0b">
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box">
+                            <div class="preview-fill" id="pattern-preview"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('pattern')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="pattern-code"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GLASSMORPHISM -->
+        <section class="tool-section" id="glass-section">
+            <div class="header">
+                <h2>Glassmorphism Generator</h2>
+                <p>Create frosted glass UI effects</p>
+            </div>
+            <div class="content">
+                <div class="controls">
+                    <div class="card">
+                        <div class="card-title">Glass Properties</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Blur</span><span class="control-value"
+                                    id="glass-blur-val">16px</span></div><input type="range" id="glass-blur" min="0"
+                                max="40" value="16">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Transparency</span><span class="control-value"
+                                    id="glass-alpha-val">0.2</span></div><input type="range" id="glass-alpha" min="0"
+                                max="1" step="0.05" value="0.2">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Saturation</span><span class="control-value"
+                                    id="glass-saturation-val">180%</span></div><input type="range" id="glass-saturation"
+                                min="100" max="300" value="180">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Border Opacity</span><span class="control-value"
+                                    id="glass-border-val">0.3</span></div><input type="range" id="glass-border" min="0"
+                                max="1" step="0.05" value="0.3">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Border Radius</span><span class="control-value"
+                                    id="glass-radius-val">16px</span></div><input type="range" id="glass-radius" min="0"
+                                max="40" value="16">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Colors</div>
+                        <div class="control-group">
+                            <div class="control-label">Glass Tint</div><input type="color" id="glass-tint"
+                                value="#ffffff">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">Background</div><input type="color" id="glass-bg-color"
+                                value="#6366f1">
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box centered" id="glass-preview-box"
+                            style="background:linear-gradient(135deg,#6366f1,#a855f7,#ec4899);">
+                            <div id="glass-preview"
+                                style="width:200px;height:150px;display:flex;align-items:center;justify-content:center;color:white;font-weight:500;">
+                                Glass Card</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('glass')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="glass-code"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CLIP-PATH -->
+        <section class="tool-section" id="clip-section">
+            <div class="header">
+                <h2>Clip-Path Editor</h2>
+                <p>Create shapes using CSS clip-path</p>
+            </div>
+            <div class="content">
+                <div class="controls">
+                    <div class="card">
+                        <div class="card-title">Shape Preset</div>
+                        <div class="radio-group" id="clip-shape">
+                            <div class="radio-btn radio-btn-icon active" data-value="polygon"><svg viewBox="0 0 24 24">
+                                    <polygon points="12,4 20,20 4,20" />
+                                </svg><span>Polygon</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="circle"><svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="8" />
+                                </svg><span>Circle</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="ellipse"><svg viewBox="0 0 24 24">
+                                    <ellipse cx="12" cy="12" rx="9" ry="6" />
+                                </svg><span>Ellipse</span></div>
+                            <div class="radio-btn radio-btn-icon" data-value="inset"><svg viewBox="0 0 24 24">
+                                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                                </svg><span>Inset</span></div>
+                        </div>
+                    </div>
+                    <div class="card" id="polygon-presets">
+                        <div class="card-title">Polygon Presets</div>
+                        <div class="btn-group">
+                            <button class="btn btn-secondary btn-small" data-clip="triangle">Triangle</button>
+                            <button class="btn btn-secondary btn-small" data-clip="pentagon">Pentagon</button>
+                            <button class="btn btn-secondary btn-small" data-clip="hexagon">Hexagon</button>
+                            <button class="btn btn-secondary btn-small" data-clip="star">Star</button>
+                            <button class="btn btn-secondary btn-small" data-clip="arrow">Arrow</button>
+                            <button class="btn btn-secondary btn-small" data-clip="cross">Cross</button>
+                        </div>
+                    </div>
+                    <div class="card" id="clip-circle-controls" style="display:none;">
+                        <div class="card-title">Circle Settings</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Radius</span><span class="control-value"
+                                    id="clip-circle-r-val">50%</span></div><input type="range" id="clip-circle-r"
+                                min="10" max="70" value="50">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>X Position</span><span class="control-value"
+                                    id="clip-circle-x-val">50%</span></div><input type="range" id="clip-circle-x"
+                                min="0" max="100" value="50">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Y Position</span><span class="control-value"
+                                    id="clip-circle-y-val">50%</span></div><input type="range" id="clip-circle-y"
+                                min="0" max="100" value="50">
+                        </div>
+                    </div>
+                    <div class="card" id="clip-ellipse-controls" style="display:none;">
+                        <div class="card-title">Ellipse Settings</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Width</span><span class="control-value"
+                                    id="clip-ellipse-w-val">50%</span></div><input type="range" id="clip-ellipse-w"
+                                min="10" max="70" value="50">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Height</span><span class="control-value"
+                                    id="clip-ellipse-h-val">40%</span></div><input type="range" id="clip-ellipse-h"
+                                min="10" max="70" value="40">
+                        </div>
+                    </div>
+                    <div class="card" id="clip-inset-controls" style="display:none;">
+                        <div class="card-title">Inset Settings</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Inset</span><span class="control-value"
+                                    id="clip-inset-val">10%</span></div><input type="range" id="clip-inset" min="0"
+                                max="40" value="10">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Border Radius</span><span class="control-value"
+                                    id="clip-inset-r-val">10%</span></div><input type="range" id="clip-inset-r" min="0"
+                                max="50" value="10">
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box centered"><img id="clip-preview" src="https://placecats.com/200/200"
+                                alt="Cat" style="width:200px;height:200px;object-fit:cover;"></div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('clip')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="clip-code"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TEXT SHADOW -->
+        <section class="tool-section" id="textshadow-section">
+            <div class="header">
+                <h2>Text Shadow Generator</h2>
+                <p>Create stunning text effects with multiple shadows</p>
+            </div>
+            <div class="content">
+                <div class="controls">
+                    <div class="card">
+                        <div class="card-title">Effect Preset</div>
+                        <div class="btn-group">
+                            <button class="btn btn-secondary btn-small ts-preset" data-preset="none">None</button>
+                            <button class="btn btn-secondary btn-small ts-preset active"
+                                data-preset="soft">Soft</button>
+                            <button class="btn btn-secondary btn-small ts-preset" data-preset="hard">Hard</button>
+                            <button class="btn btn-secondary btn-small ts-preset" data-preset="glow">Glow</button>
+                            <button class="btn btn-secondary btn-small ts-preset" data-preset="neon">Neon</button>
+                            <button class="btn btn-secondary btn-small ts-preset" data-preset="retro">Retro</button>
+                            <button class="btn btn-secondary btn-small ts-preset" data-preset="3d">3D</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Shadow Settings</div>
+                        <div class="control-group">
+                            <div class="control-label"><span>X Offset</span><span class="control-value"
+                                    id="ts-x-val">2px</span></div><input type="range" id="ts-x" min="-20" max="20"
+                                value="2">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Y Offset</span><span class="control-value"
+                                    id="ts-y-val">2px</span></div><input type="range" id="ts-y" min="-20" max="20"
+                                value="2">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Blur</span><span class="control-value"
+                                    id="ts-blur-val">4px</span></div><input type="range" id="ts-blur" min="0" max="30"
+                                value="4">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">Shadow Color</div><input type="color" id="ts-color"
+                                value="#000000">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Opacity</span><span class="control-value"
+                                    id="ts-opacity-val">0.5</span></div><input type="range" id="ts-opacity" min="0"
+                                max="1" step="0.05" value="0.5">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Text</div>
+                        <div class="control-group"><input type="text" id="ts-text" value="Shadow"
+                                placeholder="Enter text"></div>
+                        <div class="control-group">
+                            <div class="control-label">Text Color</div><input type="color" id="ts-text-color"
+                                value="#ffffff">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label"><span>Font Size</span><span class="control-value"
+                                    id="ts-size-val">48px</span></div><input type="range" id="ts-size" min="24" max="96"
+                                value="48">
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box centered" style="background:#1c1c1f;">
+                            <div id="textshadow-preview" style="font-size:48px;font-weight:700;color:white;">Shadow
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('textshadow')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="textshadow-code"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FLEXBOX & GRID LAYOUTS -->
+        <section class="tool-section" id="layouts-section">
+            <div class="header">
+                <h2>Flexbox & Grid Layouts</h2>
+                <p>Common layout patterns ready to use</p>
+            </div>
+            <div class="content">
+                <div class="controls" style="width:340px;">
+                    <div class="card">
+                        <div class="card-title">Flexbox Patterns</div>
+                        <div class="layout-grid" id="flex-layouts"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Grid Patterns</div>
+                        <div class="layout-grid" id="grid-layouts"></div>
+                    </div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box" id="layouts-preview-box" style="padding:16px;align-items:stretch;">
+                            <div id="layouts-preview"
+                                style="flex:1;border:1px dashed var(--border-color);border-radius:8px;"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('layouts')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="layouts-code">Select a layout to see its CSS</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SNIPPETS -->
+        <section class="tool-section" id="snippets-section">
+            <div class="header">
+                <h2>CSS Snippets</h2>
+                <p>Useful CSS tricks and techniques</p>
+            </div>
+            <div class="content">
+                <div class="controls" style="width:320px;overflow-y:auto;max-height:calc(100vh - 180px);">
+                    <div class="snippets-list" id="snippets-grid"></div>
+                </div>
+                <div class="preview-area">
+                    <div class="card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="card-title">Preview</div>
+                        <div class="preview-box centered" id="snippets-preview-box">
+                            <div id="snippets-preview" style="padding:24px;"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="code-header"><span class="card-title" style="margin:0;">CSS Code</span><button
+                                class="btn btn-copy" onclick="copyCode('snippets')"><svg viewBox="0 0 24 24">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                </svg>Copy CSS</button></div>
+                        <div class="code-output" id="snippets-code" style="max-height:250px;">Select a snippet to see
+                            its code</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <div class="copy-toast" id="copy-toast">Copied to clipboard!</div>
+
+    <script>
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                item.classList.add('active');
+                document.querySelectorAll('.tool-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(`${item.dataset.tool}-section`).classList.add('active');
+            });
+        });
+
+        // Radio buttons
+        document.querySelectorAll('.radio-group').forEach(group => {
+            group.querySelectorAll('.radio-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    group.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (group.id === 'gradient-type') updateGradient();
+                    if (group.id === 'timing-function') updateTransition();
+                    if (group.id === 'pattern-type') { document.querySelectorAll('.pattern-controls').forEach(c => c.style.display = 'none'); document.getElementById(`${btn.dataset.value}-controls`).style.display = 'block'; updatePattern(); }
+                    if (group.id === 'corner-shape-type') updateBorderShape();
+                    if (group.id === 'clip-shape') updateClipControls();
+                });
+            });
+        });
+
+        // Copy
+        function copyCode(tool) {
+            navigator.clipboard.writeText(document.getElementById(`${tool}-code`).innerText);
+            const toast = document.getElementById('copy-toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Syntax Highlighting with Prism.js (debounced)
+        const codeCache = {};
+        const codeTimeouts = {};
+
+        function setCode(id, code) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            // Show plain text immediately
+            if (!codeCache[id] || codeCache[id] !== code) {
+                el.textContent = code;
+                codeCache[id] = code;
+
+                // Debounce the highlighting
+                if (codeTimeouts[id]) clearTimeout(codeTimeouts[id]);
+                codeTimeouts[id] = setTimeout(() => {
+                    if (typeof Prism !== 'undefined') {
+                        const highlighted = Prism.highlight(code, Prism.languages.css, 'css');
+                        el.innerHTML = `<code class="language-css">${highlighted}</code>`;
+                    }
+                }, 150);
+            }
+        }
+
+        // Angle Dial - Fixed
+        function setupAngleDial(dialId, lineId, valId, initialAngle, callback) {
+            const dial = document.getElementById(dialId);
+            const line = document.getElementById(lineId);
+            const valEl = document.getElementById(valId);
+            let angle = initialAngle;
+
+            function updateDial(a) {
+                // Normalize to 0-360
+                a = ((a % 360) + 360) % 360;
+                angle = a;
+                // CSS rotate: 0deg = pointing right, so subtract 90 to make 0deg point up
+                line.style.transform = `rotate(${a - 90}deg)`;
+                valEl.textContent = `${Math.round(a)}deg`;
+                callback(a);
+            }
+
+            function handleDial(e) {
+                const rect = dial.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = e.clientX - cx;
+                const dy = e.clientY - cy;
+                // atan2 gives angle from positive X axis, counterclockwise
+                // We want: up=0, right=90, down=180, left=270
+                let a = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+                updateDial(Math.round(a));
+            }
+
+            dial.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                handleDial(e);
+                const move = (e) => { e.preventDefault(); handleDial(e); };
+                const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
+                document.addEventListener('mousemove', move);
+                document.addEventListener('mouseup', up);
+            });
+
+            updateDial(initialAngle);
+            return { setAngle: updateDial, getAngle: () => angle };
+        }
+
+        // ========== GRADIENT ==========
+        let gradientAngle = 90;
+        let colorStops = [{ color: '#6366f1', pos: 0 }, { color: '#a855f7', pos: 50 }, { color: '#ec4899', pos: 100 }];
+        let activeStop = null;
+
+        const gradientDial = setupAngleDial('gradient-angle-dial', 'gradient-angle-line', 'gradient-angle-val', 90, (a) => { gradientAngle = a; updateGradient(); });
+
+        function randomColor() {
+            return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        }
+
+        function renderGradientStrip() {
+            const strip = document.getElementById('gradient-strip');
+            const sorted = [...colorStops].sort((a, b) => a.pos - b.pos);
+            const stopsStr = sorted.map(s => `${s.color} ${s.pos}%`).join(', ');
+            strip.style.background = `linear-gradient(90deg, ${stopsStr})`;
+
+            const deleteIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>`;
+
+            strip.innerHTML = colorStops.map((s, i) => `
+            <div class="gradient-stop ${i === activeStop ? 'active' : ''}" style="left:${s.pos}%;--stop-color:${s.color}" data-index="${i}">
+                <input type="color" class="gradient-stop-color-input" value="${s.color}" data-index="${i}">
+                <div class="gradient-stop-delete" data-index="${i}">${deleteIcon}</div>
+            </div>
+        `).join('');
+
+            strip.querySelectorAll('.gradient-stop').forEach(stop => {
+                const idx = parseInt(stop.dataset.index);
+                const colorInput = stop.querySelector('.gradient-stop-color-input');
+
+                stop.addEventListener('mousedown', (e) => {
+                    if (e.target.closest('.gradient-stop-delete')) return;
+                    if (e.target === colorInput) return; // Don't interfere with color picker
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    // Update active state without full re-render
+                    strip.querySelectorAll('.gradient-stop').forEach(s => s.classList.remove('active'));
+                    stop.classList.add('active');
+                    activeStop = idx;
+
+                    const startX = e.clientX;
+                    const moveStop = (ev) => {
+                        ev.preventDefault();
+                        const rect = strip.getBoundingClientRect();
+                        const pos = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
+                        colorStops[idx].pos = Math.round(pos);
+                        stop.style.left = `${Math.round(pos)}%`;
+                        const sortedStops = [...colorStops].sort((a, b) => a.pos - b.pos);
+                        strip.style.background = `linear-gradient(90deg, ${sortedStops.map(s => `${s.color} ${s.pos}%`).join(', ')})`;
+                    };
+                    const upStop = () => {
+                        document.removeEventListener('mousemove', moveStop);
+                        document.removeEventListener('mouseup', upStop);
+                        updateGradient();
+                    };
+                    document.addEventListener('mousemove', moveStop);
+                    document.addEventListener('mouseup', upStop);
+                });
+
+                // Double-click to edit color - open the color picker
+                stop.addEventListener('dblclick', (e) => {
+                    if (e.target.closest('.gradient-stop-delete')) return;
+                    if (e.target === colorInput) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    colorInput.click();
+                });
+
+                // Color input change handler
+                colorInput.addEventListener('input', (e) => {
+                    colorStops[idx].color = e.target.value;
+                    stop.style.setProperty('--stop-color', e.target.value);
+                    const sortedStops = [...colorStops].sort((a, b) => a.pos - b.pos);
+                    strip.style.background = `linear-gradient(90deg, ${sortedStops.map(s => `${s.color} ${s.pos}%`).join(', ')})`;
+                    updateGradient();
+                });
+
+                // Also update on change (for when picker closes)
+                colorInput.addEventListener('change', (e) => {
+                    colorStops[idx].color = e.target.value;
+                    stop.style.setProperty('--stop-color', e.target.value);
+                    renderGradientStrip(); // Re-render to update the input value attr
+                    updateGradient();
+                });
+
+                // Delete button
+                const deleteBtn = stop.querySelector('.gradient-stop-delete');
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (colorStops.length <= 2) return;
+                    colorStops.splice(idx, 1);
+                    activeStop = null;
+                    renderGradientStrip();
+                    updateGradient();
+                });
+            });
+        }
+
+        // Click on strip to add new stop
+        document.getElementById('gradient-strip').addEventListener('click', (e) => {
+            if (e.target.closest('.gradient-stop')) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const pos = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+            colorStops.push({ color: randomColor(), pos });
+            activeStop = colorStops.length - 1;
+            renderGradientStrip();
+            updateGradient();
+        });
+
+        document.getElementById('gradient-repeating').addEventListener('change', updateGradient);
+
+        function updateGradient() {
+            const type = document.querySelector('#gradient-type .radio-btn.active').dataset.value;
+            const repeating = document.getElementById('gradient-repeating').checked;
+            const sorted = [...colorStops].sort((a, b) => a.pos - b.pos);
+            const stopsStr = sorted.map(s => `${s.color} ${s.pos}%`).join(', ');
+
+            let prefix = repeating ? 'repeating-' : '';
+            let gradient;
+            if (type === 'linear') gradient = `${prefix}linear-gradient(${gradientAngle}deg, ${stopsStr})`;
+            else if (type === 'radial') gradient = `${prefix}radial-gradient(circle, ${stopsStr})`;
+            else gradient = `${prefix}conic-gradient(from ${gradientAngle}deg, ${stopsStr})`;
+
+            document.getElementById('gradient-preview').style.background = gradient;
+            setCode('gradient-code', `background: ${gradient};`);
+        }
+
+        // ========== SHADOW ==========
+        let lightX = 0.3, lightY = 0.3;
+        function updateLightDot() { const dot = document.getElementById('light-dot'); dot.style.left = (lightX * 100) + '%'; dot.style.top = (lightY * 100) + '%'; }
+
+        document.getElementById('light-position').addEventListener('mousedown', function (e) {
+            const update = (e) => { const rect = this.getBoundingClientRect(); lightX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)); lightY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)); updateLightDot(); updateShadow(); };
+            update(e);
+            const move = (e) => update(e);
+            const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup', up);
+        });
+
+        ['shadow-oomph', 'shadow-crispy', 'shadow-layers', 'shadow-distance'].forEach(id => {
+            document.getElementById(id).addEventListener('input', (e) => { document.getElementById(id + '-val').textContent = e.target.value + (id === 'shadow-distance' ? 'px' : ''); updateShadow(); });
+        });
+        ['shadow-bg', 'shadow-element', 'shadow-tint'].forEach(id => document.getElementById(id).addEventListener('input', updateShadow));
+
+        function hexToRgb(hex) { const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return r ? { r: parseInt(r[1], 16), g: parseInt(r[2], 16), b: parseInt(r[3], 16) } : null; }
+
+        function updateShadow() {
+            const oomph = parseFloat(document.getElementById('shadow-oomph').value);
+            const crispy = parseFloat(document.getElementById('shadow-crispy').value);
+            const layers = parseInt(document.getElementById('shadow-layers').value);
+            const distance = parseInt(document.getElementById('shadow-distance').value);
+            const bgColor = document.getElementById('shadow-bg').value;
+            const elementColor = document.getElementById('shadow-element').value;
+            const tint = document.getElementById('shadow-tint').checked;
+            const offsetX = (0.5 - lightX) * distance * 2, offsetY = (0.5 - lightY) * distance * 2;
+            const bgRgb = hexToRgb(bgColor);
+            let shadows = [];
+            for (let i = 0; i < layers; i++) {
+                const p = (i + 1) / layers;
+                const x = Math.round(offsetX * p), y = Math.round(offsetY * p);
+                const blur = Math.round(distance * p * (1 - crispy * 0.8)), spread = Math.round(-distance * 0.1 * p);
+                const alpha = (oomph * 0.5 * (1 - p * 0.5)).toFixed(2);
+                const color = tint && bgRgb ? `rgba(${Math.round(bgRgb.r * 0.3)}, ${Math.round(bgRgb.g * 0.3)}, ${Math.round(bgRgb.b * 0.3)}, ${alpha})` : `rgba(0, 0, 0, ${alpha})`;
+                shadows.push(`${x}px ${y}px ${blur}px ${spread}px ${color}`);
+            }
+            document.getElementById('shadow-preview-box').style.background = bgColor;
+            const preview = document.getElementById('shadow-preview');
+            preview.style.background = elementColor;
+            preview.style.boxShadow = shadows.join(', ');
+            setCode('shadow-code', `box-shadow:\n  ${shadows.join(',\n  ')};`);
+        }
+
+        // ========== BORDER SHAPE ==========
+        function getCornerVal(id) {
+            const el = document.getElementById(id);
+            return parseInt(el.textContent) || 0;
+        }
+
+        function setCornerVal(id, val) {
+            document.getElementById(id).textContent = Math.max(0, Math.min(100, parseInt(val) || 0));
+        }
+
+        function updateBorderShape() {
+            const shape = document.querySelector('#corner-shape-type .radio-btn.active').dataset.value;
+            const size = document.getElementById('border-size').value;
+            const color = document.getElementById('border-color').value;
+            const bg = document.getElementById('border-bg').value;
+            const tl = getCornerVal('br-tl'), tr = getCornerVal('br-tr');
+            const bl = getCornerVal('br-bl'), br = getCornerVal('br-br');
+            const superellipseVal = document.getElementById('superellipse').value;
+
+            document.getElementById('border-size-val').textContent = size + 'px';
+            document.getElementById('superellipse-val').textContent = superellipseVal;
+
+            // Show/hide superellipse slider
+            document.getElementById('superellipse-control').style.display = shape === 'superellipse' ? 'block' : 'none';
+
+            const preview = document.getElementById('border-preview');
+            const radiusValue = `${tl}px ${tr}px ${br}px ${bl}px`;
+
+            // Determine corner-shape value
+            let cornerShapeValue = '';
+            if (shape === 'superellipse') {
+                cornerShapeValue = `superellipse(${superellipseVal})`;
+            } else if (shape !== 'round') {
+                cornerShapeValue = shape;
+            }
+
+            preview.style.width = size + 'px';
+            preview.style.height = size + 'px';
+            preview.style.background = color;
+            preview.style.borderRadius = radiusValue;
+            preview.style.cornerShape = cornerShapeValue;
+            document.getElementById('border-preview-box').style.background = bg;
+
+            // Build CSS output
+            let css = `width: ${size}px;\nheight: ${size}px;\nbackground: ${color};\nborder-radius: ${tl}px ${tr}px ${br}px ${bl}px;`;
+
+            // Add corner-shape (experimental)
+            if (shape !== 'round') {
+                css += `\n\n/* corner-shape (experimental, limited browser support) */`;
+                if (shape === 'superellipse') {
+                    css += `\ncorner-shape: superellipse(${superellipseVal});`;
+                } else {
+                    css += `\ncorner-shape: ${shape};`;
+                }
+            }
+
+            setCode('border-code', css);
+        }
+
+        // Corner value contenteditable handlers
+        ['br-tl', 'br-tr', 'br-bl', 'br-br', 'border-radius'].forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('blur', () => {
+                const val = parseInt(el.textContent) || 0;
+                el.textContent = Math.max(0, Math.min(100, val));
+                if (id === 'border-radius') {
+                    ['br-tl', 'br-tr', 'br-bl', 'br-br'].forEach(cid => setCornerVal(cid, val));
+                }
+                updateBorderShape();
+            });
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    el.blur();
+                }
+            });
+        });
+
+        // Corner shape type selection
+        document.querySelectorAll('#corner-shape-type .radio-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#corner-shape-type .radio-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                updateBorderShape();
+            });
+        });
+
+        ['border-size', 'border-color', 'border-bg', 'superellipse'].forEach(id => document.getElementById(id).addEventListener('input', updateBorderShape));
+
+        // ========== TRANSITION ==========
+        function updateTransition() {
+            const prop = document.getElementById('transition-property').value;
+            const duration = document.getElementById('transition-duration').value;
+            const delay = document.getElementById('transition-delay').value;
+            const timing = document.querySelector('#timing-function .radio-btn.active').dataset.value;
+            const scale = document.getElementById('hover-scale').value;
+            const rotate = document.getElementById('hover-rotate').value;
+            const opacity = document.getElementById('hover-opacity').value;
+
+            document.getElementById('transition-duration-val').textContent = duration + 'ms';
+            document.getElementById('transition-delay-val').textContent = delay + 'ms';
+            document.getElementById('hover-scale-val').textContent = scale;
+            document.getElementById('hover-rotate-val').textContent = rotate + '°';
+            document.getElementById('hover-opacity-val').textContent = opacity;
+
+            const preview = document.getElementById('transition-preview');
+            preview.style.transition = `${prop} ${duration}ms ${timing} ${delay}ms`;
+            preview.onmouseenter = () => { preview.style.transform = `scale(${scale}) rotate(${rotate}deg)`; preview.style.opacity = opacity; };
+            preview.onmouseleave = () => { preview.style.transform = ''; preview.style.opacity = ''; };
+
+            setCode('transition-code', `.element {\n  transition: ${prop} ${duration}ms ${timing}${delay > 0 ? ` ${delay}ms` : ''};\n}\n\n.element:hover {\n  transform: scale(${scale}) rotate(${rotate}deg);\n  opacity: ${opacity};\n}`);
+        }
+        ['transition-property', 'transition-duration', 'transition-delay', 'hover-scale', 'hover-rotate', 'hover-opacity'].forEach(id => document.getElementById(id).addEventListener('input', updateTransition));
+
+        // ========== FILTER ==========
+        function updateFilter() {
+            const vals = { blur: document.getElementById('filter-blur').value, brightness: document.getElementById('filter-brightness').value, contrast: document.getElementById('filter-contrast').value, grayscale: document.getElementById('filter-grayscale').value, hue: document.getElementById('filter-hue').value, saturate: document.getElementById('filter-saturate').value, sepia: document.getElementById('filter-sepia').value, invert: document.getElementById('filter-invert').value };
+            document.getElementById('filter-blur-val').textContent = vals.blur + 'px';
+            document.getElementById('filter-brightness-val').textContent = vals.brightness + '%';
+            document.getElementById('filter-contrast-val').textContent = vals.contrast + '%';
+            document.getElementById('filter-grayscale-val').textContent = vals.grayscale + '%';
+            document.getElementById('filter-hue-val').textContent = vals.hue + '°';
+            document.getElementById('filter-saturate-val').textContent = vals.saturate + '%';
+            document.getElementById('filter-sepia-val').textContent = vals.sepia + '%';
+            document.getElementById('filter-invert-val').textContent = vals.invert + '%';
+
+            const filters = [];
+            if (vals.blur != 0) filters.push(`blur(${vals.blur}px)`);
+            if (vals.brightness != 100) filters.push(`brightness(${vals.brightness}%)`);
+            if (vals.contrast != 100) filters.push(`contrast(${vals.contrast}%)`);
+            if (vals.grayscale != 0) filters.push(`grayscale(${vals.grayscale}%)`);
+            if (vals.hue != 0) filters.push(`hue-rotate(${vals.hue}deg)`);
+            if (vals.saturate != 100) filters.push(`saturate(${vals.saturate}%)`);
+            if (vals.sepia != 0) filters.push(`sepia(${vals.sepia}%)`);
+            if (vals.invert != 0) filters.push(`invert(${vals.invert}%)`);
+
+            const filterVal = filters.length ? filters.join(' ') : 'none';
+            document.getElementById('filter-preview').style.filter = filterVal;
+            setCode('filter-code', `filter: ${filterVal};`);
+        }
+        ['filter-blur', 'filter-brightness', 'filter-contrast', 'filter-grayscale', 'filter-hue', 'filter-saturate', 'filter-sepia', 'filter-invert'].forEach(id => document.getElementById(id).addEventListener('input', updateFilter));
+        document.getElementById('reset-filters').addEventListener('click', () => { ['filter-blur', 'filter-grayscale', 'filter-hue', 'filter-sepia', 'filter-invert'].forEach(id => document.getElementById(id).value = 0);['filter-brightness', 'filter-contrast', 'filter-saturate'].forEach(id => document.getElementById(id).value = 100); updateFilter(); });
+
+        // ========== PATTERN ==========
+        let stripesAngle = 45, gridAngle = 0, textAngle = -15;
+        setupAngleDial('stripes-angle-dial', 'stripes-angle-line', 'stripes-angle-val', 45, (a) => { stripesAngle = a; updatePattern(); });
+        setupAngleDial('grid-angle-dial', 'grid-angle-line', 'grid-angle-val', 0, (a) => { gridAngle = a; updatePattern(); });
+        setupAngleDial('text-angle-dial', 'text-angle-line', 'text-angle-val', 345, (a) => { textAngle = a - 360; if (a > 180) textAngle = a - 360; else textAngle = a; updatePattern(); });
+
+        function hexToRgba(hex, a) { const rgb = hexToRgb(hex); return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a})`; }
+
+        function updatePattern() {
+            const type = document.querySelector('#pattern-type .radio-btn.active').dataset.value;
+            const bg = document.getElementById('pattern-bg').value;
+            let css = '', preview = document.getElementById('pattern-preview');
+
+            if (type === 'dots') {
+                const size = document.getElementById('dots-size').value, spacing = document.getElementById('dots-spacing').value, color = document.getElementById('dots-color').value, opacity = document.getElementById('dots-opacity').value / 100;
+                document.getElementById('dots-size-val').textContent = size + 'px';
+                document.getElementById('dots-spacing-val').textContent = spacing + 'px';
+                document.getElementById('dots-opacity-val').textContent = Math.round(opacity * 100) + '%';
+                const c = hexToRgba(color, opacity);
+                css = `background-color: ${bg};\nbackground-image: radial-gradient(${c} ${size}px, transparent ${size}px);\nbackground-size: ${spacing}px ${spacing}px;`;
+                preview.style.backgroundColor = bg;
+                preview.style.backgroundImage = `radial-gradient(${c} ${size}px, transparent ${size}px)`;
+                preview.style.backgroundSize = `${spacing}px ${spacing}px`;
+            } else if (type === 'stripes') {
+                const w = document.getElementById('stripes-width').value, gap = document.getElementById('stripes-gap').value, color = document.getElementById('stripes-color').value, opacity = document.getElementById('stripes-opacity').value / 100;
+                document.getElementById('stripes-width-val').textContent = w + 'px';
+                document.getElementById('stripes-gap-val').textContent = gap + 'px';
+                document.getElementById('stripes-opacity-val').textContent = Math.round(opacity * 100) + '%';
+                const c = hexToRgba(color, opacity), total = parseInt(w) + parseInt(gap);
+                css = `background-color: ${bg};\nbackground-image: repeating-linear-gradient(${stripesAngle}deg, ${c}, ${c} ${w}px, transparent ${w}px, transparent ${total}px);`;
+                preview.style.backgroundColor = bg;
+                preview.style.backgroundImage = `repeating-linear-gradient(${stripesAngle}deg,${c},${c} ${w}px,transparent ${w}px,transparent ${total}px)`;
+                preview.style.backgroundSize = '';
+            } else if (type === 'grid') {
+                const size = document.getElementById('grid-size').value, thick = document.getElementById('grid-thickness').value, color = document.getElementById('grid-color').value, opacity = document.getElementById('grid-opacity').value / 100;
+                document.getElementById('grid-size-val').textContent = size + 'px';
+                document.getElementById('grid-thickness-val').textContent = thick + 'px';
+                document.getElementById('grid-opacity-val').textContent = Math.round(opacity * 100) + '%';
+                const c = hexToRgba(color, opacity);
+                // Use two perpendicular linear gradients that rotate together
+                const angle1 = gridAngle;
+                const angle2 = gridAngle + 90;
+                css = `background-color: ${bg};\nbackground-image: repeating-linear-gradient(${angle1}deg, ${c} 0px, ${c} ${thick}px, transparent ${thick}px, transparent ${size}px), repeating-linear-gradient(${angle2}deg, ${c} 0px, ${c} ${thick}px, transparent ${thick}px, transparent ${size}px);`;
+                preview.style.backgroundColor = bg;
+                preview.style.backgroundImage = `repeating-linear-gradient(${angle1}deg, ${c} 0px, ${c} ${thick}px, transparent ${thick}px, transparent ${size}px), repeating-linear-gradient(${angle2}deg, ${c} 0px, ${c} ${thick}px, transparent ${thick}px, transparent ${size}px)`;
+                preview.style.backgroundSize = '';
+            } else if (type === 'noise') {
+                const size = document.getElementById('noise-size').value, opacity = document.getElementById('noise-opacity').value / 100, density = document.getElementById('noise-density').value;
+                document.getElementById('noise-size-val').textContent = size + 'px';
+                document.getElementById('noise-opacity-val').textContent = Math.round(opacity * 100) + '%';
+                document.getElementById('noise-density-val').textContent = density + '%';
+                const svg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 ${size} ${size}' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='${density / 100}' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
+                css = `background-color: ${bg};\nbackground-image: ${svg};\nbackground-size: ${size}px ${size}px;\nopacity: ${opacity};`;
+                preview.style.backgroundColor = bg;
+                preview.style.backgroundImage = svg;
+                preview.style.backgroundSize = `${size}px ${size}px`;
+            } else if (type === 'text') {
+                const text = document.getElementById('text-content').value || 'CSS';
+                const fontSize = document.getElementById('text-size').value;
+                const spacing = document.getElementById('text-spacing').value;
+                const color = document.getElementById('text-color').value;
+                const opacity = document.getElementById('text-opacity').value / 100;
+                document.getElementById('text-size-val').textContent = fontSize + 'px';
+                document.getElementById('text-spacing-val').textContent = spacing + 'px';
+                document.getElementById('text-opacity-val').textContent = Math.round(opacity * 100) + '%';
+                const rgb = hexToRgb(color);
+                const encodedText = encodeURIComponent(text);
+                // SVG with rotated text pattern
+                const svg = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${spacing}' height='${spacing}'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-size='${fontSize}' font-weight='600' fill='rgba(${rgb.r},${rgb.g},${rgb.b},${opacity})' transform='rotate(${textAngle} ${spacing / 2} ${spacing / 2})'%3E${encodedText}%3C/text%3E%3C/svg%3E")`;
+                css = `background-color: ${bg};\nbackground-image: ${svg};\nbackground-size: ${spacing}px ${spacing}px;`;
+                preview.style.backgroundColor = bg;
+                preview.style.backgroundImage = svg;
+                preview.style.backgroundSize = `${spacing}px ${spacing}px`;
+            }
+            setCode('pattern-code', css);
+        }
+        ['dots-size', 'dots-spacing', 'dots-color', 'dots-opacity', 'stripes-width', 'stripes-gap', 'stripes-color', 'stripes-opacity', 'grid-size', 'grid-thickness', 'grid-color', 'grid-opacity', 'noise-size', 'noise-opacity', 'noise-density', 'text-content', 'text-size', 'text-spacing', 'text-color', 'text-opacity', 'pattern-bg'].forEach(id => document.getElementById(id).addEventListener('input', updatePattern));
+
+        // ========== GLASSMORPHISM ==========
+        function updateGlass() {
+            const blur = document.getElementById('glass-blur').value;
+            const alpha = document.getElementById('glass-alpha').value;
+            const sat = document.getElementById('glass-saturation').value;
+            const border = document.getElementById('glass-border').value;
+            const radius = document.getElementById('glass-radius').value;
+            const tint = document.getElementById('glass-tint').value;
+            const bgColor = document.getElementById('glass-bg-color').value;
+
+            document.getElementById('glass-blur-val').textContent = blur + 'px';
+            document.getElementById('glass-alpha-val').textContent = alpha;
+            document.getElementById('glass-saturation-val').textContent = sat + '%';
+            document.getElementById('glass-border-val').textContent = border;
+            document.getElementById('glass-radius-val').textContent = radius + 'px';
+
+            const tintRgb = hexToRgb(tint);
+            const preview = document.getElementById('glass-preview');
+            preview.style.background = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, ${alpha})`;
+            preview.style.backdropFilter = `blur(${blur}px) saturate(${sat}%)`;
+            preview.style.webkitBackdropFilter = `blur(${blur}px) saturate(${sat}%)`;
+            preview.style.borderRadius = radius + 'px';
+            preview.style.border = `1px solid rgba(255, 255, 255, ${border})`;
+
+            document.getElementById('glass-preview-box').style.background = `linear-gradient(135deg, ${bgColor}, #a855f7, #ec4899)`;
+
+            setCode('glass-code', `background: rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, ${alpha});\nbackdrop-filter: blur(${blur}px) saturate(${sat}%);\n-webkit-backdrop-filter: blur(${blur}px) saturate(${sat}%);\nborder-radius: ${radius}px;\nborder: 1px solid rgba(255, 255, 255, ${border});`);
+        }
+        ['glass-blur', 'glass-alpha', 'glass-saturation', 'glass-border', 'glass-radius', 'glass-tint', 'glass-bg-color'].forEach(id => document.getElementById(id).addEventListener('input', updateGlass));
+
+        // ========== CLIP-PATH ==========
+        const clipShapes = {
+            triangle: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+            pentagon: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)',
+            hexagon: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+            star: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+            arrow: 'polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)',
+            cross: 'polygon(10% 25%, 35% 25%, 35% 0%, 65% 0%, 65% 25%, 90% 25%, 90% 50%, 65% 50%, 65% 100%, 35% 100%, 35% 50%, 10% 50%)'
+        };
+        let currentClip = clipShapes.triangle;
+
+        function updateClipControls() {
+            const shape = document.querySelector('#clip-shape .radio-btn.active').dataset.value;
+            document.getElementById('polygon-presets').style.display = shape === 'polygon' ? 'block' : 'none';
+            document.getElementById('clip-circle-controls').style.display = shape === 'circle' ? 'block' : 'none';
+            document.getElementById('clip-ellipse-controls').style.display = shape === 'ellipse' ? 'block' : 'none';
+            document.getElementById('clip-inset-controls').style.display = shape === 'inset' ? 'block' : 'none';
+            updateClip();
+        }
+
+        function updateClip() {
+            const shape = document.querySelector('#clip-shape .radio-btn.active').dataset.value;
+            const preview = document.getElementById('clip-preview');
+
+            let clip;
+            if (shape === 'polygon') clip = currentClip;
+            else if (shape === 'circle') {
+                const r = document.getElementById('clip-circle-r').value, x = document.getElementById('clip-circle-x').value, y = document.getElementById('clip-circle-y').value;
+                document.getElementById('clip-circle-r-val').textContent = r + '%';
+                document.getElementById('clip-circle-x-val').textContent = x + '%';
+                document.getElementById('clip-circle-y-val').textContent = y + '%';
+                clip = `circle(${r}% at ${x}% ${y}%)`;
+            } else if (shape === 'ellipse') {
+                const w = document.getElementById('clip-ellipse-w').value, h = document.getElementById('clip-ellipse-h').value;
+                document.getElementById('clip-ellipse-w-val').textContent = w + '%';
+                document.getElementById('clip-ellipse-h-val').textContent = h + '%';
+                clip = `ellipse(${w}% ${h}% at 50% 50%)`;
+            } else if (shape === 'inset') {
+                const i = document.getElementById('clip-inset').value, r = document.getElementById('clip-inset-r').value;
+                document.getElementById('clip-inset-val').textContent = i + '%';
+                document.getElementById('clip-inset-r-val').textContent = r + '%';
+                clip = `inset(${i}% round ${r}%)`;
+            }
+
+            preview.style.clipPath = clip;
+            setCode('clip-code', `clip-path: ${clip};`);
+        }
+
+        document.querySelectorAll('[data-clip]').forEach(btn => {
+            btn.addEventListener('click', () => { currentClip = clipShapes[btn.dataset.clip]; updateClip(); });
+        });
+        ['clip-circle-r', 'clip-circle-x', 'clip-circle-y', 'clip-ellipse-w', 'clip-ellipse-h', 'clip-inset', 'clip-inset-r'].forEach(id => document.getElementById(id).addEventListener('input', updateClip));
+
+        // ========== TEXT SHADOW ==========
+        const tsPresets = {
+            none: { x: 0, y: 0, blur: 0, opacity: 0 },
+            soft: { x: 2, y: 2, blur: 4, opacity: 0.5 },
+            hard: { x: 3, y: 3, blur: 0, opacity: 0.8 },
+            glow: { x: 0, y: 0, blur: 15, opacity: 0.8, color: '#6366f1' },
+            neon: { x: 0, y: 0, blur: 10, opacity: 1, color: '#ec4899', multi: true },
+            retro: { x: 4, y: 4, blur: 0, opacity: 1, color: '#a855f7', multi: true },
+            '3d': { x: 1, y: 1, blur: 0, opacity: 1, color: '#1c1c1f', multi: true }
+        };
+
+        function updateTextShadow() {
+            const x = document.getElementById('ts-x').value;
+            const y = document.getElementById('ts-y').value;
+            const blur = document.getElementById('ts-blur').value;
+            const color = document.getElementById('ts-color').value;
+            const opacity = document.getElementById('ts-opacity').value;
+            const textColor = document.getElementById('ts-text-color').value;
+            const fontSize = document.getElementById('ts-size').value;
+            const text = document.getElementById('ts-text').value;
+
+            document.getElementById('ts-x-val').textContent = x + 'px';
+            document.getElementById('ts-y-val').textContent = y + 'px';
+            document.getElementById('ts-blur-val').textContent = blur + 'px';
+            document.getElementById('ts-opacity-val').textContent = opacity;
+            document.getElementById('ts-size-val').textContent = fontSize + 'px';
+
+            const rgb = hexToRgb(color);
+            const shadowColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+            const shadow = `${x}px ${y}px ${blur}px ${shadowColor}`;
+
+            const preview = document.getElementById('textshadow-preview');
+            preview.textContent = text;
+            preview.style.color = textColor;
+            preview.style.fontSize = fontSize + 'px';
+            preview.style.textShadow = shadow;
+
+            setCode('textshadow-code', `color: ${textColor};\nfont-size: ${fontSize}px;\ntext-shadow: ${shadow};`);
+        }
+
+        document.querySelectorAll('.ts-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.ts-preset').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const p = tsPresets[btn.dataset.preset];
+                document.getElementById('ts-x').value = p.x;
+                document.getElementById('ts-y').value = p.y;
+                document.getElementById('ts-blur').value = p.blur;
+                document.getElementById('ts-opacity').value = p.opacity;
+                if (p.color) document.getElementById('ts-color').value = p.color;
+                updateTextShadow();
+            });
+        });
+        ['ts-x', 'ts-y', 'ts-blur', 'ts-color', 'ts-opacity', 'ts-text-color', 'ts-size', 'ts-text'].forEach(id => document.getElementById(id).addEventListener('input', updateTextShadow));
+
+        // ========== FLEXBOX & GRID LAYOUTS ==========
+        const flexLayouts = [
+            { name: 'Center All', css: `.container {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n}`, preview: '<div style="display:flex;justify-content:center;align-items:center;height:100%"><div style="width:30px;height:30px"></div></div>' },
+            { name: 'Space Between', css: `.container {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n}`, preview: '<div style="display:flex;justify-content:space-between;align-items:center;height:100%"><div style="width:20px;height:20px"></div><div style="width:20px;height:20px"></div><div style="width:20px;height:20px"></div></div>' },
+            { name: 'Space Evenly', css: `.container {\n  display: flex;\n  justify-content: space-evenly;\n  align-items: center;\n}`, preview: '<div style="display:flex;justify-content:space-evenly;align-items:center;height:100%"><div style="width:18px;height:18px"></div><div style="width:18px;height:18px"></div><div style="width:18px;height:18px"></div></div>' },
+            { name: 'Column Stack', css: `.container {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}`, preview: '<div style="display:flex;flex-direction:column;gap:4px;padding:4px"><div style="height:16px"></div><div style="height:16px"></div><div style="height:16px"></div></div>' },
+            { name: 'Wrap Cards', css: `.container {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}`, preview: '<div style="display:flex;flex-wrap:wrap;gap:3px;padding:2px"><div style="width:28px;height:20px"></div><div style="width:28px;height:20px"></div><div style="width:28px;height:20px"></div><div style="width:28px;height:20px"></div></div>' },
+            { name: 'Navbar', css: `.navbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 0 16px;\n}\n.nav-links {\n  display: flex;\n  gap: 16px;\n}`, preview: '<div style="display:flex;justify-content:space-between;align-items:center;height:100%;padding:0 4px"><div style="width:20px;height:14px"></div><div style="display:flex;gap:4px"><div style="width:12px;height:10px"></div><div style="width:12px;height:10px"></div><div style="width:12px;height:10px"></div></div></div>' },
+            { name: 'Sticky Footer', css: `.page {\n  display: flex;\n  flex-direction: column;\n  min-height: 100vh;\n}\n.content { flex: 1; }\n.footer { /* stays at bottom */ }`, preview: '<div style="display:flex;flex-direction:column;height:100%"><div style="height:12px;margin:3px"></div><div style="flex:1;margin:0 3px"></div><div style="height:10px;margin:3px"></div></div>' },
+            { name: 'Sidebar Left', css: `.layout {\n  display: flex;\n}\n.sidebar { width: 200px; }\n.main { flex: 1; }`, preview: '<div style="display:flex;height:100%;gap:3px;padding:3px"><div style="width:25px"></div><div style="flex:1"></div></div>' },
+            { name: 'Holy Grail', css: `.layout {\n  display: flex;\n  flex-direction: column;\n  min-height: 100vh;\n}\n.body { display: flex; flex: 1; }\n.sidebar { width: 200px; }\n.main { flex: 1; }`, preview: '<div style="display:flex;flex-direction:column;height:100%;gap:2px;padding:2px"><div style="height:12px"></div><div style="display:flex;flex:1;gap:2px"><div style="width:18px"></div><div style="flex:1"></div><div style="width:18px"></div></div><div style="height:10px"></div></div>' },
+        ];
+
+        const gridLayouts = [
+            { name: '2 Columns', css: `.grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 16px;\n}`, preview: '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;height:100%"><div></div><div></div></div>' },
+            { name: '3 Columns', css: `.grid {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n}`, preview: '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:4px;height:100%"><div></div><div></div><div></div></div>' },
+            { name: '4 Columns', css: `.grid {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 16px;\n}`, preview: '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;padding:3px;height:100%"><div></div><div></div><div></div><div></div></div>' },
+            { name: 'Auto-fit', css: `.grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 16px;\n}`, preview: '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(30px,1fr));gap:3px;padding:3px;height:100%"><div></div><div></div><div></div></div>' },
+            { name: 'Sidebar + Content', css: `.grid {\n  display: grid;\n  grid-template-columns: 250px 1fr;\n  gap: 24px;\n}`, preview: '<div style="display:grid;grid-template-columns:30px 1fr;gap:4px;padding:4px;height:100%"><div></div><div></div></div>' },
+            { name: 'Featured + Grid', css: `.grid {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n}\n.featured {\n  grid-column: span 2;\n  grid-row: span 2;\n}`, preview: '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;padding:3px;height:100%"><div style="grid-column:span 2;grid-row:span 2"></div><div></div><div></div></div>' },
+            { name: 'Dashboard', css: `.dashboard {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  grid-template-rows: auto 1fr 1fr;\n  gap: 16px;\n}\n.header { grid-column: 1 / -1; }\n.sidebar { grid-row: 2 / 4; }\n.main { grid-column: 2 / 5; }`, preview: '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;grid-template-rows:15px 1fr 1fr;gap:2px;padding:2px;height:100%"><div style="grid-column:1/-1"></div><div style="grid-row:span 2"></div><div style="grid-column:span 3"></div><div style="grid-column:span 3"></div></div>' },
+            { name: 'Bento Grid', css: `.bento {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  grid-auto-rows: 100px;\n  gap: 16px;\n}\n.large { grid-column: span 2; grid-row: span 2; }`, preview: '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;grid-auto-rows:1fr;gap:2px;padding:2px;height:100%"><div style="grid-column:span 2;grid-row:span 2"></div><div></div><div></div><div></div><div></div></div>' },
+            { name: 'Masonry-ish', css: `.masonry {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  grid-auto-rows: 50px;\n  gap: 12px;\n}\n.tall { grid-row: span 2; }`, preview: '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-auto-rows:20px;gap:2px;padding:2px;height:100%"><div style="grid-row:span 2"></div><div></div><div style="grid-row:span 2"></div><div></div></div>' },
+        ];
+
+        function renderLayouts() {
+            const flexContainer = document.getElementById('flex-layouts');
+            const gridContainer = document.getElementById('grid-layouts');
+            flexContainer.innerHTML = flexLayouts.map((l, i) => `<div class="layout-item" data-type="flex" data-index="${i}"><div class="layout-item-preview">${l.preview}</div><div class="layout-item-name">${l.name}</div></div>`).join('');
+            gridContainer.innerHTML = gridLayouts.map((l, i) => `<div class="layout-item" data-type="grid" data-index="${i}"><div class="layout-item-preview">${l.preview}</div><div class="layout-item-name">${l.name}</div></div>`).join('');
+            document.querySelectorAll('.layout-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.layout-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    const layouts = item.dataset.type === 'flex' ? flexLayouts : gridLayouts;
+                    const layout = layouts[item.dataset.index];
+                    setCode('layouts-code', layout.css);
+                    // Render large preview
+                    const previewBox = document.getElementById('layouts-preview');
+                    previewBox.innerHTML = layout.preview.replace(/style="/g, 'style="height:100%;');
+                    // Style the preview items
+                    previewBox.querySelectorAll('div > div').forEach(el => {
+                        if (!el.style.background && !el.innerHTML.includes('<div')) {
+                            el.classList.add('layout-preview-item');
+                        }
+                    });
+                });
+            });
+            // Show first layout by default
+            if (flexLayouts.length > 0) {
+                document.querySelector('.layout-item').click();
+            }
+        }
+
+        // ========== SNIPPETS ==========
+        const snippets = [
+            { name: 'Rainbow Button', desc: 'Animated rainbow gradient border with glow effect', preview: '<div class="rainbow-btn"><div class="rainbow-glow"></div>Button</div>', css: `/* Rainbow Button */\n.rainbow-btn {\n  position: relative;\n  padding: 12px 24px;\n  font-size: 14px;\n  font-weight: 600;\n  color: white;\n  background: #0a0a0b;\n  border: none;\n  border-radius: 8px;\n  cursor: pointer;\n  z-index: 1;\n}\n.rainbow-btn::before {\n  content: '';\n  position: absolute;\n  inset: -3px;\n  background: conic-gradient(from var(--angle), #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff0080, #ff0000);\n  border-radius: 10px;\n  z-index: -2;\n  animation: rainbow-spin 3s linear infinite;\n}\n.rainbow-btn::after {\n  content: '';\n  position: absolute;\n  inset: 0;\n  background: #0a0a0b;\n  border-radius: 8px;\n  z-index: -1;\n}\n@property --angle {\n  syntax: '<angle>';\n  initial-value: 0deg;\n  inherits: false;\n}\n@keyframes rainbow-spin {\n  to { --angle: 360deg; }\n}` },
+            { name: 'Metal Button', desc: 'Metallic button with shiny border effect', preview: '<button class="metal-btn">Metal</button>', css: `/* Metal Button */\n.metal-btn {\n  position: relative;\n  padding: 12px 28px;\n  font-size: 14px;\n  font-weight: 600;\n  color: #333;\n  background: linear-gradient(180deg,\n    #f0f0f0 0%,\n    #d4d4d4 50%,\n    #c0c0c0 51%,\n    #e8e8e8 100%);\n  border: none;\n  border-radius: 6px;\n  cursor: pointer;\n  box-shadow:\n    0 1px 0 #fff inset,\n    0 -1px 0 #999 inset,\n    0 4px 8px rgba(0,0,0,0.3);\n  text-shadow: 0 1px 0 rgba(255,255,255,0.8);\n}\n.metal-btn::before {\n  content: '';\n  position: absolute;\n  inset: 1px;\n  border-radius: 5px;\n  background: linear-gradient(180deg,\n    rgba(255,255,255,0.4) 0%,\n    transparent 50%);\n  pointer-events: none;\n}\n.metal-btn::after {\n  content: '';\n  position: absolute;\n  inset: 0;\n  border-radius: 6px;\n  box-shadow:\n    0 0 0 1px rgba(255,255,255,0.5) inset,\n    0 0 0 2px rgba(0,0,0,0.1) inset;\n  pointer-events: none;\n}` },
+            { name: 'Max-Width Button', desc: 'Button sized by largest child, click to toggle loading', preview: '<button class="max-width-btn" id="maxwidth-demo" onclick="this.classList.toggle(\'loading\');if(this.classList.contains(\'loading\')){setTimeout(()=>this.classList.remove(\'loading\'),3000)}"><span class="label">Click me to do something...</span><span class="loader">Loading...</span></button>', css: `/* Button sized by largest content */\n.max-width-btn {\n  display: grid;\n  padding: 10px 20px;\n  background: #6366f1;\n  color: white;\n  border: none;\n  border-radius: 8px;\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n}\n.max-width-btn > * {\n  grid-area: 1 / 1;\n  text-align: center;\n}\n.max-width-btn .loader {\n  visibility: hidden;\n}\n.max-width-btn .label {\n  visibility: visible;\n}\n/* Loading state */\n.max-width-btn.loading .loader {\n  visibility: visible;\n}\n.max-width-btn.loading .label {\n  visibility: hidden;\n}` },
+            { name: 'Gradient Text', desc: 'Text with gradient fill effect', preview: '<div style="font-size:24px;font-weight:700;background:linear-gradient(135deg,#6366f1,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Gradient</div>', css: `.gradient-text {\n  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);\n  -webkit-background-clip: text;\n  -webkit-text-fill-color: transparent;\n  background-clip: text;\n}` },
+            { name: 'Truncate Text', desc: 'Single line text with ellipsis overflow', preview: '<div style="width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px">This is very long text that gets truncated</div>', css: `.truncate {\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n\n/* Multi-line truncate */\n.line-clamp {\n  display: -webkit-box;\n  -webkit-line-clamp: 3;\n  -webkit-box-orient: vertical;\n  overflow: hidden;\n}` },
+            { name: 'Custom Scrollbar', desc: 'Styled scrollbar for webkit browsers', preview: '<textarea class="custom-scrollbar-demo" style="width:200px;height:80px;resize:none;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;padding:8px;font-size:12px;" readonly>Scroll this textarea to see the custom scrollbar styling in action.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</textarea>', css: `/* Webkit browsers (Chrome, Safari, Edge) */\n.custom-scrollbar::-webkit-scrollbar {\n  width: 8px;\n  height: 8px;\n}\n.custom-scrollbar::-webkit-scrollbar-track {\n  background: #1c1c1f;\n  border-radius: 4px;\n}\n.custom-scrollbar::-webkit-scrollbar-thumb {\n  background: #6366f1;\n  border-radius: 4px;\n}\n.custom-scrollbar::-webkit-scrollbar-thumb:hover {\n  background: #818cf8;\n}\n\n/* Firefox */\n.custom-scrollbar {\n  scrollbar-width: thin;\n  scrollbar-color: #6366f1 #1c1c1f;\n}` },
+            { name: 'Aspect Ratio Box', desc: 'Container with fixed aspect ratio', preview: '<div style="width:100px;aspect-ratio:16/9;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:white">16:9</div>', css: `.aspect-box {\n  aspect-ratio: 16 / 9;\n  width: 100%;\n}\n\n/* Common ratios */\n.square { aspect-ratio: 1; }\n.video { aspect-ratio: 16 / 9; }\n.portrait { aspect-ratio: 3 / 4; }` },
+            { name: 'Animated Underline', desc: 'Hover underline that animates from left', preview: '<a href="#" class="animated-underline-demo" onclick="return false">Hover over me</a>', css: `.hover-underline {\n  position: relative;\n  text-decoration: none;\n  color: inherit;\n}\n.hover-underline::after {\n  content: '';\n  position: absolute;\n  bottom: -2px;\n  left: 0;\n  width: 0;\n  height: 2px;\n  background: currentColor;\n  transition: width 0.3s ease;\n}\n.hover-underline:hover::after {\n  width: 100%;\n}` },
+            { name: 'CSS Anchor Tooltip', desc: 'Tooltip using CSS anchor positioning', preview: '<div style="position:relative;padding:20px 0;"><button class="anchor-tooltip-trigger" style="anchor-name:--tooltip-anchor;padding:8px 16px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);cursor:pointer">Hover me</button><div class="anchor-tooltip-content" style="position:absolute;position-anchor:--tooltip-anchor;bottom:anchor(top);left:anchor(center);transform:translateX(-50%);background:#333;color:white;padding:6px 12px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity 0.2s;pointer-events:none;margin-bottom:8px;">Tooltip with anchor!</div></div>', css: `/* CSS Anchor Positioning Tooltip */\n.tooltip-trigger {\n  anchor-name: --my-anchor;\n}\n\n.tooltip {\n  position: absolute;\n  position-anchor: --my-anchor;\n  /* Position above the anchor */\n  bottom: anchor(top);\n  left: anchor(center);\n  transform: translateX(-50%);\n  /* Styling */\n  background: #333;\n  color: white;\n  padding: 8px 12px;\n  border-radius: 6px;\n  font-size: 13px;\n  white-space: nowrap;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s;\n  margin-bottom: 8px;\n}\n\n.tooltip-trigger:hover + .tooltip,\n.tooltip-trigger:focus + .tooltip {\n  opacity: 1;\n}\n\n/* Fallback for browsers without anchor */\n@supports not (anchor-name: --a) {\n  .tooltip {\n    bottom: 100%;\n    left: 50%;\n  }\n}` },
+            { name: 'CSS Dialog / Modal', desc: 'Native HTML dialog with CSS styling', preview: '<button class="open-dialog-demo" style="padding:8px 16px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer">Open Dialog</button><dialog class="dialog-demo" style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:12px;padding:24px;max-width:300px;"><h3 style="margin:0 0 12px">Dialog Title</h3><p style="margin:0 0 16px;color:var(--text-secondary);font-size:14px">This is a native HTML dialog element styled with CSS.</p><button onclick="this.closest(\'dialog\').close()" style="padding:8px 16px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;width:100%">Close</button></dialog>', css: `/* Native HTML Dialog */\ndialog {\n  background: #1c1c1f;\n  color: #f0f0f2;\n  border: 1px solid #2a2a2e;\n  border-radius: 12px;\n  padding: 24px;\n  max-width: 400px;\n  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);\n}\n\n/* Backdrop */\ndialog::backdrop {\n  background: rgba(0, 0, 0, 0.7);\n  backdrop-filter: blur(4px);\n}\n\n/* Open/close animation */\ndialog[open] {\n  animation: dialog-in 0.2s ease-out;\n}\n@keyframes dialog-in {\n  from {\n    opacity: 0;\n    transform: scale(0.95);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n\n/* Usage: */\n/* <dialog id="my-dialog">...</dialog> */\n/* dialog.showModal() to open */\n/* dialog.close() to close */` },
+            { name: 'Loading Spinner', desc: 'CSS-only animated spinner', preview: '<div style="width:32px;height:32px;border:3px solid var(--border-color);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>', css: `.spinner {\n  width: 24px;\n  height: 24px;\n  border: 3px solid #e5e5e5;\n  border-top-color: #6366f1;\n  border-radius: 50%;\n  animation: spin 1s linear infinite;\n}\n@keyframes spin {\n  to { transform: rotate(360deg); }\n}` },
+            { name: 'Skeleton Loader', desc: 'Animated placeholder for loading content', preview: '<div style="width:200px;"><div style="width:100%;height:16px;background:linear-gradient(90deg,var(--bg-tertiary) 25%,var(--bg-hover) 50%,var(--bg-tertiary) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;margin-bottom:8px"></div><div style="width:70%;height:12px;background:linear-gradient(90deg,var(--bg-tertiary) 25%,var(--bg-hover) 50%,var(--bg-tertiary) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px"></div></div><style>@keyframes shimmer{to{background-position:-200% 0}}</style>', css: `.skeleton {\n  background: linear-gradient(\n    90deg,\n    #1c1c1f 25%,\n    #2a2a2e 50%,\n    #1c1c1f 75%\n  );\n  background-size: 200% 100%;\n  animation: shimmer 1.5s infinite;\n}\n@keyframes shimmer {\n  to { background-position: -200% 0; }\n}` },
+            { name: 'Fluid Typography', desc: 'Responsive font size using clamp()', preview: '<div style="font-size:clamp(16px,4vw,28px);font-weight:600">Fluid Text</div>', css: `/* Fluid typography */\n.fluid-text {\n  font-size: clamp(1rem, 2.5vw, 2rem);\n}\n\n/* Common fluid sizes */\n--text-sm: clamp(0.875rem, 1vw, 1rem);\n--text-base: clamp(1rem, 1.5vw, 1.125rem);\n--text-lg: clamp(1.25rem, 2vw, 1.5rem);\n--text-xl: clamp(1.5rem, 3vw, 2.5rem);` },
+        ];
+
+        function renderSnippets() {
+            const container = document.getElementById('snippets-grid');
+            container.innerHTML = snippets.map((s, i) => `<div class="snippet-item" data-index="${i}"><div class="snippet-name">${s.name}</div><div class="snippet-desc">${s.desc}</div></div>`).join('');
+            document.querySelectorAll('.snippet-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.snippet-item').forEach(c => c.classList.remove('active'));
+                    item.classList.add('active');
+                    const snippet = snippets[item.dataset.index];
+                    document.getElementById('snippets-preview').innerHTML = snippet.preview;
+                    setCode('snippets-code', snippet.css);
+                    // Attach dialog open handler if present
+                    const dialogBtn = document.querySelector('.open-dialog-demo');
+                    const dialog = document.querySelector('.dialog-demo');
+                    if (dialogBtn && dialog) {
+                        dialogBtn.onclick = () => dialog.showModal();
+                    }
+                });
+            });
+            // Show first snippet by default
+            if (snippets.length > 0) {
+                document.querySelector('.snippet-item').click();
+            }
+        }
+
+        // Initialize
+        renderGradientStrip();
+        updateGradient();
+        updateLightDot();
+        updateShadow();
+        updateBorderShape();
+        updateTransition();
+        updateFilter();
+        updatePattern();
+        updateGlass();
+        updateClip();
+        updateTextShadow();
+        renderLayouts();
+        renderSnippets();
+    </script>
+</body>
+
+</html>
