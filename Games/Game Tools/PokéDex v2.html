@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PokéDex v2</title>
+  <style>
+    :root {
+      --pokedex-red: #dc0a2d;
+      --bg-black: #0d0d0d;
+      --card-gray: #1e1e1e;
+      --type-fire: #EE8130;
+      --type-water: #6390F0;
+      --type-grass: #7AC74C;
+      --type-electric: #F7D02C;
+      --type-psychic: #F95587;
+      --type-ice: #96D9D6;
+      --type-dragon: #6F35FC;
+      --type-dark: #705746;
+      --type-fairy: #D685AD;
+      --type-normal: #A8A77A;
+      --type-fighting: #C22E28;
+      --type-flying: #A98FF3;
+      --type-poison: #A33EA1;
+      --type-ground: #E2BF65;
+      --type-bug: #A6B91A;
+      --type-rock: #B6A136;
+      --type-ghost: #735797;
+      --type-steel: #B7B7CE;
+    }
+
+    body {
+      background: var(--bg-black);
+      color: white;
+      margin: 0;
+      font-family: -apple-system, system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* HEADER - ONLY IN LIBRARY */
+    header {
+      background: var(--pokedex-red);
+      padding: 12px;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    /* SCROLL AREA */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      transition: background 0.4s;
+    }
+
+    .view-section {
+      display: none;
+      padding: 15px;
+      padding-bottom: 120px;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    /* LIST ITEMS */
+    .list-item {
+      background: var(--card-gray);
+      padding: 10px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      border: 1px solid #333;
+    }
+
+    .list-item img {
+      width: 50px;
+      height: 50px;
+    }
+
+    /* INTEL CARDS */
+    .detail-hero {
+      background: rgba(255, 255, 255, 0.9);
+      color: #222;
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 15px;
+      position: relative;
+    }
+
+    #hero-img {
+      width: 160px;
+      height: 160px;
+      image-rendering: pixelated;
+    }
+
+    .shiny-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #FFD700;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .shiny-btn.active {
+      background: #ff4c4c;
+      color: white;
+    }
+
+    .data-card {
+      background: rgba(25, 25, 25, 0.85);
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 12px;
+      border: 1px solid #444;
+      backdrop-filter: blur(10px);
+    }
+
+    .tag {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin: 2px;
+      display: inline-block;
+      color: white;
+    }
+
+    .stat-bar {
+      background: #333;
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .stat-fill {
+      background: #51adfe;
+      height: 100%;
+      transition: width 0.6s;
+    }
+
+    .evo-row {
+      display: flex;
+      gap: 15px;
+      overflow-x: auto;
+      padding: 10px 0;
+    }
+
+    .evo-unit {
+      min-width: 70px;
+      text-align: center;
+      font-size: 10px;
+    }
+
+    .evo-unit img {
+      width: 55px;
+      background: #333;
+      border-radius: 50%;
+      border: 2px solid #555;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      height: 75px;
+      background: #111;
+      display: flex;
+      border-top: 1px solid #333;
+      z-index: 100;
+    }
+
+    .nav-tab {
+      flex: 1;
+      text-align: center;
+      color: #777;
+      font-size: 11px;
+      padding-top: 12px;
+    }
+
+    .nav-tab.active {
+      color: var(--pokedex-red);
+      font-weight: bold;
+    }
+
+    #load-screen {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+  </style>
+</head>
+
+<body>
+
+
+  <div id="load-screen">✨ Processing...</div>
+
+
+  <header id="main-header">
+    <input type="text" id="search" placeholder="Search 1,025 Pokémon..." oninput="filterData()">
+    <div class="filter-row">
+      <select id="gen" onchange="filterData()">
+        <option value="all">Gens 1-9</option>
+        <option value="1">Gen 1</option>
+        <option value="2">Gen 2</option>
+        <option value="3">Gen 3</option>
+        <option value="4">Gen 4</option>
+        <option value="5">Gen 5</option>
+        <option value="6">Gen 6</option>
+        <option value="7">Gen 7</option>
+        <option value="8">Gen 8</option>
+        <option value="9">Gen 9</option>
+      </select>
+      <select id="type" onchange="filterData()">
+        <option value="all">All Types</option>
+        <option value="fire">Fire</option>
+        <option value="water">Water</option>
+        <option value="grass">Grass</option>
+        <option value="electric">Electric</option>
+        <option value="ice">Ice</option>
+        <option value="psychic">Psychic</option>
+        <option value="dragon">Dragon</option>
+        <option value="dark">Dark</option>
+        <option value="fairy">Fairy</option>
+      </select>
+    </div>
+  </header>
+
+
+  <main id="view-port">
+    <section id="lib-view" class="view-section active"></section>
+    <section id="stat-view" class="view-section"></section>
+    <section id="party-view" class="view-section">
+      <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+        <h3>Battle Party</h3>
+        <button onclick="chaosRandomize()" style="background:#6F35FC; color:white; border:none; border-radius:8px; padding:8px 12px;">🎲 Randomize</button>
+      </div>
+      <div id="party-slots" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+
+      <div id="synergy-box" class="data-card" style="margin-top:20px; border-color:gold; display:none;">
+        <h4 style="color:gold; margin:0 0 10px 0;">🛡️ Team Audit</h4>
+        <div id="synergy-report" style="font-size:12px; line-height:1.5;"></div>
+      </div>
+      <button onclick="auditTeam()" style="width:100%; padding:15px; margin-top:10px; background:gold; color:black; font-weight:bold; border:none; border-radius:10px;">ANALYZE TEAM SYNERGY</button>
+    </section>
+  </main>
+
+
+  <nav>
+    <div class="nav-tab active" onclick="tab('lib-view', this)"><span>📖</span><br>Library</div>
+    <div class="nav-tab" onclick="tab('stat-view', this)"><span>📊</span><br>Intel</div>
+    <div class="nav-tab" onclick="tab('party-view', this)"><span>⚔️</span><br>Party</div>
+  </nav>
+
+
+  <script>
+    let db = [];
+    let current = null;
+    let isShiny = false;
+    let party = JSON.parse(localStorage.getItem('mobTeamV8')) || Array(6).fill(null);
+    const ranges = {
+      1: [0, 151],
+      2: [151, 251],
+      3: [251, 386],
+      4: [386, 493],
+      5: [493, 649],
+      6: [649, 721],
+      7: [721, 809],
+      8: [809, 905],
+      9: [905, 1025]
+    };
+
+    async function start() {
+      const r = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025');
+      const d = await r.json();
+      db = d.results.map((p, i) => ({
+        ...p,
+        id: i + 1
+      }));
+      drawLib(db);
+      drawParty();
+    }
+
+    function drawLib(list) {
+      document.getElementById('lib-view').innerHTML = list.map(p => `
+            <div class="list-item" onclick="load('${p.name}')">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" loading="lazy">
+                <div style="margin-left:12px;">
+                    <b style="text-transform:capitalize;">${p.name}</b><br>
+                    <small style="color:#777;">#${p.id}</small>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function filterData() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const g = document.getElementById('gen').value;
+      const t = document.getElementById('type').value;
+      let res = db;
+      if (q) res = res.filter(p => p.name.includes(q) || p.id == q);
+      if (g !== 'all') res = res.filter(p => p.id > ranges[g][0] && p.id <= ranges[g][1]);
+      if (t !== 'all') {
+        document.getElementById('load-screen').style.display = 'flex';
+        const tr = await fetch(`https://pokeapi.co/api/v2/type/${t}`);
+        const td = await tr.json();
+        const names = td.pokemon.map(p => p.pokemon.name);
+        res = res.filter(p => names.includes(p.name));
+        document.getElementById('load-screen').style.display = 'none';
+      }
+      drawLib(res);
+    }
+
+    async function load(name) {
+      tab('stat-view', document.querySelectorAll('.nav-tab')[1]);
+      const box = document.getElementById('stat-view');
+      box.innerHTML = '<p style="text-align:center; padding-top:50px;">Analyzing Signal...</p>';
+
+      const r = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
+      current = await r.json();
+      isShiny = false;
+
+      const mainType = current.types[0].type.name;
+      document.getElementById('view-port').style.background = `radial-gradient(circle at top, var(--type-${mainType}), #000 80%)`;
+
+      let weak = new Set(),
+        strong = new Set();
+      for (let t of current.types) {
+        const tr = await fetch(t.type.url);
+        const td = await tr.json();
+        td.damage_relations.double_damage_from.forEach(x => weak.add(x.name));
+        td.damage_relations.double_damage_to.forEach(x => strong.add(x.name));
+      }
+
+      const sr = await fetch(current.species.url);
+      const sd = await sr.json();
+      const er = await fetch(sd.evolution_chain.url);
+      const ed = await er.json();
+
+      let abHTML = "";
+      for (let a of current.abilities) {
+        const ar = await fetch(a.ability.url);
+        const ad = await ar.json();
+        const desc = ad.effect_entries.find(e => e.language.name === "en")?.short_effect || "Passive Ability";
+        abHTML += `<div style="margin-bottom:10px; border-left:3px solid red; padding-left:8px;"><b style="text-transform:capitalize; color:red;">${a.ability.name.replace(/-/g,' ')}</b><br><small style="font-size:11px;">${desc}</small></div>`;
+      }
+
+      box.innerHTML = `
+            <div class="detail-hero">
+                <button class="shiny-btn" onclick="toggleShiny()">✨</button>
+                <img id="hero-img" src="${current.sprites.other['official-artwork'].front_default || current.sprites.front_default}">
+                <h2 style="text-transform:uppercase; margin:5px 0;">${current.name}</h2>
+                <div>${current.types.map(t => `<span class="tag" style="background:var(--type-${t.type.name})">${t.type.name}</span>`).join('')}</div>
+                <button onclick="new Audio('${current.cries.latest}').play()" style="margin-top:8px; padding:4px 15px; border-radius:15px; border:1px solid #ddd;">🔊 PLAY CRY</button>
+            </div>
+
+
+            <div class="data-card">
+                <h5 style="margin:0 0 10px 0; color:#51adfe;">BASE STATS</h5>
+                ${current.stats.map(s => `<div style="font-size:11px; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between;"><span>${s.stat.name.toUpperCase()}</span><span>${s.base_stat}</span></div>
+                    <div class="stat-bar"><div class="stat-fill" style="width:${Math.min((s.base_stat/200)*100, 100)}%"></div></div>
+                </div>`).join('')}
+            </div>
+
+
+            <div class="data-card">
+                <h5 style="margin:0 0 5px 0; color:#2ecc71;">STRONG VS</h5>
+                <div>${Array.from(strong).map(t => `<span class="tag" style="background:var(--type-${t})">${t}</span>`).join('')}</div>
+                <h5 style="margin:15px 0 5px 0; color:#ff4c4c;">WEAK VS</h5>
+                <div>${Array.from(weak).map(t => `<span class="tag" style="background:var(--type-${t})">${t}</span>`).join('')}</div>
+            </div>
+
+
+            <div class="data-card">
+                <h5 style="margin:0 0 10px 0; color:#FFD700;">ABILITIES</h5>
+                ${abHTML}
+            </div>
+
+
+            <div class="data-card">
+                <h5 style="margin:0; color:gold;">EVOLUTION CHAIN</h5>
+                <div class="evo-row" id="evo-strip"></div>
+            </div>
+            <button onclick="addTeam()" style="width:100%; padding:18px; background:#2ecc71; color:white; border:none; border-radius:12px; font-weight:bold;">ADD TO PARTY</button>
+        `;
+
+      let ch = ed.chain;
+      while (ch) {
+        const id = ch.species.url.split('/').filter(Boolean).pop();
+        document.getElementById('evo-strip').innerHTML += `
+                <div class="evo-unit" onclick="load('${ch.species.name}')">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png"><br>${ch.species.name}
+                </div>`;
+        ch = ch.evolves_to[0];
+      }
+    }
+
+    function toggleShiny() {
+      isShiny = !isShiny;
+      const img = document.getElementById('hero-img');
+      img.src = isShiny ? current.sprites.front_shiny : (current.sprites.other['official-artwork'].front_default || current.sprites.front_default);
+      document.querySelector('.shiny-btn').classList.toggle('active');
+    }
+
+    function tab(id, el) {
+      document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.querySelectorAll('.nav-tab').forEach(n => n.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('main-header').style.display = (id === 'lib-view') ? 'block' : 'none';
+      if (id !== 'stat-view') document.getElementById('view-port').style.background = 'var(--bg-black)';
+      document.getElementById('view-port').scrollTop = 0;
+    }
+
+    function addTeam() {
+      const i = party.findIndex(p => p === null);
+      if (i !== -1) {
+        party[i] = {
+          name: current.name,
+          img: current.sprites.front_default,
+          types: current.types.map(t => t.type.name)
+        };
+        save();
+        alert("Registered to Team!");
+      }
+    }
+
+    function drawParty() {
+      document.getElementById('party-slots').innerHTML = party.map((p, i) => `
+            <div style="background:var(--card-gray); padding:10px; border-radius:12px; text-align:center; border:1px solid #333; position:relative;">
+                ${p ? `<div onclick="party[${i}]=null; save()" style="position:absolute; top:0; right:5px; color:#ff4c4c; font-size:24px;">×</div><img src="${p.img}"><br><small>${p.name}</small>` : '<small style="color:#444">EMPTY</small>'}
+            </div>
+        `).join('');
+    }
+
+    async function chaosRandomize() {
+      document.getElementById('load-screen').style.display = 'flex';
+      let team = [];
+      for (let i = 0; i < 6; i++) {
+        const rId = Math.floor(Math.random() * 1025) + 1;
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${rId}`);
+        const d = await res.json();
+        team.push({
+          name: d.name,
+          img: d.sprites.front_default,
+          types: d.types.map(t => t.type.name)
+        });
+      }
+      party = team;
+      save();
+      document.getElementById('load-screen').style.display = 'none';
+    }
+
+    async function auditTeam() {
+      const active = party.filter(p => p !== null);
+      if (active.length < 2) return alert("Add at least 2 members to analyze!");
+
+      document.getElementById('load-screen').style.display = 'flex';
+      let wMap = {};
+      for (let p of active) {
+        for (let tName of p.types) {
+          const r = await fetch(`https://pokeapi.co/api/v2/type/${tName}`);
+          const d = await r.json();
+          d.damage_relations.double_damage_from.forEach(x => wMap[x.name] = (wMap[x.name] || 0) + 1);
+        }
+      }
+      document.getElementById('load-screen').style.display = 'none';
+      const bad = Object.entries(wMap).filter(e => e[1] >= 2);
+      document.getElementById('synergy-box').style.display = 'block';
+      document.getElementById('synergy-report').innerHTML = bad.length ?
+        "⚠️ Team shared vulnerabilities: " + bad.map(b => `<b style="color:var(--type-${b[0]})">${b[0]}</b>`).join(', ') :
+        "✅ Well balanced team!";
+    }
+
+    function save() {
+      localStorage.setItem('mobTeamV8', JSON.stringify(party));
+      drawParty();
+    }
+    start();
+
+    (() => {
+      const ENTRY = 'PokéDex v2',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
