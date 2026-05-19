@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en" class="h-full">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scale=no">
+  <title>HTML YouTube v2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0f0f0f;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #383838;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #484848;
+    }
+
+    /* Animations */
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.8);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1.4);
+        opacity: 0;
+      }
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slide-up {
+      from {
+        transform: translateY(100%);
+      }
+
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    @keyframes heartPop {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+      }
+
+      50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(1) translateY(-20px);
+        opacity: 0;
+      }
+    }
+
+    .animate-fade {
+      animation: fade-in 0.3s ease-out;
+    }
+
+    .animate-slide-up {
+      animation: slide-up 0.3s ease-out;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    .loader-ring {
+      position: relative;
+    }
+
+    .loader-ring::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 3px solid #ff0000;
+      animation: pulse-ring 1.5s ease-out infinite;
+    }
+
+    /* Video card hover effects */
+    .video-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .video-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .video-card:active {
+      transform: scale(0.98);
+    }
+
+    /* Bottom sheet styling */
+    .bottom-sheet {
+      border-radius: 16px 16px 0 0;
+      max-height: 90%;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      transition: width 0.3s ease;
+    }
+
+    /* Toast notification */
+    .toast {
+      animation: slide-up 0.3s ease-out, fade-in 0.3s ease-out;
+    }
+
+    /* Video player controls */
+    .player-controls {
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+    }
+
+    /* Safe area padding for mobile */
+    @supports (padding: env(safe-area-inset-bottom)) {
+      .safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    }
+
+    @view-transition {
+      navigation: auto;
+    }
+
+  </style>
+</head>
+
+<body class="h-full bg-[#0f0f0f] text-white overflow-x-hidden"><!-- Connect Screen -->
+  <div id="connect-screen" class="fixed inset-0 bg-[#0f0f0f] flex flex-col items-center justify-center z-50 p-6">
+    <div class="loader-ring w-16 h-16 rounded-full border-4 border-[#ff0000] border-t-transparent animate-spin mb-6"></div>
+    <h1 class="text-2xl font-medium mb-2">HTML YouTube</h1>
+    <p id="status-text" class="text-gray-400 text-center text-sm">Connecting to server...</p><button id="retry-btn" onclick="location.reload()" class="hidden mt-6 bg-[#ff0000] hover:bg-[#cc0000] px-6 py-3 rounded-full font-medium transition-colors"><i class="fas fa-redo mr-2"></i>Retry Connection </button>
+  </div><!-- Main App Container -->
+  <div id="app" class="h-full flex flex-col" style="display: none;"><!-- Header -->
+    <header class="sticky top-0 bg-[#0f0f0f]/95 backdrop-blur-lg z-40 border-b border-white/10">
+      <div class="flex items-center justify-between px-4 py-3">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-[#ff0000] rounded-lg flex items-center justify-center"><i class="fas fa-play text-sm"></i></div><span class="text-lg font-medium hidden sm:block">YouTube</span>
+        </div>
+        <div id="search-container" class="flex-1 max-w-2xl mx-4">
+          <div class="relative"><input type="text" id="q-input" placeholder="Search videos..." class="w-full bg-[#121212] border border-[#303030] rounded-full py-2.5 pl-4 pr-12 text-sm focus:outline-none focus:border-[#3ea6ff] transition-colors" onkeydown="if(event.key==='Enter') runSearch()"><button onclick="runSearch()" class="absolute right-1 top-1/2 -translate-y-1/2 bg-[#222222] hover:bg-[#383838] w-10 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fas fa-search text-sm"></i></button></div>
+        </div><button onclick="showSettings()" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"><i class="fas fa-ellipsis-vertical"></i></button>
+      </div>
+    </header><!-- Content Area -->
+    <main id="content" class="flex-1 overflow-y-auto"><!-- Video Grid -->
+      <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4"><!-- Videos will be rendered here --></div><!-- Loader -->
+      <div id="loader" class="hidden flex-col items-center justify-center py-20">
+        <div class="w-10 h-10 border-3 border-[#ff0000] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-gray-400 text-sm">Loading videos...</p>
+      </div><!-- Empty State -->
+      <div id="empty-state" class="hidden flex-col items-center justify-center py-20 px-6 text-center">
+        <div class="w-20 h-20 bg-[#222222] rounded-full flex items-center justify-center mb-4"><i class="fas fa-video-slash text-3xl text-gray-500"></i></div>
+        <h3 class="text-lg font-medium mb-2">No videos found</h3>
+        <p class="text-gray-400 text-sm">Try searching for something or check your subscriptions</p>
+      </div>
+    </main><!-- Bottom Navigation -->
+    <nav class="sticky bottom-0 bg-[#0f0f0f] border-t border-white/10 safe-bottom">
+      <div class="flex justify-around py-2"><button onclick="goHome()" class="nav-btn flex flex-col items-center py-2 px-6 rounded-lg transition-colors hover:bg-white/5" data-tab="home"><i class="fas fa-home text-xl mb-1"></i><span class="text-[10px]">Home</span></button><button onclick="loadSubs()" class="nav-btn flex flex-col items-center py-2 px-6 rounded-lg transition-colors hover:bg-white/5" data-tab="subs"><i class="fas fa-bell text-xl mb-1"></i><span class="text-[10px]">Subscriptions</span></button><button onclick="showLibrary()" class="nav-btn flex flex-col items-center py-2 px-6 rounded-lg transition-colors hover:bg-white/5" data-tab="library"><i class="fas fa-folder text-xl mb-1"></i><span class="text-[10px]">Library</span></button></div>
+    </nav>
+  </div><!-- Player Overlay -->
+  <div id="player-overlay" class="fixed inset-0 bg-black z-50 flex flex-col transition-all duration-300" style="display: none;"><!-- Video Container -->
+    <div class="relative bg-black aspect-video w-full max-h-[40vh] sm:max-h-[60vh]"><video id="vid-player" class="w-full h-full" controls="" playsinline=""></video>
+      <div class="absolute top-4 left-4 flex gap-2"><button onclick="minimizePlayer()" class="w-10 h-10 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"><i class="fas fa-chevron-down"></i></button><button onclick="closePlayer()" class="w-10 h-10 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"><i class="fas fa-times"></i></button></div>
+    </div><!-- Video Info -->
+    <div class="flex-1 overflow-y-auto bg-[#0f0f0f]">
+      <div class="p-4">
+        <h1 id="p-title" class="text-lg font-medium mb-2 line-clamp-2">Loading...</h1>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-[#ff0000] rounded-full flex items-center justify-center"><i class="fas fa-user"></i></div>
+          <div>
+            <p id="p-uploader" class="font-medium text-sm">Channel</p>
+            <p id="p-views" class="text-xs text-gray-400">— views</p>
+          </div><button id="sub-btn" onclick="toggleSub()" class="ml-auto bg-white text-black px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"> Subscribe </button>
+        </div><!-- Action Buttons -->
+        <div class="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4"><button onclick="openDlPopup()" class="flex items-center gap-2 bg-[#272727] hover:bg-[#3a3a3a] px-4 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors"><i class="fas fa-download"></i><span>Download</span></button><button onclick="openSharePopup()" class="flex items-center gap-2 bg-[#272727] hover:bg-[#3a3a3a] px-4 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors"><i class="fas fa-share"></i><span>Share</span></button><button onclick="addToPlaylist()" class="flex items-center gap-2 bg-[#272727] hover:bg-[#3a3a3a] px-4 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors"><i class="fas fa-plus"></i><span>Save</span></button></div><!-- Description -->
+        <div id="p-description" class="mt-4 bg-[#272727] rounded-xl p-4">
+          <p class="text-sm text-gray-300 line-clamp-3">No description available.</p>
+        </div>
+      </div>
+    </div>
+  </div><!-- Download Popup (Bottom Sheet) -->
+  <div id="dl-popup" class="fixed inset-0 bg-black/60 z-[60] flex items-end justify-center" style="display: none;" onclick="if(event.target===this) closeDlPopup()">
+    <div class="bottom-sheet w-full max-w-lg bg-[#212121] animate-slide-up">
+      <div class="w-12 h-1 bg-gray-600 rounded-full mx-auto mt-3 mb-4"></div>
+      <div class="px-6 pb-6">
+        <h2 class="text-xl font-medium mb-4">Download Video</h2>
+        <div class="mb-4"><label class="text-sm text-gray-400 mb-2 block">File Name</label><input type="text" id="dl-name" class="w-full bg-[#0f0f0f] border border-[#303030] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#3ea6ff]" placeholder="Enter file name"></div><!-- Download Progress -->
+        <div id="dl-progress" class="hidden mb-4">
+          <div class="flex justify-between text-sm mb-2"><span class="text-gray-400">Preparing download...</span><span id="dl-percent" class="text-[#3ea6ff]">0%</span></div>
+          <div class="h-2 bg-[#0f0f0f] rounded-full overflow-hidden">
+            <div id="dl-bar" class="progress-bar h-full bg-[#3ea6ff] rounded-full" style="width: 0%"></div>
+          </div>
+          <p id="dl-size" class="text-xs text-gray-500 mt-2"></p>
+          <p id="dl-status" class="text-xs text-gray-400 mt-2"></p>
+        </div><!-- Download Ready Button --><button id="dl-save-btn" class="hidden w-full bg-[#3ea6ff] hover:bg-[#65b8ff] text-black font-medium py-3 rounded-lg transition-colors mb-3" onclick="saveFile()"><i class="fas fa-download mr-2"></i>Save to Device </button><!-- Extract Audio Button --><button id="dl-audio-btn" class="hidden w-full bg-[#ff0000] hover:bg-[#cc0000] text-white font-medium py-3 rounded-lg transition-colors mb-3" onclick="extractAudio()"><i class="fas fa-music mr-2"></i>Extract Audio (MP3) </button><!-- Save Audio Button --><button id="dl-save-audio-btn" class="hidden w-full bg-[#3ea6ff] hover:bg-[#65b8ff] text-black font-medium py-3 rounded-lg transition-colors mb-3" onclick="saveAudioFile()"><i class="fas fa-download mr-2"></i>Save Audio </button>
+        <div class="flex gap-3"><button onclick="closeDlPopup()" class="flex-1 bg-[#383838] hover:bg-[#484848] py-3 rounded-lg font-medium transition-colors"> Cancel </button><button id="dl-start-btn" onclick="startDownload()" class="flex-1 bg-[#ff0000] hover:bg-[#cc0000] py-3 rounded-lg font-medium transition-colors"><i class="fas fa-download mr-2"></i>Prepare </button></div>
+      </div>
+    </div>
+  </div><!-- Share Popup -->
+  <div id="share-popup" class="fixed inset-0 bg-black/60 z-[60] flex items-end justify-center" style="display: none;" onclick="if(event.target===this) closeSharePopup()">
+    <div class="bottom-sheet w-full max-w-lg bg-[#212121] animate-slide-up">
+      <div class="w-12 h-1 bg-gray-600 rounded-full mx-auto mt-3 mb-4"></div>
+      <div class="px-6 pb-6">
+        <h2 class="text-xl font-medium mb-4">Share</h2><!-- Share Progress -->
+        <div id="share-progress" class="hidden mb-4">
+          <div class="flex justify-between text-sm mb-2"><span class="text-gray-400">Preparing file for sharing...</span><span id="share-percent" class="text-[#3ea6ff]">0%</span></div>
+          <div class="h-2 bg-[#0f0f0f] rounded-full overflow-hidden">
+            <div id="share-bar" class="progress-bar h-full bg-[#3ea6ff] rounded-full" style="width: 0%"></div>
+          </div>
+        </div><!-- Share Ready Button --><button id="share-file-btn" class="hidden w-full bg-[#3ea6ff] hover:bg-[#65b8ff] text-black font-medium py-3 rounded-lg transition-colors mb-3" onclick="shareFile()"><i class="fas fa-share mr-2"></i>Share Video File </button><!-- Extract Audio Button --><button id="share-audio-btn" class="hidden w-full bg-[#ff0000] hover:bg-[#cc0000] text-white font-medium py-3 rounded-lg transition-colors mb-3" onclick="extractAudioShare()"><i class="fas fa-music mr-2"></i>Extract Audio (MP3) </button>
+        <div class="grid grid-cols-4 gap-4 mb-6"><button onclick="copyLink()" class="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-white/10 transition-colors">
+            <div class="w-12 h-12 bg-[#3ea6ff] rounded-full flex items-center justify-center"><i class="fas fa-link text-black"></i></div><span class="text-xs">Copy Link</span>
+          </button><button onclick="shareToTwitter()" class="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-white/10 transition-colors">
+            <div class="w-12 h-12 bg-[#1da1f2] rounded-full flex items-center justify-center"><i class="fab fa-twitter"></i></div><span class="text-xs">Twitter</span>
+          </button><button onclick="shareToWhatsApp()" class="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-white/10 transition-colors">
+            <div class="w-12 h-12 bg-[#25d366] rounded-full flex items-center justify-center"><i class="fab fa-whatsapp text-xl"></i></div><span class="text-xs">WhatsApp</span>
+          </button><button onclick="shareNative()" class="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-white/10 transition-colors">
+            <div class="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center"><i class="fas fa-ellipsis-h"></i></div><span class="text-xs">More</span>
+          </button></div>
+        <div class="flex gap-3"><button onclick="closeSharePopup()" class="flex-1 bg-[#383838] hover:bg-[#484848] py-3 rounded-lg font-medium transition-colors"> Close </button><button id="share-prepare-btn" onclick="prepareShare()" class="flex-1 bg-[#ff0000] hover:bg-[#cc0000] py-3 rounded-lg font-medium transition-colors"><i class="fas fa-file-video mr-2"></i>Share File </button></div>
+      </div>
+    </div>
+  </div><!-- Settings Popup -->
+  <div id="settings-popup" class="fixed inset-0 bg-black/60 z-[60] flex items-end justify-center" style="display: none;" onclick="if(event.target===this) closeSettings()">
+    <div class="bottom-sheet w-full max-w-lg bg-[#212121] animate-slide-up">
+      <div class="w-12 h-1 bg-gray-600 rounded-full mx-auto mt-3 mb-4"></div>
+      <div class="px-6 pb-6">
+        <h2 class="text-xl font-medium mb-4">Settings</h2>
+        <div class="space-y-2"><button onclick="clearHistory()" class="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors text-left"><i class="fas fa-history text-gray-400 w-6"></i><span>Clear Watch History</span></button><button onclick="clearSaved()" class="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors text-left"><i class="fas fa-trash-can text-gray-400 w-6"></i><span>Clear Saved Videos</span></button><button onclick="clearSubs()" class="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors text-left"><i class="fas fa-bell-slash text-gray-400 w-6"></i><span>Clear All Subscriptions</span></button><button onclick="showAbout()" class="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors text-left"><i class="fas fa-info-circle text-gray-400 w-6"></i><span>About</span></button></div><button onclick="closeSettings()" class="w-full bg-[#383838] hover:bg-[#484848] py-3 rounded-lg font-medium transition-colors mt-4"> Close </button>
+      </div>
+    </div>
+  </div><!-- Library Popup -->
+  <div id="library-popup" class="fixed inset-0 bg-black/60 z-[60] flex items-end justify-center" style="display: none;" onclick="if(event.target===this) closeLibrary()">
+    <div class="bottom-sheet w-full max-w-lg bg-[#212121] animate-slide-up max-h-[80%] flex flex-col">
+      <div class="w-12 h-1 bg-gray-600 rounded-full mx-auto mt-3 mb-4 flex-shrink-0"></div>
+      <div class="px-6 pb-6 flex-1 overflow-y-auto">
+        <h2 class="text-xl font-medium mb-4">Your Library</h2>
+        <div class="space-y-2"><button onclick="loadHistory()" class="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors text-left">
+            <div class="w-10 h-10 bg-[#272727] rounded-lg flex items-center justify-center"><i class="fas fa-history text-[#3ea6ff]"></i></div>
+            <div><span class="font-medium">Watch History</span>
+              <p id="history-count" class="text-sm text-gray-400">0 videos</p>
+            </div><i class="fas fa-chevron-right ml-auto text-gray-400"></i>
+          </button><button onclick="loadSaved()" class="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors text-left">
+            <div class="w-10 h-10 bg-[#272727] rounded-lg flex items-center justify-center"><i class="fas fa-bookmark text-[#ff0000]"></i></div>
+            <div><span class="font-medium">Saved Videos</span>
+              <p id="saved-count" class="text-sm text-gray-400">0 videos</p>
+            </div><i class="fas fa-chevron-right ml-auto text-gray-400"></i>
+          </button><button onclick="loadSubsList()" class="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors text-left">
+            <div class="w-10 h-10 bg-[#272727] rounded-lg flex items-center justify-center"><i class="fas fa-users text-[#ff0000]"></i></div>
+            <div><span class="font-medium">Subscriptions</span>
+              <p id="subs-count" class="text-sm text-gray-400">0 channels</p>
+            </div><i class="fas fa-chevron-right ml-auto text-gray-400"></i>
+          </button></div>
+      </div>
+      <div class="px-6 pb-6 flex-shrink-0"><button onclick="closeLibrary()" class="w-full bg-[#383838] hover:bg-[#484848] py-3 rounded-lg font-medium transition-colors"> Close </button></div>
+    </div>
+  </div><!-- Minimized Player -->
+  <div id="mini-player" class="fixed bottom-16 right-4 w-64 bg-black rounded-xl overflow-hidden shadow-2xl z-[45]" style="display: none;">
+    <div class="relative aspect-video"><video id="mini-vid-player" class="w-full h-full" playsinline=""></video>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-3"><button onclick="toggleMiniPlay()" class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"><i id="mini-play-icon" class="fas fa-pause text-sm"></i></button><button onclick="expandPlayer()" class="ml-auto w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"><i class="fas fa-expand text-sm"></i></button><button onclick="closePlayer()" class="ml-2 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"><i class="fas fa-times text-sm"></i></button></div>
+    </div>
+    <div class="p-3 bg-[#1a1a1a]">
+      <p id="mini-title" class="text-xs font-medium line-clamp-1 mb-1">Video Title</p>
+      <p id="mini-uploader" class="text-[10px] text-gray-400 line-clamp-1">Channel Name</p>
+    </div>
+  </div><!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-20 left-4 right-4 z-[70] flex flex-col gap-2 pointer-events-none"></div>
+  <script>
+    // ========== CONFIGURATION ==========
+    const HARD_CODED_URL = "https://tube.oasis-archive.org";
+    let API_URL = HARD_CODED_URL;
+    let currentVideo = null;
+    let preparedBlob = null;
+    let preparedFileName = '';
+
+    // ========== INITIALIZATION ==========
+    window.onload = () => {
+      if (API_URL.endsWith('/')) API_URL = API_URL.slice(0, -1);
+
+      fetch(API_URL + "/")
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('connect-screen').style.display = 'none';
+          document.getElementById('app').style.display = 'flex';
+          goHome();
+        })
+        .catch(e => {
+          document.getElementById('status-text').innerText = "Connection Failed.\n\n1. Check your internet.\n2. Server might be offline.";
+          document.getElementById('status-text').style.color = "#ff4444";
+          document.querySelector('.loader-ring').classList.remove('animate-spin');
+          document.getElementById('retry-btn').style.display = 'block';
+        });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        // Escape key closes player or popups
+        if (e.key === 'Escape') {
+          if (document.getElementById('player-overlay').style.display !== 'none') {
+            minimizePlayer();
+          } else if (document.getElementById('dl-popup').style.display !== 'none') {
+            closeDlPopup();
+          } else if (document.getElementById('share-popup').style.display !== 'none') {
+            closeSharePopup();
+          } else if (document.getElementById('settings-popup').style.display !== 'none') {
+            closeSettings();
+          } else if (document.getElementById('library-popup').style.display !== 'none') {
+            closeLibrary();
+          }
+        }
+
+        // Space bar toggle play/pause in mini player
+        if (e.key === ' ' && document.getElementById('mini-player').style.display !== 'none' && e.target.tagName !== 'INPUT') {
+          e.preventDefault();
+          toggleMiniPlay();
+        }
+      });
+    };
+
+    // ========== NAVIGATION ==========
+    function setActiveNav(tab) {
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === tab;
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('text-gray-400', !isActive);
+      });
+    }
+
+    async function goHome() {
+      setActiveNav('home');
+      runSearch('trending');
+    }
+
+    // ========== SEARCH ==========
+    async function runSearch(q = null) {
+      const query = q || document.getElementById('q-input').value;
+      if (!query) return;
+
+      showLoader();
+
+      try {
+        const res = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        renderGrid(data);
+      } catch (e) {
+        showToast('Search failed. Please try again.', 'error');
+        hideLoader();
+        showEmpty();
+      }
+    }
+
+    // ========== SUBSCRIPTIONS ==========
+    async function loadSubs() {
+      setActiveNav('subs');
+      const subs = JSON.parse(localStorage.getItem('youtube_client_subs') || '[]');
+
+      if (subs.length === 0) {
+        showEmpty('No subscriptions yet', 'Subscribe to channels to see their latest videos here');
+        return;
+      }
+
+      showLoader();
+
+      try {
+        const promises = subs.map(s =>
+          fetch(`${API_URL}/api/search?q=${encodeURIComponent(s)}&sort=date`)
+          .then(r => r.json())
+          .catch(err => {
+            console.error('Failed to fetch for:', s, err);
+            return [];
+          })
+        );
+        const results = await Promise.all(promises);
+        const mixed = results.flat().sort((a, b) => {
+          const dateA = a.upload_date || a.date || 0;
+          const dateB = b.upload_date || b.date || 0;
+          return dateB - dateA;
+        });
+
+        if (mixed.length === 0) {
+          showEmpty('No videos found', 'Your subscribed channels have no recent videos');
+        } else {
+          renderGrid(mixed);
+        }
+      } catch (e) {
+        console.error('Subscription feed error:', e);
+        showToast('Could not load subscription feed.', 'error');
+        hideLoader();
+        showEmpty('Error loading feed', 'Please check your connection and try again');
+      }
+    }
+
+    // ========== VIDEO GRID ==========
+    function renderGrid(videos) {
+      const grid = document.getElementById('video-grid');
+      hideLoader();
+
+      if (!videos || videos.length === 0) {
+        showEmpty();
+        return;
+      }
+
+      document.getElementById('empty-state').style.display = 'none';
+
+      grid.innerHTML = videos.map(v => {
+        // Ensure we have a valid ID
+        const videoId = v.id || v.video_id || '';
+        if (!videoId) {
+          console.warn('Video missing ID:', v);
+          return '';
+        }
+
+        const title = v.title || 'Untitled Video';
+        const uploader = v.uploader || v.channel || 'Unknown';
+        const thumbnail = v.thumbnail || v.thumbnails?.[0]?.url || '';
+        const duration = v.duration || 0;
+        const views = v.view_count || v.views || 0;
+        const uploadDate = v.upload_date || v.date || 0;
+
+        return `
+        <article class="video-card cursor-pointer animate-fade" onclick="loadPlayer('${escapeHtml(videoId)}')">
+          <div class="relative aspect-video bg-[#1f1f1f] rounded-xl overflow-hidden mb-3">
+            ${thumbnail ? `<img 
+              src="${escapeHtml(thumbnail)}" 
+              alt="${escapeHtml(title)}"
+              class="w-full h-full object-cover"
+              loading="lazy"
+              onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-[#1f1f1f]\\' ><i class=\\'fas fa-play text-4xl text-gray-600\\'></i></div>'"
+            >` : `<div class="w-full h-full flex items-center justify-center bg-[#1f1f1f]"><i class="fas fa-play text-4xl text-gray-600"></i></div>`}
+            ${duration ? `<span class="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-xs font-medium">${formatDuration(duration)}</span>` : ''}
+          </div>
+          <div class="flex gap-3">
+            <div class="w-9 h-9 bg-[#ff0000] rounded-full flex-shrink-0 flex items-center justify-center">
+              <i class="fas fa-user text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium text-sm line-clamp-2 mb-1">${escapeHtml(title)}</h3>
+              <p class="text-gray-400 text-xs">${escapeHtml(uploader)}</p>
+              <p class="text-gray-400 text-xs">${views ? formatViews(views) + ' views' : ''} ${uploadDate ? '• ' + formatDate(uploadDate) : ''}</p>
+            </div>
+          </div>
+        </article>
+      `;
+      }).filter(html => html !== '').join('');
+    }
+
+    function showLoader() {
+      document.getElementById('video-grid').innerHTML = Array(8).fill(`
+        <div class="animate-fade">
+          <div class="skeleton aspect-video rounded-xl mb-3"></div>
+          <div class="flex gap-3">
+            <div class="skeleton w-9 h-9 rounded-full flex-shrink-0"></div>
+            <div class="flex-1">
+              <div class="skeleton h-4 rounded mb-2"></div>
+              <div class="skeleton h-3 rounded w-3/4"></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('empty-state').style.display = 'none';
+    }
+
+    function hideLoader() {
+      document.getElementById('loader').style.display = 'none';
+    }
+
+    function showEmpty(title = 'No videos found', subtitle = 'Try searching for something or check your subscriptions') {
+      document.getElementById('video-grid').innerHTML = '';
+      const empty = document.getElementById('empty-state');
+      empty.querySelector('h3').textContent = title;
+      empty.querySelector('p').textContent = subtitle;
+      empty.style.display = 'flex';
+    }
+
+    // ========== PLAYER ==========
+    async function loadPlayer(id) {
+      document.getElementById('player-overlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+
+      try {
+        const res = await fetch(`${API_URL}/api/info?id=${encodeURIComponent(id)}`);
+        const data = await res.json();
+
+        if (data.error) {
+          showToast('Error: ' + data.error, 'error');
+          closePlayer();
+          return;
+        }
+
+        // Store complete video data including the ID
+        currentVideo = {
+          id: id,
+          title: data.title || 'Unknown',
+          uploader: data.uploader || 'Unknown',
+          thumbnail: data.thumbnail || '',
+          duration: data.duration || 0,
+          views: data.view_count || data.views || 0,
+          description: data.description || 'No description available.',
+          stream_url: data.stream_url,
+          date: data.upload_date || Date.now()
+        };
+
+        const player = document.getElementById('vid-player');
+        player.src = currentVideo.stream_url;
+        player.play();
+
+        document.getElementById('p-title').innerText = currentVideo.title;
+        document.getElementById('p-uploader').innerText = currentVideo.uploader;
+        document.getElementById('p-views').innerText = currentVideo.views ? formatViews(currentVideo.views) + ' views' : '— views';
+        document.getElementById('p-description').querySelector('p').innerText = currentVideo.description;
+
+        // Update subscribe button state
+        updateSubButton();
+
+        // Add to history
+        addToHistory(currentVideo);
+
+      } catch (e) {
+        console.error('Player error:', e);
+        showToast('Could not load video.', 'error');
+        closePlayer();
+      }
+    }
+
+    function closePlayer() {
+      document.getElementById('player-overlay').style.display = 'none';
+      document.getElementById('mini-player').style.display = 'none';
+      document.body.style.overflow = '';
+      const player = document.getElementById('vid-player');
+      const miniPlayer = document.getElementById('mini-vid-player');
+      player.pause();
+      player.src = '';
+      miniPlayer.pause();
+      miniPlayer.src = '';
+      currentVideo = null;
+      preparedBlob = null;
+    }
+
+    function minimizePlayer() {
+      const player = document.getElementById('vid-player');
+      const miniPlayer = document.getElementById('mini-vid-player');
+      const currentTime = player.currentTime;
+      const isPaused = player.paused;
+
+      // Transfer video state to mini player
+      miniPlayer.src = player.src;
+      miniPlayer.currentTime = currentTime;
+
+      // Update mini player info
+      document.getElementById('mini-title').textContent = currentVideo?.title || 'Video';
+      document.getElementById('mini-uploader').textContent = currentVideo?.uploader || 'Channel';
+
+      // Hide main player, show mini player
+      document.getElementById('player-overlay').style.display = 'none';
+      document.getElementById('mini-player').style.display = 'block';
+      document.body.style.overflow = '';
+
+      // Continue playback if it was playing
+      if (!isPaused) {
+        miniPlayer.play();
+        document.getElementById('mini-play-icon').className = 'fas fa-pause text-sm';
+      } else {
+        document.getElementById('mini-play-icon').className = 'fas fa-play text-sm';
+      }
+    }
+
+    function expandPlayer() {
+      const miniPlayer = document.getElementById('mini-vid-player');
+      const player = document.getElementById('vid-player');
+      const currentTime = miniPlayer.currentTime;
+      const isPaused = miniPlayer.paused;
+
+      // Transfer video state back to main player
+      player.src = miniPlayer.src;
+      player.currentTime = currentTime;
+
+      // Show main player, hide mini player
+      document.getElementById('player-overlay').style.display = 'flex';
+      document.getElementById('mini-player').style.display = 'none';
+      document.body.style.overflow = 'hidden';
+
+      // Continue playback if it was playing
+      if (!isPaused) {
+        player.play();
+      }
+    }
+
+    function toggleMiniPlay() {
+      const miniPlayer = document.getElementById('mini-vid-player');
+      const icon = document.getElementById('mini-play-icon');
+
+      if (miniPlayer.paused) {
+        miniPlayer.play();
+        icon.className = 'fas fa-pause text-sm';
+      } else {
+        miniPlayer.pause();
+        icon.className = 'fas fa-play text-sm';
+      }
+    }
+
+    function updateSubButton() {
+      if (!currentVideo) return;
+      const subs = JSON.parse(localStorage.getItem('youtube_client_subs') || '[]');
+      const isSubbed = subs.includes(currentVideo.uploader);
+      const btn = document.getElementById('sub-btn');
+
+      if (isSubbed) {
+        btn.textContent = 'Subscribed';
+        btn.classList.remove('bg-white', 'text-black', 'hover:bg-gray-200');
+        btn.classList.add('bg-[#272727]', 'text-white', 'hover:bg-[#3a3a3a]');
+      } else {
+        btn.textContent = 'Subscribe';
+        btn.classList.add('bg-white', 'text-black', 'hover:bg-gray-200');
+        btn.classList.remove('bg-[#272727]', 'text-white', 'hover:bg-[#3a3a3a]');
+      }
+    }
+
+    function toggleSub() {
+      if (!currentVideo) return;
+      let subs = JSON.parse(localStorage.getItem('youtube_client_subs') || '[]');
+      const name = currentVideo.uploader;
+
+      if (subs.includes(name)) {
+        subs = subs.filter(s => s !== name);
+        showToast('Unsubscribed from ' + name);
+      } else {
+        subs.push(name);
+        showToast('Subscribed to ' + name, 'success');
+      }
+
+      localStorage.setItem('youtube_client_subs', JSON.stringify(subs));
+      updateSubButton();
+    }
+
+    // ========== DOWNLOAD WITH FILE SYSTEM ACCESS API ==========
+    function openDlPopup() {
+      if (!currentVideo) return;
+      preparedBlob = null;
+      document.getElementById('dl-name').value = currentVideo.title;
+      document.getElementById('dl-progress').style.display = 'none';
+      document.getElementById('dl-save-btn').style.display = 'none';
+      document.getElementById('dl-audio-btn').style.display = 'none';
+      document.getElementById('dl-start-btn').style.display = 'block';
+      document.getElementById('dl-popup').style.display = 'flex';
+      document.getElementById('dl-name').focus();
+    }
+
+    function closeDlPopup() {
+      // Cancel any ongoing audio extraction
+      if (currentAudioController) {
+        currentAudioController.abort();
+        currentAudioController = null;
+      }
+
+      document.getElementById('dl-popup').style.display = 'none';
+      preparedBlob = null;
+      preparedAudioBlob = null;
+    }
+
+    async function startDownload() {
+      if (!currentVideo) return;
+
+      const name = document.getElementById('dl-name').value || currentVideo.title;
+      preparedFileName = name.replace(/[^a-zA-Z0-9\s\-\_]/g, '') + '.mp4';
+      const url = `${API_URL}/api/proxy_download?url=${encodeURIComponent(currentVideo.stream_url)}&name=${encodeURIComponent(name)}`;
+
+      document.getElementById('dl-start-btn').style.display = 'none';
+      document.getElementById('dl-progress').style.display = 'block';
+
+      try {
+        const response = await fetch(url);
+
+        if (!response.ok) throw new Error('Download failed');
+
+        const contentLength = response.headers.get('content-length');
+        const total = parseInt(contentLength, 10) || 0;
+
+        const reader = response.body.getReader();
+        const chunks = [];
+        let received = 0;
+
+        while (true) {
+          const {
+            done,
+            value
+          } = await reader.read();
+          if (done) break;
+
+          chunks.push(value);
+          received += value.length;
+
+          if (total > 0) {
+            const percent = Math.round((received / total) * 100);
+            document.getElementById('dl-percent').textContent = percent + '%';
+            document.getElementById('dl-bar').style.width = percent + '%';
+            document.getElementById('dl-size').textContent = formatBytes(received) + ' / ' + formatBytes(total);
+          } else {
+            document.getElementById('dl-percent').textContent = formatBytes(received);
+            document.getElementById('dl-bar').style.width = '50%';
+            document.getElementById('dl-size').textContent = formatBytes(received) + ' downloaded';
+          }
+        }
+
+        preparedBlob = new Blob(chunks, {
+          type: 'video/mp4'
+        });
+
+        document.getElementById('dl-percent').textContent = '100%';
+        document.getElementById('dl-bar').style.width = '100%';
+        document.getElementById('dl-size').textContent = formatBytes(received) + ' ready to save';
+        document.getElementById('dl-save-btn').style.display = 'block';
+        document.getElementById('dl-audio-btn').style.display = 'block';
+
+        showToast('Download ready! Tap "Save to Device" to save.', 'success');
+
+      } catch (e) {
+        showToast('Download failed: ' + e.message, 'error');
+        document.getElementById('dl-start-btn').style.display = 'block';
+        document.getElementById('dl-progress').style.display = 'none';
+      }
+    }
+
+    async function saveFile() {
+      if (!preparedBlob) {
+        showToast('No file prepared. Please try downloading again.', 'error');
+        return;
+      }
+
+      // Check for File System Access API support
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: preparedFileName,
+            types: [{
+              description: 'Video File',
+              accept: {
+                'video/mp4': ['.mp4']
+              }
+            }]
+          });
+
+          const writable = await handle.createWritable();
+          await writable.write(preparedBlob);
+          await writable.close();
+
+          showToast('Video saved successfully!', 'success');
+          closeDlPopup();
+
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            // Fallback to traditional download
+            fallbackDownload();
+          }
+        }
+      } else {
+        // Fallback for browsers without File System Access API
+        fallbackDownload();
+      }
+    }
+
+    function fallbackDownload() {
+      if (!preparedBlob) return;
+
+      const url = URL.createObjectURL(preparedBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = preparedFileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Download started!', 'success');
+      closeDlPopup();
+    }
+
+    // ========== AUDIO EXTRACTION ==========
+    let currentAudioController = null;
+
+    let preparedAudioBlob = null;
+    let preparedAudioFileName = '';
+
+    async function extractAudio() {
+      if (!currentVideo) {
+        showToast('No video selected.', 'error');
+        return;
+      }
+
+      preparedAudioFileName = (currentVideo.title.replace(/[^a-zA-Z0-9\s\-\_]/g, '') || 'audio') + '.wav';
+
+      // Hide other buttons, show progress
+      document.getElementById('dl-save-btn').style.display = 'none';
+      document.getElementById('dl-audio-btn').style.display = 'none';
+      document.getElementById('dl-start-btn').style.display = 'none';
+      document.getElementById('dl-save-audio-btn').style.display = 'none';
+
+      const progressDiv = document.getElementById('dl-progress');
+      const progressBar = document.getElementById('dl-bar');
+      const progressPercent = document.getElementById('dl-percent');
+
+      progressDiv.style.display = 'block';
+      progressPercent.textContent = '0%';
+      progressBar.style.width = '0%';
+      progressBar.classList.remove('bg-[#3ea6ff]');
+      progressBar.classList.add('bg-[#ff0000]');
+      progressPercent.classList.remove('text-[#3ea6ff]');
+      progressPercent.classList.add('text-[#ff0000]');
+      document.getElementById('dl-size').textContent = 'Extracting audio...';
+      document.getElementById('dl-status').textContent = '';
+
+      try {
+        const audioBlob = await downloadAudioDirectly(currentVideo.stream_url, (percent, loaded, total, status) => {
+          progressPercent.textContent = percent + '%';
+          progressBar.style.width = percent + '%';
+          if (total > 0) {
+            document.getElementById('dl-size').textContent = formatBytes(loaded) + ' / ' + formatBytes(total);
+          } else {
+            document.getElementById('dl-size').textContent = formatBytes(loaded) + ' downloaded';
+          }
+          if (status) {
+            document.getElementById('dl-status').textContent = status;
+          }
+        });
+
+        if (!audioBlob) {
+          throw new Error('Download was cancelled');
+        }
+
+        preparedAudioBlob = audioBlob;
+
+        progressPercent.textContent = '100%';
+        progressBar.style.width = '100%';
+        document.getElementById('dl-size').textContent = formatBytes(audioBlob.size) + ' ready to save';
+        document.getElementById('dl-status').textContent = '';
+
+        // Show save audio button
+        document.getElementById('dl-save-audio-btn').style.display = 'block';
+
+        showToast('Audio ready! Tap "Save Audio" to save.', 'success');
+
+      } catch (e) {
+        if (e.message === 'Download was cancelled') {
+          showToast('Audio extraction cancelled.', 'info');
+        } else {
+          showToast('Audio extraction failed: ' + e.message, 'error');
+        }
+
+        // Reset UI
+        progressDiv.style.display = 'none';
+        progressBar.classList.remove('bg-[#ff0000]');
+        progressBar.classList.add('bg-[#3ea6ff]');
+        progressPercent.classList.remove('text-[#ff0000]');
+        progressPercent.classList.add('text-[#3ea6ff]');
+        document.getElementById('dl-save-btn').style.display = 'block';
+        document.getElementById('dl-audio-btn').style.display = 'block';
+      }
+    }
+
+    async function saveAudioFile() {
+      if (!preparedAudioBlob) {
+        showToast('No audio file prepared. Please try again.', 'error');
+        return;
+      }
+
+      // Check for File System Access API support
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: preparedAudioFileName,
+            types: [{
+              description: 'Audio File',
+              accept: {
+                'audio/wav': ['.wav']
+              }
+            }]
+          });
+
+          const writable = await handle.createWritable();
+          await writable.write(preparedAudioBlob);
+          await writable.close();
+
+          showToast('Audio saved successfully!', 'success');
+
+          // Reset UI
+          const progressDiv = document.getElementById('dl-progress');
+          const progressBar = document.getElementById('dl-bar');
+          const progressPercent = document.getElementById('dl-percent');
+
+          progressDiv.style.display = 'none';
+          progressBar.classList.remove('bg-[#ff0000]');
+          progressBar.classList.add('bg-[#3ea6ff]');
+          progressPercent.classList.remove('text-[#ff0000]');
+          progressPercent.classList.add('text-[#3ea6ff]');
+          document.getElementById('dl-save-btn').style.display = 'block';
+          document.getElementById('dl-audio-btn').style.display = 'block';
+          document.getElementById('dl-save-audio-btn').style.display = 'none';
+
+          preparedAudioBlob = null;
+
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            // Fallback to traditional download
+            fallbackAudioDownload(preparedAudioBlob, preparedAudioFileName);
+
+            // Reset UI
+            const progressDiv = document.getElementById('dl-progress');
+            const progressBar = document.getElementById('dl-bar');
+            const progressPercent = document.getElementById('dl-percent');
+
+            progressDiv.style.display = 'none';
+            progressBar.classList.remove('bg-[#ff0000]');
+            progressBar.classList.add('bg-[#3ea6ff]');
+            progressPercent.classList.remove('text-[#ff0000]');
+            progressPercent.classList.add('text-[#3ea6ff]');
+            document.getElementById('dl-save-btn').style.display = 'block';
+            document.getElementById('dl-audio-btn').style.display = 'block';
+            document.getElementById('dl-save-audio-btn').style.display = 'none';
+
+            preparedAudioBlob = null;
+          }
+        }
+      } else {
+        // Fallback for browsers without File System Access API
+        fallbackAudioDownload(preparedAudioBlob, preparedAudioFileName);
+
+        // Reset UI
+        const progressDiv = document.getElementById('dl-progress');
+        const progressBar = document.getElementById('dl-bar');
+        const progressPercent = document.getElementById('dl-percent');
+
+        progressDiv.style.display = 'none';
+        progressBar.classList.remove('bg-[#ff0000]');
+        progressBar.classList.add('bg-[#3ea6ff]');
+        progressPercent.classList.remove('text-[#ff0000]');
+        progressPercent.classList.add('text-[#3ea6ff]');
+        document.getElementById('dl-save-btn').style.display = 'block';
+        document.getElementById('dl-audio-btn').style.display = 'block';
+        document.getElementById('dl-save-audio-btn').style.display = 'none';
+
+        preparedAudioBlob = null;
+      }
+    }
+
+    async function extractAudioShare() {
+      if (!currentVideo) {
+        showToast('No video selected.', 'error');
+        return;
+      }
+
+      const audioFileName = (currentVideo.title.replace(/[^a-zA-Z0-9\s\-\_]/g, '') || 'audio') + '.mp3';
+
+      // Hide other buttons, show progress
+      document.getElementById('share-file-btn').style.display = 'none';
+      document.getElementById('share-audio-btn').style.display = 'none';
+      document.getElementById('share-prepare-btn').style.display = 'none';
+
+      const progressDiv = document.getElementById('share-progress');
+      progressDiv.style.display = 'block';
+      document.getElementById('share-percent').textContent = '0%';
+      document.getElementById('share-bar').style.width = '0%';
+
+      try {
+        const audioBlob = await downloadAudioDirectly(currentVideo.stream_url, (percent, loaded, total) => {
+          document.getElementById('share-percent').textContent = percent + '%';
+          document.getElementById('share-bar').style.width = percent + '%';
+        });
+
+        if (!audioBlob) {
+          throw new Error('Download was cancelled');
+        }
+
+        document.getElementById('share-percent').textContent = '100%';
+        document.getElementById('share-bar').style.width = '100%';
+
+        // Share or download the file
+        if (navigator.canShare && navigator.canShare({
+            files: [new File([audioBlob], audioFileName, {
+              type: 'audio/mpeg'
+            })]
+          })) {
+          try {
+            const file = new File([audioBlob], audioFileName, {
+              type: 'audio/mpeg'
+            });
+
+            await navigator.share({
+              title: currentVideo?.title || 'Audio',
+              text: `Audio from: ${currentVideo?.title}`,
+              files: [file]
+            });
+
+            showToast('Shared successfully!', 'success');
+
+          } catch (e) {
+            if (e.name !== 'AbortError') {
+              showToast('Sharing failed. Downloading instead...', 'info');
+              fallbackAudioDownload(audioBlob, audioFileName);
+            }
+          }
+        } else {
+          showToast('File sharing not supported. Downloading instead...', 'info');
+          fallbackAudioDownload(audioBlob, audioFileName);
+        }
+
+        // Reset UI
+        progressDiv.style.display = 'none';
+        document.getElementById('share-file-btn').style.display = 'block';
+        document.getElementById('share-audio-btn').style.display = 'block';
+
+      } catch (e) {
+        if (e.message === 'Download was cancelled') {
+          showToast('Audio extraction cancelled.', 'info');
+        } else {
+          showToast('Audio extraction failed: ' + e.message, 'error');
+        }
+
+        // Reset UI
+        progressDiv.style.display = 'none';
+        document.getElementById('share-file-btn').style.display = 'block';
+        document.getElementById('share-audio-btn').style.display = 'block';
+      }
+    }
+
+    async function downloadAudioDirectly(streamUrl, progressCallback) {
+      // Create abort controller for cancellation
+      currentAudioController = new AbortController();
+
+      try {
+        // Use the proxy endpoint to avoid CORS issues
+        const proxyUrl = `${API_URL}/api/proxy_download?url=${encodeURIComponent(streamUrl)}&name=temp`;
+
+        progressCallback(10, 0, 0, 'Downloading video...');
+        const videoBlob = await fetchWithProgress(proxyUrl, (percent, loaded, total) => {
+          // Map 0-100% download to 10-50% overall progress
+          const overallPercent = 10 + Math.floor(percent * 0.4);
+          progressCallback(overallPercent, loaded, total, 'Downloading video...');
+        }, currentAudioController.signal);
+
+        if (!videoBlob) {
+          throw new Error('Download was cancelled');
+        }
+
+        progressCallback(50, videoBlob.size, videoBlob.size, 'Decoding audio...');
+
+        // Now convert video to audio using Web Audio API
+        const audioBlob = await extractAudioFromVideo(videoBlob, (percent, status) => {
+          // Map 0-100% extraction to 50-100% overall progress
+          const overallPercent = 50 + Math.floor(percent * 0.5);
+          progressCallback(overallPercent, 0, 0, status);
+        });
+
+        currentAudioController = null;
+        return audioBlob;
+
+      } catch (e) {
+        currentAudioController = null;
+        if (e.name === 'AbortError') {
+          return null;
+        }
+        console.error('Audio extraction error:', e);
+        throw e;
+      }
+    }
+
+    async function fetchWithProgress(url, progressCallback, signal) {
+      try {
+        const response = await fetch(url, {
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+
+        const contentLength = response.headers.get('content-length');
+        const total = parseInt(contentLength, 10) || 0;
+
+        const reader = response.body.getReader();
+        const chunks = [];
+        let received = 0;
+
+        while (true) {
+          const {
+            done,
+            value
+          } = await reader.read();
+          if (done) break;
+
+          chunks.push(value);
+          received += value.length;
+
+          if (total > 0) {
+            const percent = Math.round((received / total) * 100);
+            progressCallback(percent, received, total);
+          } else {
+            progressCallback(50, received, 0);
+          }
+        }
+
+        return new Blob(chunks, {
+          type: 'video/mp4'
+        });
+
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          throw error;
+        }
+        console.error('Fetch error:', error);
+        throw new Error('Failed to download video. Check your connection.');
+      }
+    }
+
+    async function extractAudioFromVideo(videoBlob, progressCallback) {
+      try {
+        progressCallback(10, 'Reading video file...');
+
+        // Create array buffer from blob
+        const arrayBuffer = await videoBlob.arrayBuffer();
+
+        progressCallback(30, 'Decoding audio...');
+
+        // Create audio context
+        const audioContext = new(window.AudioContext || window.webkitAudioContext)();
+
+        // Decode the entire audio at once
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        progressCallback(70, 'Converting to WAV...');
+
+        // Convert audio buffer to WAV
+        const wavBlob = audioBufferToWav(audioBuffer);
+
+        progressCallback(95, 'Finalizing...');
+
+        // Clean up
+        await audioContext.close();
+
+        progressCallback(100, 'Complete!');
+
+        return wavBlob;
+
+      } catch (error) {
+        console.error('Audio extraction failed:', error);
+        throw new Error('Failed to extract audio: ' + error.message);
+      }
+    }
+
+    function audioBufferToWav(audioBuffer) {
+      const numChannels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const format = 1; // PCM
+      const bitDepth = 16;
+
+      // Interleave channels
+      const length = audioBuffer.length * numChannels * 2;
+      const buffer = new ArrayBuffer(44 + length);
+      const view = new DataView(buffer);
+      const channels = [];
+      let offset = 0;
+      let pos = 0;
+
+      // Write WAV header
+      const setUint16 = (data) => {
+        view.setUint16(pos, data, true);
+        pos += 2;
+      };
+      const setUint32 = (data) => {
+        view.setUint32(pos, data, true);
+        pos += 4;
+      };
+
+      // "RIFF" chunk descriptor
+      setUint32(0x46464952); // "RIFF"
+      setUint32(36 + length); // file length - 8
+      setUint32(0x45564157); // "WAVE"
+
+      // "fmt " sub-chunk
+      setUint32(0x20746d66); // "fmt "
+      setUint32(16); // chunk length
+      setUint16(format); // audio format (1 = PCM)
+      setUint16(numChannels);
+      setUint32(sampleRate);
+      setUint32(sampleRate * numChannels * bitDepth / 8); // byte rate
+      setUint16(numChannels * bitDepth / 8); // block align
+      setUint16(bitDepth);
+
+      // "data" sub-chunk
+      setUint32(0x61746164); // "data"
+      setUint32(length); // chunk length
+
+      // Write audio data
+      for (let i = 0; i < numChannels; i++) {
+        channels.push(audioBuffer.getChannelData(i));
+      }
+
+      offset = pos;
+      for (let i = 0; i < audioBuffer.length; i++) {
+        for (let channel = 0; channel < numChannels; channel++) {
+          let sample = Math.max(-1, Math.min(1, channels[channel][i]));
+          sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+          view.setInt16(offset, sample, true);
+          offset += 2;
+        }
+      }
+
+      return new Blob([buffer], {
+        type: 'audio/wav'
+      });
+    }
+
+    function fallbackAudioDownload(audioBlob, fileName) {
+      const url = URL.createObjectURL(audioBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Audio download started!', 'success');
+    }
+
+    // ========== SHARE WITH WEB SHARE API ==========
+    function openSharePopup() {
+      if (!currentVideo) return;
+      preparedBlob = null;
+      document.getElementById('share-progress').style.display = 'none';
+      document.getElementById('share-file-btn').style.display = 'none';
+      document.getElementById('share-audio-btn').style.display = 'none';
+      document.getElementById('share-prepare-btn').style.display = 'block';
+      document.getElementById('share-popup').style.display = 'flex';
+    }
+
+    function closeSharePopup() {
+      // Cancel any ongoing audio extraction
+      if (currentAudioController) {
+        currentAudioController.abort();
+        currentAudioController = null;
+      }
+
+      document.getElementById('share-popup').style.display = 'none';
+      preparedBlob = null;
+    }
+
+    async function prepareShare() {
+      if (!currentVideo) return;
+
+      const name = currentVideo.title.replace(/[^a-zA-Z0-9\s\-\_]/g, '') + '.mp4';
+      preparedFileName = name;
+      const url = `${API_URL}/api/proxy_download?url=${encodeURIComponent(currentVideo.stream_url)}&name=${encodeURIComponent(currentVideo.title)}`;
+
+      document.getElementById('share-prepare-btn').style.display = 'none';
+      document.getElementById('share-progress').style.display = 'block';
+
+      try {
+        const response = await fetch(url);
+
+        if (!response.ok) throw new Error('Failed to fetch video');
+
+        const contentLength = response.headers.get('content-length');
+        const total = parseInt(contentLength, 10) || 0;
+
+        const reader = response.body.getReader();
+        const chunks = [];
+        let received = 0;
+
+        while (true) {
+          const {
+            done,
+            value
+          } = await reader.read();
+          if (done) break;
+
+          chunks.push(value);
+          received += value.length;
+
+          if (total > 0) {
+            const percent = Math.round((received / total) * 100);
+            document.getElementById('share-percent').textContent = percent + '%';
+            document.getElementById('share-bar').style.width = percent + '%';
+          } else {
+            document.getElementById('share-percent').textContent = formatBytes(received);
+            document.getElementById('share-bar').style.width = '50%';
+          }
+        }
+
+        preparedBlob = new Blob(chunks, {
+          type: 'video/mp4'
+        });
+
+        document.getElementById('share-percent').textContent = '100%';
+        document.getElementById('share-bar').style.width = '100%';
+        document.getElementById('share-file-btn').style.display = 'block';
+        document.getElementById('share-audio-btn').style.display = 'block';
+
+        showToast('File ready for sharing!', 'success');
+
+      } catch (e) {
+        showToast('Failed to prepare file: ' + e.message, 'error');
+        document.getElementById('share-prepare-btn').style.display = 'block';
+        document.getElementById('share-progress').style.display = 'none';
+      }
+    }
+
+    async function shareFile() {
+      if (!preparedBlob) {
+        showToast('No file prepared. Please try again.', 'error');
+        return;
+      }
+
+      if (navigator.canShare && navigator.canShare({
+          files: [new File([preparedBlob], preparedFileName, {
+            type: 'video/mp4'
+          })]
+        })) {
+        try {
+          const file = new File([preparedBlob], preparedFileName, {
+            type: 'video/mp4'
+          });
+
+          await navigator.share({
+            title: currentVideo?.title || 'Video',
+            text: `Check out this video: ${currentVideo?.title}`,
+            files: [file]
+          });
+
+          showToast('Shared successfully!', 'success');
+          closeSharePopup();
+
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            showToast('Sharing failed. Try using the other options.', 'error');
+          }
+        }
+      } else {
+        showToast('File sharing not supported on this device. Use the download option instead.', 'error');
+      }
+    }
+
+    function copyLink() {
+      if (!currentVideo) return;
+      const link = `${API_URL}/watch?v=${currentVideo.id}`;
+
+      navigator.clipboard.writeText(link).then(() => {
+        showToast('Link copied to clipboard!', 'success');
+      }).catch(() => {
+        showToast('Failed to copy link.', 'error');
+      });
+    }
+
+    async function shareNative() {
+      if (!currentVideo) return;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: currentVideo.title,
+            text: `Check out: ${currentVideo.title}`,
+            url: `${API_URL}/watch?v=${currentVideo.id}`
+          });
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            showToast('Sharing failed.', 'error');
+          }
+        }
+      } else {
+        copyLink();
+      }
+    }
+
+    function shareToTwitter() {
+      if (!currentVideo) return;
+      const text = encodeURIComponent(`Check out: ${currentVideo.title}`);
+      const url = encodeURIComponent(`${API_URL}/watch?v=${currentVideo.id}`);
+      window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'noopener,noreferrer');
+    }
+
+    function shareToWhatsApp() {
+      if (!currentVideo) return;
+      const text = encodeURIComponent(`Check out: ${currentVideo.title} ${API_URL}/watch?v=${currentVideo.id}`);
+      window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer');
+    }
+
+    // ========== LIBRARY ==========
+    function showLibrary() {
+      setActiveNav('library');
+
+      const history = JSON.parse(localStorage.getItem('youtube_history') || '[]');
+      const saved = JSON.parse(localStorage.getItem('youtube_saved') || '[]');
+      const subs = JSON.parse(localStorage.getItem('youtube_client_subs') || '[]');
+
+      document.getElementById('history-count').textContent = history.length + ' videos';
+      document.getElementById('saved-count').textContent = saved.length + ' videos';
+      document.getElementById('subs-count').textContent = subs.length + ' channels';
+
+      document.getElementById('library-popup').style.display = 'flex';
+    }
+
+    function closeLibrary() {
+      document.getElementById('library-popup').style.display = 'none';
+    }
+
+    function loadHistory() {
+      closeLibrary();
+      const history = JSON.parse(localStorage.getItem('youtube_history') || '[]');
+      if (history.length === 0) {
+        showEmpty('No watch history', 'Videos you watch will appear here');
+        return;
+      }
+      renderGrid(history);
+    }
+
+    function loadSaved() {
+      closeLibrary();
+      const saved = JSON.parse(localStorage.getItem('youtube_saved') || '[]');
+      if (saved.length === 0) {
+        showEmpty('No saved videos', 'Save videos to watch later');
+        return;
+      }
+      renderGrid(saved);
+    }
+
+    function loadSubsList() {
+      closeLibrary();
+      const subs = JSON.parse(localStorage.getItem('youtube_client_subs') || '[]');
+      if (subs.length === 0) {
+        showEmpty('No subscriptions', 'Subscribe to your favorite channels');
+        return;
+      }
+      // Show subs as a simple list
+      const grid = document.getElementById('video-grid');
+      grid.innerHTML = subs.map(s => `
+        <div class="bg-[#1f1f1f] rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-[#272727] transition-colors" onclick="runSearch('${escapeHtml(s)}')">
+          <div class="w-12 h-12 bg-[#ff0000] rounded-full flex items-center justify-center">
+            <i class="fas fa-user"></i>
+          </div>
+          <span class="font-medium">${escapeHtml(s)}</span>
+          <i class="fas fa-chevron-right ml-auto text-gray-400"></i>
+        </div>
+      `).join('');
+      document.getElementById('empty-state').style.display = 'none';
+    }
+
+    function addToHistory(video) {
+      if (!video || !video.id) return;
+
+      let history = JSON.parse(localStorage.getItem('youtube_history') || '[]');
+      // Remove if already exists
+      history = history.filter(v => v.id !== video.id);
+      // Add to front with all necessary data
+      history.unshift({
+        id: video.id,
+        title: video.title || 'Unknown',
+        uploader: video.uploader || 'Unknown',
+        thumbnail: video.thumbnail || '',
+        duration: video.duration || 0,
+        views: video.views || video.view_count || 0,
+        date: video.date || video.upload_date || Date.now()
+      });
+      // Keep only last 100
+      history = history.slice(0, 100);
+      localStorage.setItem('youtube_history', JSON.stringify(history));
+    }
+
+    function addToPlaylist() {
+      if (!currentVideo || !currentVideo.id) return;
+
+      let saved = JSON.parse(localStorage.getItem('youtube_saved') || '[]');
+
+      // Check if already saved using the correct ID
+      if (saved.find(v => v.id === currentVideo.id)) {
+        showToast('Already in your saved videos');
+        return;
+      }
+
+      saved.unshift({
+        id: currentVideo.id,
+        title: currentVideo.title || 'Unknown',
+        uploader: currentVideo.uploader || 'Unknown',
+        thumbnail: currentVideo.thumbnail || '',
+        duration: currentVideo.duration || 0,
+        views: currentVideo.views || 0,
+        date: currentVideo.date || Date.now()
+      });
+
+      localStorage.setItem('youtube_saved', JSON.stringify(saved));
+
+      // Show animated heart feedback
+      const playerOverlay = document.getElementById('player-overlay');
+      const heart = document.createElement('div');
+      heart.innerHTML = '<i class="fas fa-heart text-6xl text-red-500"></i>';
+      heart.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); pointer-events: none; z-index: 100; animation: heartPop 0.6s ease-out;';
+      playerOverlay.appendChild(heart);
+      setTimeout(() => heart.remove(), 600);
+
+      showToast('Added to saved videos', 'success');
+    }
+
+    // Double-tap to save video
+    let lastTap = 0;
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('vid-player').addEventListener('click', (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < 300 && tapLength > 0) {
+          addToPlaylist();
+        }
+        lastTap = currentTime;
+      });
+    });
+
+    // ========== SETTINGS ==========
+    function showSettings() {
+      document.getElementById('settings-popup').style.display = 'flex';
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-popup').style.display = 'none';
+    }
+
+    function clearHistory() {
+      localStorage.removeItem('youtube_history');
+      showToast('Watch history cleared');
+      closeSettings();
+    }
+
+    function clearSaved() {
+      localStorage.removeItem('youtube_saved');
+      showToast('Saved videos cleared');
+      closeSettings();
+    }
+
+    function clearSubs() {
+      localStorage.removeItem('youtube_client_subs');
+      showToast('Subscriptions cleared');
+      closeSettings();
+    }
+
+    function showAbout() {
+      closeSettings();
+      showToast('HTML YouTube v2', 'success');
+    }
+
+    // ========== TOAST NOTIFICATIONS ==========
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const colors = {
+        info: 'bg-[#272727]',
+        success: 'bg-green-600',
+        error: 'bg-red-600'
+      };
+
+      const icons = {
+        info: 'fa-info-circle',
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle'
+      };
+
+      toast.className = `toast ${colors[type]} px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 pointer-events-auto`;
+      toast.innerHTML = `
+        <i class="fas ${icons[type]}"></i>
+        <span class="text-sm">${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ========== UTILITY FUNCTIONS ==========
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDuration(seconds) {
+      if (!seconds) return '';
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+
+      if (h > 0) {
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      }
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function formatViews(views) {
+      if (!views) return '0';
+      if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M';
+      if (views >= 1000) return (views / 1000).toFixed(1) + 'K';
+      return views.toString();
+    }
+
+    function formatDate(timestamp) {
+      if (!timestamp) return '';
+      const date = new Date(timestamp * 1000);
+      const now = new Date();
+      const diff = now - date;
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      if (days === 0) return 'Today';
+      if (days === 1) return 'Yesterday';
+      if (days < 7) return days + ' days ago';
+      if (days < 30) return Math.floor(days / 7) + ' weeks ago';
+      if (days < 365) return Math.floor(days / 30) + ' months ago';
+      return Math.floor(days / 365) + ' years ago';
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    (() => {
+      const ENTRY = 'HTML YouTube v2',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
