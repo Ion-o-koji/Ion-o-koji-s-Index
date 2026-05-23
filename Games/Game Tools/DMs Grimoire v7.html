@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>DMs Grimoire v7</title>
+
+  <!-- React and ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --background: 215 20% 11%;
+      --foreground: 210 10% 92%;
+      --card: 215 17% 15%;
+      --card-foreground: 210 10% 92%;
+      --popover: 215 17% 15%;
+      --popover-foreground: 210 10% 92%;
+      --primary: 210 8% 65%;
+      --primary-foreground: 215 20% 10%;
+      --secondary: 215 12% 20%;
+      --secondary-foreground: 210 15% 88%;
+      --muted: 215 12% 18%;
+      --muted-foreground: 215 8% 65%;
+      --accent: 215 16% 22%;
+      --accent-foreground: 210 15% 92%;
+      --destructive: 0 60% 45%;
+      --destructive-foreground: 210 20% 96%;
+      --border: 215 13% 25%;
+      --input: 215 13% 25%;
+      --ring: 210 8% 65%;
+      --radius: 0.5rem;
+    }
+
+    body {
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      font-family: Inter, sans-serif;
+    }
+
+    .font-serif {
+      font-family: Cinzel, serif;
+    }
+
+    .font-mono {
+      font-family: JetBrains Mono, monospace;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: hsla(215, 8%, 65%, 0.25);
+      border-radius: 2px;
+    }
+
+    .blur-overlay {
+      backdrop-filter: blur(4px);
+    }
+
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            border: "hsl(var(--border))",
+            input: "hsl(var(--input))",
+            ring: "hsl(var(--ring))",
+            background: "hsl(var(--background))",
+            foreground: "hsl(var(--foreground))",
+            primary: {
+              DEFAULT: "hsl(var(--primary))",
+              foreground: "hsl(var(--primary-foreground))"
+            },
+            secondary: {
+              DEFAULT: "hsl(var(--secondary))",
+              foreground: "hsl(var(--secondary-foreground))"
+            },
+            destructive: {
+              DEFAULT: "hsl(var(--destructive))",
+              foreground: "hsl(var(--destructive-foreground))"
+            },
+            muted: {
+              DEFAULT: "hsl(var(--muted))",
+              foreground: "hsl(var(--muted-foreground))"
+            },
+            accent: {
+              DEFAULT: "hsl(var(--accent))",
+              foreground: "hsl(var(--accent-foreground))"
+            },
+            card: {
+              DEFAULT: "hsl(var(--card))",
+              foreground: "hsl(var(--card-foreground))"
+            },
+          },
+          borderRadius: {
+            lg: "var(--radius)",
+            md: "calc(var(--radius) - 2px)",
+            sm: "calc(var(--radius) - 4px)",
+          },
+        },
+      },
+    };
+
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script>
+    const {
+      useState,
+      useEffect,
+      useMemo,
+      useRef
+    } = React;
+
+    function cn(...classes) {
+      return classes.filter(Boolean).join(" ");
+    }
+
+    function useLocalStorage(key, initialValue) {
+      const [storedValue, setStoredValue] = useState(() => {
+        try {
+          const item = typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
+          if (!item) return initialValue;
+          const parsed = JSON.parse(item);
+          return Array.isArray(initialValue) && !Array.isArray(parsed) ? initialValue : parsed ?? initialValue;
+        } catch {
+          return initialValue;
+        }
+      });
+
+      const setValue = (value) => {
+        try {
+          const valueToStore = value instanceof Function ? value(storedValue) : value;
+          setStoredValue(valueToStore);
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          }
+        } catch (e) {
+          console.error("Storage error:", e);
+        }
+      };
+
+      return [storedValue, setValue];
+    }
+
+    function normalizeAC(val) {
+      if (val == null) return 10;
+      if (Array.isArray(val)) {
+        const first = val[0];
+        if (typeof first === "object" && first !== null) {
+          return first.value ?? first.base ?? first.default ?? 10;
+        }
+        return typeof first === "number" ? first : 10;
+      }
+      if (typeof val === "object") {
+        return val.value ?? val.base ?? val.default ?? 10;
+      }
+      return typeof val === "number" ? val : 10;
+    }
+
+    const OPEN5E_ENDPOINTS = {
+      spells: {
+        url: "https://api.open5e.com/v1/spells/",
+        label: "Spells",
+        srdSlug: "wotc-srd"
+      },
+      monsters: {
+        url: "https://api.open5e.com/v1/monsters/",
+        label: "Monsters",
+        srdSlug: "wotc-srd"
+      },
+      magicitems: {
+        url: "https://api.open5e.com/v1/magicitems/",
+        label: "Magic Items",
+        srdSlug: "wotc-srd"
+      },
+      weapons: {
+        url: "https://api.open5e.com/v1/weapons/",
+        label: "Weapons",
+        srdSlug: "wotc-srd"
+      },
+      armor: {
+        url: "https://api.open5e.com/v1/armor/",
+        label: "Armor",
+        srdSlug: "wotc-srd"
+      },
+      conditions: {
+        url: "https://api.open5e.com/v1/conditions/",
+        label: "Conditions",
+        srdSlug: "wotc-srd"
+      },
+      rules: {
+        url: "https://api.open5e.com/v1/sections/",
+        label: "Rules",
+        srdSlug: "wotc-srd"
+      },
+      classes: {
+        url: "https://api.open5e.com/v1/classes/",
+        label: "Classes",
+        srdSlug: "wotc-srd"
+      }
+    };
+
+    const CATEGORIES = Object.entries(OPEN5E_ENDPOINTS).map(([id, meta]) => ({
+      id,
+      label: meta.label
+    }));
+
+    const Button = ({
+      variant = "default",
+      size = "default",
+      className,
+      ...props
+    }) => {
+      const variants = {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      };
+      const sizes = {
+        default: "h-10 px-4 py-2",
+        sm: "h-8 px-3 text-xs",
+        icon: "h-9 w-9 p-0"
+      };
+      return React.createElement("button", {
+        className: cn("inline-flex items-center justify-center rounded-md font-medium transition-colors disabled:opacity-50", variants[variant], sizes[size], className),
+        ...props
+      });
+    };
+
+    const Card = ({
+      className,
+      ...props
+    }) => React.createElement("div", {
+      className: cn("rounded-xl border bg-card text-card-foreground shadow-sm", className),
+      ...props
+    });
+    const CardHeader = ({
+      className,
+      ...props
+    }) => React.createElement("div", {
+      className: cn("flex flex-col space-y-1.5 p-5", className),
+      ...props
+    });
+    const CardTitle = ({
+      className,
+      ...props
+    }) => React.createElement("h3", {
+      className: cn("font-semibold leading-none tracking-tight", className),
+      ...props
+    });
+    const CardContent = ({
+      className,
+      ...props
+    }) => React.createElement("div", {
+      className: cn("p-5 pt-0", className),
+      ...props
+    });
+    const Badge = ({
+      variant = "default",
+      className,
+      ...props
+    }) => {
+      const variants = {
+        default: "bg-primary text-primary-foreground",
+        secondary: "bg-secondary text-secondary-foreground",
+        outline: "text-foreground border"
+      };
+      return React.createElement("div", {
+        className: cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold", variants[variant], className),
+        ...props
+      });
+    };
+
+    async function fetchOpen5eList(categoryId, searchTerm = "") {
+      const meta = OPEN5E_ENDPOINTS[categoryId];
+      if (!meta) return [];
+
+      // Build query params
+      const params = new URLSearchParams({
+        limit: "100"
+      });
+
+      // SRD-only per category
+      if (meta.srdSlug) {
+        params.set("document__slug", meta.srdSlug);
+      }
+
+      // Apply search if provided
+      if (searchTerm) {
+        params.set("search", searchTerm);
+      }
+
+      const url = `${meta.url}?${params.toString()}`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return [];
+
+        const data = await res.json();
+
+        return (data.results || []).map((item, idx) => ({
+          name: item.name || item.title || item.slug || `Item ${idx + 1}`,
+          index: item.slug || String(idx),
+          categoryId,
+          _raw: item
+        }));
+      } catch {
+        return [];
+      }
+    }
+
+    async function fetchOpen5eDetail(listItem) {
+      if (!listItem._raw?.url) return listItem._raw || {};
+      try {
+        const res = await fetch(listItem._raw.url);
+        return res.ok ? res.json() : listItem._raw;
+      } catch {
+        return listItem._raw || {};
+      }
+    }
+
+    function CompendiumView({
+      sidebarOpen,
+      setSidebarOpen,
+      onAddToCombat
+    }) {
+      const [category, setCategory] = useLocalStorage("dm-grimoire-category", "spells");
+      const [list, setList] = useState([]);
+      const [loading, setLoading] = useState(false);
+      const [search, setSearch] = useState("");
+      const [openBlocks, setOpenBlocks] = useLocalStorage("dm-grimoire-blocks", []);
+      const safeOpenBlocks = Array.isArray(openBlocks) ? openBlocks : [];
+
+      useEffect(() => {
+        let active = true;
+        const timeoutId = setTimeout(async () => {
+          setLoading(true);
+          const data = await fetchOpen5eList(category, search);
+          if (active) {
+            setList(data);
+            setLoading(false);
+          }
+        }, 300);
+        return () => {
+          active = false;
+          clearTimeout(timeoutId);
+        };
+      }, [category, search]);
+
+      const openDetail = async (item) => {
+        if (safeOpenBlocks.find(b => b.index === item.index)) return;
+        const data = await fetchOpen5eDetail(item);
+        setOpenBlocks(prev => [{
+          ...data,
+          index: item.index,
+          categoryId: category
+        }, ...(Array.isArray(prev) ? prev : [])]);
+        if (window.innerWidth < 768) setSidebarOpen(false);
+      };
+
+      return React.createElement("div", {
+          className: "flex h-full w-full overflow-hidden"
+        },
+        React.createElement("aside", {
+            className: cn("flex flex-col border-r bg-card/70 transition-all absolute md:relative z-20 h-full w-full md:w-80", sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0 md:w-0 md:opacity-0")
+          },
+          React.createElement("div", {
+              className: "p-4 border-b space-y-4 bg-background/95 backdrop-blur"
+            },
+            React.createElement("div", {
+                className: "flex flex-wrap gap-2"
+              },
+              CATEGORIES.map(cat => React.createElement(Button, {
+                key: cat.id,
+                variant: category === cat.id ? "default" : "outline",
+                size: "sm",
+                onClick: () => setCategory(cat.id),
+                className: "text-xs h-7"
+              }, cat.label))
+            ),
+            React.createElement("div", {
+                className: "relative"
+              },
+              React.createElement("span", {
+                className: "absolute left-2 top-2.5 text-xs opacity-50"
+              }, "🔍"),
+              React.createElement("input", {
+                placeholder: "Search...",
+                value: search,
+                onChange: e => setSearch(e.target.value),
+                className: "h-10 w-full rounded-md border bg-background/80 px-3 py-2 text-sm pl-8"
+              })
+            )
+          ),
+          React.createElement("div", {
+              className: "flex-1 overflow-y-auto p-2 custom-scrollbar text-sm"
+            },
+            loading ? React.createElement("div", {
+              className: "flex justify-center p-8 animate-pulse"
+            }, "Loading...") :
+            list.map(item => React.createElement("button", {
+              key: item.index,
+              onClick: () => openDetail(item),
+              className: "w-full text-left px-3 py-2 text-sm rounded-md hover:bg-accent/70 transition-colors truncate"
+            }, item.name))
+          )
+        ),
+        React.createElement("div", {
+            className: "flex-1 overflow-y-auto bg-[hsl(215,20%,11%)] p-4 relative"
+          },
+          safeOpenBlocks.length === 0 ? React.createElement("div", {
+            className: "h-full flex flex-col items-center justify-center opacity-25"
+          }, "Select items to begin") :
+          React.createElement("div", {
+              className: "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 items-start pb-20"
+            },
+            safeOpenBlocks.map(block => React.createElement(DetailCard, {
+              key: block.index,
+              data: block,
+              onClose: () => setOpenBlocks(prev => prev.filter(b => b.index !== block.index)),
+              onAddToCombat
+            }))
+          )
+        )
+      );
+    }
+
+    //tags for the detail card badges
+
+    const CATEGORY_BADGES = {
+      spells: "Spell",
+      monsters: "Monster",
+      magicitems: "Magic Item",
+      weapons: "Weapon",
+      armor: "Armor",
+      conditions: "Condition",
+      feats: "Feat",
+      backgrounds: "Background",
+      races: "Race",
+      classes: "Class",
+      subclasses: "Subclass",
+      rules: "Rule",
+      languages: "Language",
+      skills: "Skill",
+      abilityscores: "Ability Score",
+      damagetypes: "Damage Type",
+      traits: "Trait"
+    };
+
+    function DetailCard({
+      data,
+      onClose,
+      onAddToCombat
+    }) {
+      const [fullData, setFullData] = React.useState(data);
+      const [loadingDetails, setLoadingDetails] = React.useState(false);
+      const [detailsError, setDetailsError] = React.useState(null);
+
+      const isMonster = fullData.categoryId === "monsters";
+
+      const isSpell =
+        fullData.categoryId === "spells" ||
+        typeof fullData.level !== "undefined" ||
+        typeof fullData.level_int !== "undefined";
+
+      const isArmor = fullData.categoryId === "armor";
+
+      const armorCategory =
+        fullData.armor_category || // primary field
+        fullData.category || // fallback 1  
+        fullData.type || // fallback 2
+        "";
+
+      const armorBaseAc =
+        fullData.armor_class ||
+        fullData.base_ac ||
+        fullData.ac ||
+        undefined;
+
+      const armorStrReq =
+        fullData.str_minimum ||
+        fullData.strength_requirement ||
+        fullData.strength_requirement_int ||
+        null;
+
+      const armorStealthDisadvantage =
+        fullData.stealth_disadvantage === true ||
+        fullData.disadvantage_on_stealth === true ||
+        fullData.stealth === "disadvantage";
+
+      const spellLevel =
+        typeof fullData.level_int === "number" ?
+        fullData.level_int :
+        fullData.level;
+
+      const spellSchool = fullData.school || fullData.school_slug || "";
+      const spellCastingTime = fullData.casting_time || "";
+      const spellRange = fullData.range || "";
+      const spellDuration = fullData.duration || "";
+      const spellComponents = fullData.components || "";
+      const spellMaterial = fullData.material || "";
+
+      const isWeapon = fullData.categoryId === "weapons" ||
+        fullData.equipment_category === "Weapon" ||
+        fullData.equipment_category_slug === "weapon";
+
+      // Prefer fullData, but fall back to original data
+      const ac = normalizeAC(fullData.armor_class ?? fullData.ac);
+      const hp = fullData.hit_points || fullData.hp;
+      const scores = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+      const getScore = (s) =>
+        fullData[s.toLowerCase()] ??
+        fullData[
+          s
+          .toLowerCase()
+          .replace("con", "constitution")
+          .replace("str", "strength")
+          .replace("dex", "dexterity")
+          .replace("int", "intelligence")
+          .replace("wis", "wisdom")
+          .replace("cha", "charisma")
+        ];
+
+      // Helper: fetch full spell details by slug/name, with safe fallback
+      async function fetchSpellDetails(identifier) {
+        const slug = identifier.slug || identifier.index;
+        const name = identifier.name || identifier.title;
+        if (!slug && !name) return;
+
+        setLoadingDetails(true);
+        setDetailsError(null);
+
+        try {
+          let spell = null;
+
+          // 1) Try direct SRD-only single spell endpoint if we have a slug/index
+          if (slug) {
+            const url = `https://api.open5e.com/v1/spells/${encodeURIComponent(
+          slug
+        )}/?document__slug=wotc-srd`;
+
+            const res = await fetch(url);
+            if (res.ok) {
+              spell = await res.json();
+            } else if (res.status !== 404) {
+              throw new Error(`Failed to load spell details (${res.status})`);
+            }
+            // If 404, fall through to search
+          }
+
+          // 2) Fallback: search by name in WotC SRD if direct slug lookup didn't work
+          if (!spell && name) {
+            const searchUrl =
+              "https://api.open5e.com/v1/spells/?" +
+              new URLSearchParams({
+                document__slug: "wotc-srd",
+                search: name,
+              }).toString();
+
+            const res2 = await fetch(searchUrl);
+            if (!res2.ok) {
+              throw new Error(`Failed to search spell (${res2.status})`);
+            }
+
+            const list = await res2.json();
+            if (Array.isArray(list.results) && list.results.length > 0) {
+              spell =
+                list.results.find((s) => s.name === name) || list.results[0];
+            }
+          }
+
+          if (!spell) {
+            return; // keep basic data, no scary error
+          }
+
+          setFullData((prev) => ({
+            ...prev,
+            ...spell,
+          }));
+        } catch (err) {
+          console.error(err);
+          setDetailsError(err.message || "Failed to load spell details.");
+        } finally {
+          setLoadingDetails(false);
+        }
+      }
+
+      // Helper: fetch full monster details by slug/index, with safe fallbacks
+      async function fetchMonsterDetails(identifier) {
+        const slug = identifier.slug || identifier.index;
+        const name = identifier.name || identifier.title;
+        if (!slug && !name) return;
+
+        setLoadingDetails(true);
+        setDetailsError(null);
+
+        try {
+          let monster = null;
+
+          if (slug) {
+            const url = `https://api.open5e.com/v1/monsters/${encodeURIComponent(
+          slug
+        )}/?document__slug=wotc-srd`;
+
+            const res = await fetch(url);
+            if (res.ok) {
+              monster = await res.json();
+            } else if (res.status !== 404) {
+              throw new Error(`Failed to load monster details (${res.status})`);
+            }
+          }
+
+          if (!monster && name) {
+            const searchUrl =
+              "https://api.open5e.com/monsters/?" +
+              new URLSearchParams({
+                document__slug: "wotc-srd",
+                search: name,
+              }).toString();
+
+            const res2 = await fetch(searchUrl);
+            if (!res2.ok) {
+              throw new Error(`Failed to search monster (${res2.status})`);
+            }
+
+            const list = await res2.json();
+            if (Array.isArray(list.results) && list.results.length > 0) {
+              monster =
+                list.results.find((m) => m.name === name) || list.results[0];
+            }
+          }
+
+          if (!monster) {
+            return;
+          }
+
+          setFullData((prev) => ({
+            ...prev,
+            ...monster,
+          }));
+        } catch (err) {
+          console.error(err);
+          setDetailsError(err.message || "Failed to load monster details.");
+        } finally {
+          setLoadingDetails(false);
+        }
+      }
+
+      React.useEffect(() => {
+        setFullData(data);
+        setDetailsError(null);
+
+        const looksLikeMonster =
+          data.categoryId === "monsters" || data.hit_points !== undefined;
+
+        const looksLikeSpell =
+          data.categoryId === "spells" ||
+          typeof data.level !== "undefined" ||
+          typeof data.level_int !== "undefined";
+
+        if (looksLikeMonster) {
+          const hasActions =
+            Array.isArray(data.actions) && data.actions.length > 0;
+          const hasLegendary =
+            Array.isArray(data.legendary_actions) &&
+            data.legendary_actions.length > 0;
+
+          if (!hasActions || !hasLegendary) {
+            fetchMonsterDetails(data);
+          }
+          return;
+        }
+
+        if (looksLikeSpell) {
+          const hasComponents = !!(data.components || data.material);
+          const hasCasting = !!data.casting_time;
+          const hasRange = !!data.range;
+          const hasDuration = !!data.duration;
+
+          if (!hasComponents || !hasCasting || !hasRange || !hasDuration) {
+            fetchSpellDetails(data);
+          }
+        }
+      }, [data]);
+
+      const actions = Array.isArray(fullData.actions) ? fullData.actions : [];
+      const legendaryActions = Array.isArray(fullData.legendary_actions) ?
+        fullData.legendary_actions : [];
+
+      const descriptionText =
+        fullData.desc || fullData.description || fullData.full_text || "";
+
+      return React.createElement(
+        Card, {
+          className: "relative overflow-hidden group border-muted bg-card/95"
+        },
+        React.createElement(
+          Button, {
+            variant: "ghost",
+            size: "icon",
+            className: "absolute right-2 top-2 h-7 w-7 text-muted-foreground",
+            onClick: onClose,
+          },
+          "✕"
+        ),
+        React.createElement(
+          CardHeader, {
+            className: "pb-2"
+          },
+          React.createElement(
+            CardTitle, {
+              className: "font-serif text-lg pr-8"
+            },
+            fullData.name || fullData.title || "Entry"
+          ),
+          React.createElement(
+            "div", {
+              className: "flex flex-wrap gap-2 text-[10px]"
+            },
+            fullData.categoryId &&
+            React.createElement(
+              Badge, {
+                variant: "secondary"
+              },
+              CATEGORY_BADGES[fullData.categoryId] || fullData.categoryId
+            ),
+            fullData.challenge_rating &&
+            React.createElement(
+              Badge, {
+                variant: "outline"
+              },
+              `CR ${fullData.challenge_rating}`
+            ),
+            loadingDetails &&
+            React.createElement(
+              "span", {
+                className: "text-[10px] opacity-70"
+              },
+              "Loading details..."
+            ),
+            detailsError &&
+            React.createElement(
+              "span", {
+                className: "text-[10px] text-red-400"
+              },
+              detailsError
+            )
+          )
+        ),
+
+        React.createElement(
+          CardContent, {
+            className: "text-sm space-y-4"
+          },
+          isMonster &&
+          React.createElement(
+            "div", {
+              className: "grid grid-cols-2 gap-4 border-y py-3 bg-muted/20 -mx-5 px-5 text-xs",
+            },
+            ac !== undefined &&
+            React.createElement(
+              "div", {
+                className: "flex justify-between"
+              },
+              React.createElement("span", {
+                className: "opacity-60"
+              }, "AC"),
+              React.createElement("span", {
+                className: "font-bold"
+              }, ac)
+            ),
+            hp !== undefined &&
+            React.createElement(
+              "div", {
+                className: "flex justify-between"
+              },
+              React.createElement("span", {
+                className: "opacity-60"
+              }, "HP"),
+              React.createElement("span", {
+                className: "font-bold"
+              }, hp)
+            )
+          ),
+
+          // Armor summary block
+          isArmor &&
+          React.createElement(
+            "div", {
+              className: "grid grid-cols-2 gap-2 border-b py-3 bg-muted/10 -mx-5 px-5 text-[11px]",
+            },
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Armor Type"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold"
+                },
+                armorCategory || "—"
+              )
+            ),
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Base AC"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold"
+                },
+                armorBaseAc != null ? armorBaseAc : "—"
+              )
+            ),
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Str Required"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold"
+                },
+                armorStrReq != null ? armorStrReq : "None"
+              )
+            ),
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Stealth"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold"
+                },
+                armorStealthDisadvantage ? "Disadvantage" : "Normal"
+              )
+            ),
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Dex Bonus"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold text-[10px]"
+                },
+                armorCategory.toLowerCase().includes("light") ?
+                "Full Dex" :
+                armorCategory.toLowerCase().includes("medium") ?
+                "Max +2" :
+                "None"
+              )
+            )
+          ),
+          //weapons
+          isWeapon &&
+          React.createElement("div", {
+              className: "grid grid-cols-2 lg:grid-cols-3 gap-2 border-b py-3 bg-muted/10 -mx-5 px-5 text-[11px]"
+            },
+            React.createElement("div", null,
+              React.createElement("div", {
+                className: "opacity-60 uppercase text-[10px]"
+              }, "Damage"),
+              React.createElement("div", {
+                  className: "font-semibold"
+                },
+                fullData.damage?.damage_dice ? `${fullData.damage.damage_dice} ${fullData.damage.damage_type?.name || '—'}` : fullData.damage_dice || "—")
+            ),
+            React.createElement("div", null,
+              React.createElement("div", {
+                className: "opacity-60 uppercase text-[10px]"
+              }, "Cost"),
+              React.createElement("div", {
+                  className: "font-semibold"
+                },
+                fullData.cost ? `${fullData.cost.text || fullData.cost.amount} ${fullData.cost.unit || 'gp'}` : "—")
+            ),
+            React.createElement("div", null,
+              React.createElement("div", {
+                className: "opacity-60 uppercase text-[10px]"
+              }, "Weight"),
+              React.createElement("div", {
+                className: "font-semibold"
+              }, fullData.weight ? `${fullData.weight} lb` : "—")
+            ),
+            (fullData.range || fullData.range_normal) &&
+            React.createElement("div", {
+                className: "col-span-2 lg:col-span-3"
+              },
+              React.createElement("div", {
+                className: "opacity-60 uppercase text-[10px]"
+              }, "Range"),
+              React.createElement("div", {
+                  className: "font-semibold"
+                },
+                `${fullData.range_normal || ''}${fullData.range_long ? ` / ${fullData.range_long}` : ''}`)
+            ),
+            (fullData.properties || fullData.property || fullData.weapon_properties) &&
+            React.createElement("div", {
+                className: "col-span-2 lg:col-span-3 pt-1"
+              },
+              React.createElement("div", {
+                className: "opacity-60 uppercase text-[10px]"
+              }, "Properties"),
+              React.createElement("div", {
+                className: "flex flex-wrap gap-1 mt-1"
+              }, "—")
+            )
+          ),
+
+          isSpell &&
+          React.createElement(
+            "div", {
+              className: "grid grid-cols-2 gap-2 border-b py-3 bg-muted/10 -mx-5 px-5 text-[11px]",
+            },
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Level & School"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold"
+                },
+                (spellLevel === 0 || spellLevel === "0" ?
+                  "Cantrip" :
+                  `Level ${spellLevel || "—"}`) +
+                (spellSchool ? ` · ${spellSchool}` : "")
+              )
+            ),
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Casting Time"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold"
+                },
+                spellCastingTime || "—"
+              )
+            ),
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Range"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold"
+                },
+                spellRange || "—"
+              )
+            ),
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Duration"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold"
+                },
+                spellDuration || "—"
+              )
+            ),
+            React.createElement(
+              "div", {
+                className: "col-span-2"
+              },
+              React.createElement(
+                "div", {
+                  className: "opacity-60"
+                },
+                "Components"
+              ),
+              React.createElement(
+                "div", {
+                  className: "font-semibold"
+                },
+                spellComponents || "—"
+              ),
+              spellMaterial &&
+              React.createElement(
+                "div", {
+                  className: "text-[10px] opacity-80 mt-1"
+                },
+                spellMaterial
+              )
+            )
+          ),
+
+          isMonster &&
+          React.createElement(
+            "div", {
+              className: "grid grid-cols-3 sm:grid-cols-6 gap-1 text-center text-[10px]"
+            },
+            scores.map((s) => {
+              const val = getScore(s);
+              if (val === undefined) return null;
+              const mod = Math.floor((val - 10) / 2);
+              return React.createElement(
+                "div", {
+                  key: s,
+                  className: "p-1 rounded bg-muted/30 border border-muted/60",
+                },
+                React.createElement(
+                  "div", {
+                    className: "opacity-60 uppercase text-[8px]"
+                  },
+                  s
+                ),
+                React.createElement(
+                  "div", {
+                    className: "font-bold text-sm font-mono"
+                  },
+                  val
+                ),
+                React.createElement(
+                  "div", {
+                    className: "opacity-60 text-[9px]"
+                  },
+                  mod >= 0 ? `+${mod}` : mod
+                )
+              );
+            })
+          ),
+
+          React.createElement(
+            "div", {
+              className: "text-xs space-y-2 opacity-80 leading-relaxed max-h-60 overflow-y-auto custom-scrollbar",
+            },
+            descriptionText
+            .split("\\\\n")
+            .map(
+              (p, i) =>
+              p.trim() &&
+              React.createElement("p", {
+                key: `desc-${i}`
+              }, p.trim())
+            ),
+            actions.length > 0 &&
+            React.createElement(
+              "div", {
+                className: "mt-3"
+              },
+              React.createElement(
+                "h4", {
+                  className: "font-semibold text-[11px] mb-1"
+                },
+                "Actions"
+              ),
+              actions.map((a, i) =>
+                React.createElement(
+                  "div", {
+                    key: `action-${i}`,
+                    className: "mb-1"
+                  },
+                  React.createElement(
+                    "span", {
+                      className: "font-semibold"
+                    },
+                    a.name || "Action"
+                  ),
+                  React.createElement("span", null, ": "),
+                  React.createElement(
+                    "span",
+                    null,
+                    a.desc || a.description || ""
+                  )
+                )
+              )
+            ),
+            legendaryActions.length > 0 &&
+            React.createElement(
+              "div", {
+                className: "mt-3"
+              },
+              React.createElement(
+                "h4", {
+                  className: "font-semibold text-[11px] mb-1"
+                },
+                "Legendary Actions"
+              ),
+              legendaryActions.map((a, i) =>
+                React.createElement(
+                  "div", {
+                    key: `legendary-${i}`,
+                    className: "mb-1"
+                  },
+                  React.createElement(
+                    "span", {
+                      className: "font-semibold"
+                    },
+                    a.name || "Legendary Action"
+                  ),
+                  React.createElement("span", null, ": "),
+                  React.createElement(
+                    "span",
+                    null,
+                    a.desc || a.description || ""
+                  )
+                )
+              )
+            )
+          ),
+
+          isMonster &&
+          onAddToCombat &&
+          React.createElement(
+            "div", {
+              className: "pt-2 flex justify-end"
+            },
+            React.createElement(
+              Button, {
+                variant: "secondary",
+                size: "sm",
+                className: "text-[10px]",
+                onClick: () => onAddToCombat(fullData),
+              },
+              "Add to Combat"
+            )
+          )
+        )
+      );
+    }
+
+    function DiceTrayView() {
+      const [history, setHistory] = useLocalStorage("dm-grimoire-dice-history", []);
+      const safeHistory = Array.isArray(history) ? history : [];
+      const [count, setCount] = useState(1);
+      const [modifier, setModifier] = useState(0);
+      const [historyOpen, setHistoryOpen] = useState(false);
+
+      const roll = (sides) => {
+        const rolls = Array.from({
+          length: count
+        }, () => Math.floor(Math.random() * sides) + 1);
+        const total = rolls.reduce((a, b) => a + b, 0) + modifier;
+        const entry = {
+          id: Date.now(),
+          total,
+          expression: `${count}d${sides}${modifier ? (modifier > 0 ? "+" + modifier : modifier) : ""}`,
+          timestamp: new Date().toLocaleTimeString(),
+          rolls
+        };
+        setHistory(prev => [entry, ...(Array.isArray(prev) ? prev : [])].slice(0, 20));
+      };
+
+      return React.createElement("div", {
+          className: "flex flex-col h-full bg-background p-4 items-center justify-center space-y-4"
+        },
+        React.createElement("div", {
+            className: "flex gap-4"
+          },
+          React.createElement("div", {
+            className: "text-center"
+          }, React.createElement("div", {
+            className: "text-[10px] opacity-50 uppercase"
+          }, "Count"), React.createElement("div", {
+              className: "flex items-center gap-2"
+            },
+            React.createElement(Button, {
+              variant: "outline",
+              size: "sm",
+              onClick: () => setCount(c => Math.max(1, c - 1))
+            }, "−"),
+            React.createElement("span", {
+              className: "w-8 text-lg font-mono"
+            }, count),
+            React.createElement(Button, {
+              variant: "outline",
+              size: "sm",
+              onClick: () => setCount(c => Math.min(20, c + 1))
+            }, "+")
+          )),
+          React.createElement("div", {
+            className: "text-center"
+          }, React.createElement("div", {
+            className: "text-[10px] opacity-50 uppercase"
+          }, "Mod"), React.createElement("div", {
+              className: "flex items-center gap-2"
+            },
+            React.createElement(Button, {
+              variant: "outline",
+              size: "sm",
+              onClick: () => setModifier(m => m - 1)
+            }, "−"),
+            React.createElement("span", {
+              className: "w-8 text-lg font-mono"
+            }, modifier),
+            React.createElement(Button, {
+              variant: "outline",
+              size: "sm",
+              onClick: () => setModifier(m => m + 1)
+            }, "+")
+          ))
+        ),
+        React.createElement("div", {
+            className: "grid grid-cols-4 gap-4 w-full max-w-md"
+          },
+          [4, 6, 8, 10, 12, 20, 100].map(s => React.createElement(Button, {
+            key: s,
+            variant: "outline",
+            className: "h-16 font-serif",
+            onClick: () => roll(s)
+          }, `d${s}`)),
+          React.createElement(Button, {
+            variant: "ghost",
+            className: "h-16 text-xs opacity-50",
+            onClick: () => {
+              setCount(1);
+              setModifier(0);
+            }
+          }, "Reset")
+        ),
+        safeHistory.length > 0 && React.createElement("div", {
+            className: "w-full max-w-md space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar"
+          },
+          safeHistory.slice(0, 10).map(h => React.createElement("div", {
+              key: h.id,
+              className: "flex justify-between p-2 rounded border bg-card/50 text-sm"
+            },
+            React.createElement("div", null, React.createElement("span", {
+              className: "font-bold text-lg mr-2"
+            }, h.total), React.createElement("span", {
+              className: "opacity-50 text-xs"
+            }, h.expression)),
+            React.createElement("span", {
+              className: "opacity-30 text-[10px]"
+            }, h.timestamp)
+          ))
+        )
+      );
+    }
+
+    function CombatTrackerView({
+      combatants,
+      setCombatants
+    }) {
+      const [form, setForm] = useState({
+        name: "",
+        init: "",
+        hp: "",
+        ac: ""
+      });
+      const safeCombatants = Array.isArray(combatants) ? combatants : [];
+
+      const add = (e) => {
+        e.preventDefault();
+        if (!form.name) return;
+        const c = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: form.name,
+          init: Number(form.init) || 0,
+          hp: Number(form.hp) || 10,
+          maxHp: Number(form.hp) || 10,
+          ac: Number(form.ac) || 10
+        };
+        setCombatants(prev => [...(Array.isArray(prev) ? prev : []), c].sort((a, b) => b.init - a.init));
+        setForm({
+          name: "",
+          init: "",
+          hp: "",
+          ac: ""
+        });
+      };
+
+      const nextTurn = () => {
+        if (safeCombatants.length === 0) return;
+        const newCombatants = [...safeCombatants];
+        const first = newCombatants.shift();
+        newCombatants.push(first);
+        setCombatants(newCombatants);
+      };
+
+      return React.createElement("div", {
+          className: "flex flex-col md:flex-row h-full"
+        },
+        React.createElement("div", {
+            className: "w-full md:w-72 p-4 border-r bg-muted/10 space-y-4"
+          },
+          React.createElement("h2", {
+            className: "font-serif text-lg"
+          }, "Summon Combatant"),
+          React.createElement("form", {
+              onSubmit: add,
+              className: "space-y-3"
+            },
+            React.createElement("input", {
+              placeholder: "Name",
+              value: form.name,
+              onChange: e => setForm(f => ({
+                ...f,
+                name: e.target.value
+              })),
+              className: "w-full p-2 rounded border bg-background text-sm"
+            }),
+            React.createElement("div", {
+                className: "grid grid-cols-3 gap-2"
+              },
+              React.createElement("input", {
+                type: "number",
+                placeholder: "Init",
+                value: form.init,
+                onChange: e => setForm(f => ({
+                  ...f,
+                  init: e.target.value
+                })),
+                className: "w-full p-2 rounded border bg-background text-sm"
+              }),
+              React.createElement("input", {
+                type: "number",
+                placeholder: "HP",
+                value: form.hp,
+                onChange: e => setForm(f => ({
+                  ...f,
+                  hp: e.target.value
+                })),
+                className: "w-full p-2 rounded border bg-background text-sm"
+              }),
+              React.createElement("input", {
+                type: "number",
+                placeholder: "AC",
+                value: form.ac,
+                onChange: e => setForm(f => ({
+                  ...f,
+                  ac: e.target.value
+                })),
+                className: "w-full p-2 rounded border bg-background text-sm"
+              })
+            ),
+            React.createElement(Button, {
+              type: "submit",
+              className: "w-full font-bold"
+            }, "Add to Battle")
+          )
+        ),
+        //next turn button
+        React.createElement(
+          "div", {
+            className: "p-4 border-b bg-muted/20"
+          },
+          React.createElement(
+            Button, {
+              className: "w-full font-semibold text-sm h-10",
+              onClick: nextTurn
+            },
+            "Next Turn →"
+          )
+        ),
+        React.createElement("div", {
+            className: "flex-1 overflow-y-auto p-4 space-y-3 bg-background/50"
+          },
+          safeCombatants.length === 0 ? React.createElement("div", {
+            className: "h-full flex items-center justify-center opacity-20"
+          }, "No active combatants") :
+          safeCombatants.map((c, i) => React.createElement("div", {
+              key: c.id,
+              className: cn("flex items-center gap-4 p-3 rounded-xl border bg-card transition-all", i === 0 && "border-primary ring-1 ring-primary/30 scale-[1.02]")
+            },
+            React.createElement("div", {
+              className: cn("w-10 h-10 rounded-lg border flex items-center justify-center font-mono font-bold", i === 0 ? "bg-primary text-primary-foreground" : "bg-muted")
+            }, c.init),
+            React.createElement("div", {
+                className: "flex-1"
+              },
+              React.createElement("div", {
+                className: "font-serif font-bold"
+              }, c.name),
+              //hp bar
+              React.createElement(
+                "div", {
+                  className: "flex items-center gap-4 text-xs"
+                },
+                React.createElement(
+                  "div", {
+                    className: "text-[10px] opacity-50 uppercase min-w-[24px]"
+                  },
+                  `AC ${c.ac}`
+                ),
+                React.createElement(
+                  "div", {
+                    className: "flex items-center gap-1"
+                  },
+                  React.createElement(
+                    "div", {
+                      className: "h-1.5 bg-muted rounded-full overflow-hidden",
+                      style: {
+                        width: "48px"
+                      }
+                    },
+                    React.createElement(
+                      "div", {
+                        className: cn(
+                          "h-full rounded-full transition-all duration-200",
+                          c.hp > c.maxHp * 0.6 ? "bg-emerald-500" :
+                          c.hp > c.maxHp * 0.3 ? "bg-amber-500" :
+                          "bg-destructive"
+                        ),
+                        style: {
+                          width: `${Math.max(0, (c.hp / c.maxHp) * 100)}%`
+                        }
+                      }
+                    )
+                  ),
+                  React.createElement(
+                    "div", {
+                      className: "font-mono opacity-70 text-xs ml-1 min-w-[32px]"
+                    },
+                    React.createElement(
+                      "span", {
+                        className: "text-[10px]"
+                      },
+                      `${c.hp}`
+                    ),
+                    React.createElement(
+                      "span", {
+                        className: "text-[9px] opacity-60"
+                      },
+                      `/${c.maxHp}`
+                    )
+                  )
+                )
+              )
+
+            ),
+            React.createElement("div", {
+                className: "flex gap-1"
+              },
+              React.createElement(Button, {
+                variant: "outline",
+                size: "sm",
+                className: "h-7 w-7 p-0",
+                onClick: () => setCombatants(prev => prev.map(x => x.id === c.id ? {
+                  ...x,
+                  hp: Math.max(0, x.hp - 1)
+                } : x))
+              }, "−"),
+              React.createElement(Button, {
+                variant: "outline",
+                size: "sm",
+                className: "h-7 w-7 p-0",
+                onClick: () => setCombatants(prev => prev.map(x => x.id === c.id ? {
+                  ...x,
+                  hp: x.hp + 1
+                } : x))
+              }, "+"),
+              React.createElement(Button, {
+                variant: "ghost",
+                size: "sm",
+                className: "h-7 w-7 p-0 text-destructive",
+                onClick: () => setCombatants(prev => prev.filter(x => x.id !== c.id))
+              }, "×")
+            )
+          ))
+        )
+      );
+    }
+
+    function App() {
+      const [activeTab, setActiveTab] = useLocalStorage("dm-grimoire-tab", "compendium");
+      const [sidebarOpen, setSidebarOpen] = useState(true);
+      const [combatants, setCombatants] = useLocalStorage("dm-grimoire-combatants", []);
+
+      const addMonsterToCombat = (m) => {
+        const dex = m.dexterity ?? 10;
+        const init = Math.floor(Math.random() * 20) + 1 + Math.floor((dex - 10) / 2);
+        const hp = m.hit_points || 10;
+        const c = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: m.name,
+          init,
+          hp,
+          maxHp: hp,
+          ac: normalizeAC(m.armor_class ?? m.ac)
+        };
+        setCombatants(prev => [...(Array.isArray(prev) ? prev : []), c].sort((a, b) => b.init - a.init));
+        setActiveTab("combat");
+      };
+
+      return React.createElement("div", {
+          className: "fixed inset-0 flex flex-col bg-background text-foreground"
+        },
+        React.createElement("header", {
+            className: "h-14 border-b bg-card/95 flex items-center justify-between px-4 z-30"
+          },
+          React.createElement("h1", {
+            className: "font-serif font-black tracking-tighter text-lg"
+          }, "DM'S GRIMOIRE"),
+          React.createElement("div", {
+              className: "hidden md:flex gap-1"
+            },
+            ["compendium", "dice", "combat"].map(t => React.createElement(Button, {
+              key: t,
+              variant: activeTab === t ? "secondary" : "ghost",
+              size: "sm",
+              onClick: () => setActiveTab(t),
+              className: "capitalize"
+            }, t))
+          ),
+          activeTab === "compendium" && React.createElement(Button, {
+            variant: "outline",
+            size: "sm",
+            onClick: () => setSidebarOpen(!sidebarOpen)
+          }, "☰")
+        ),
+        React.createElement("main", {
+            className: "flex-1 min-h-0 relative pb-14 md:pb-0"
+          },
+          activeTab === "compendium" && React.createElement(CompendiumView, {
+            sidebarOpen,
+            setSidebarOpen,
+            onAddToCombat: addMonsterToCombat
+          }),
+          activeTab === "dice" && React.createElement(DiceTrayView),
+          activeTab === "combat" && React.createElement(CombatTrackerView, {
+            combatants,
+            setCombatants
+          })
+        ),
+        React.createElement("nav", {
+            className: "md:hidden fixed bottom-0 left-0 right-0 h-14 border-t bg-card/95 flex items-center justify-around z-40"
+          },
+          ["compendium", "dice", "combat"].map(t => React.createElement("button", {
+            key: t,
+            onClick: () => setActiveTab(t),
+            className: cn("text-[10px] uppercase font-bold tracking-widest", activeTab === t ? "text-primary" : "opacity-40")
+          }, t))
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(React.createElement(App));
+
+    (() => {
+      const ENTRY = 'DMs Grimoire v7',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
