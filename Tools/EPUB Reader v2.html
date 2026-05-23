@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>EPUB Reader v2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Georgia, serif;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #000;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    #reader {
+      width: 100%;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-sizing: border-box;
+      font-size: 16px;
+      line-height: 1.6;
+      background: inherit;
+    }
+
+    #reader img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 12px auto;
+    }
+
+    #menuBtn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 2000;
+      font-size: 24px;
+      background: #f5f5f7;
+      border: none;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 12px;
+      color: #1c1c1e;
+      transition: transform 0.35s ease, background 0.3s, color 0.3s;
+    }
+
+    .dark-mode #menuBtn {
+      background: #2c2c2e;
+      color: #ffffff;
+    }
+
+    #menu {
+      position: fixed;
+      top: 50px;
+      right: 10px;
+      background: #f5f5f7;
+      border-radius: 16px;
+      padding: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1999;
+      max-width: 220px;
+    }
+
+    .dark-mode #menu {
+      background: #1c1c1e;
+    }
+
+    #menu button {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #f5f5f7, #e9e9ed);
+      color: #1c1c1e;
+      text-align: center;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+      border: none;
+    }
+
+    #menu button:hover {
+      transform: translateY(-1px);
+    }
+
+    .dark-mode #menu button {
+      background: #2c2c2e;
+      color: #ffffff;
+    }
+
+    /* Choose File button */
+    #chooseFileBtn {
+      display: block;
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      text-align: center;
+      cursor: pointer;
+      color: #1c1c1e;
+      background: transparent;
+      border-radius: 10px;
+      border: none;
+    }
+
+    #chooseFileBtn:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .dark-mode #chooseFileBtn {
+      color: #ffffff;
+    }
+
+    .dark-mode #chooseFileBtn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Filename preview */
+    #fileName {
+      font-size: 13px;
+      text-align: center;
+      color: #6e6e73;
+      word-break: break-word;
+    }
+
+    .dark-mode #fileName {
+      color: #a1a1a6;
+    }
+
+    .dark-mode {
+      background: #1c1c1e;
+      color: #ffffff;
+    }
+
+    .dark-mode #reader {
+      background: #1c1c1e;
+      color: #ffffff !important;
+    }
+
+    .dark-mode #reader *:not(img):not(svg) {
+      color: #ffffff !important;
+    }
+
+    @media(max-width:500px) {
+      #menu {
+        max-width: 170px;
+      }
+
+      #reader {
+        font-size: 14px;
+        padding: 15px;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <button id="menuBtn">☰</button>
+
+  <div id="menu">
+    <button id="chooseFileBtn">Choose EPUB</button>
+    <div id="fileName">No file selected</div>
+
+    <button id="increase">A+</button>
+    <button id="decrease">A-</button>
+    <button id="toggleDark">🌙 Dark Mode</button>
+    <button id="fullscreenBtn">⛶ Fullscreen</button>
+
+    <input type="file" id="epubInput" accept=".epub" hidden>
+  </div>
+
+  <div id="reader">Please select an EPUB file to start reading.</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    let zip = null;
+    let chapters = [];
+    let fontSize = 16;
+
+    const reader = document.getElementById('reader');
+    const menu = document.getElementById('menu');
+    const menuBtn = document.getElementById('menuBtn');
+    const epubInput = document.getElementById('epubInput');
+    const chooseFileBtn = document.getElementById('chooseFileBtn');
+    const fileName = document.getElementById('fileName');
+
+    menuBtn.addEventListener('click', () => {
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    });
+
+    chooseFileBtn.addEventListener('click', () => epubInput.click());
+
+    // ✅ Robust EPUB loading
+    epubInput.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      fileName.textContent = file.name;
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        await loadEpubFromBuffer(new Uint8Array(arrayBuffer));
+        saveBook(file, new Uint8Array(arrayBuffer));
+        localStorage.setItem('epubReaderProgress', JSON.stringify({
+          scroll: 0,
+          fontSize: fontSize,
+          darkMode: document.body.classList.contains('dark-mode')
+        }));
+      } catch (err) {
+        alert("Failed to load EPUB. See console.");
+        console.error(err);
+      }
+    });
+
+    /* --- IndexedDB + EPUB Loading --- */
+    let db;
+    const request = indexedDB.open("EPUBReaderDB", 1);
+    request.onupgradeneeded = e => {
+      db = e.target.result;
+      db.createObjectStore("lastBook", {
+        keyPath: "id"
+      });
+    };
+    request.onsuccess = e => {
+      db = e.target.result;
+      loadLastBook();
+    };
+
+    function saveBook(file, arrayBuffer) {
+      const tx = db.transaction("lastBook", "readwrite");
+      const store = tx.objectStore("lastBook");
+      store.put({
+        id: 1,
+        name: file.name,
+        data: arrayBuffer
+      });
+    }
+
+    function saveProgress() {
+      localStorage.setItem('epubReaderProgress', JSON.stringify({
+        scroll: reader.scrollTop,
+        fontSize: fontSize,
+        darkMode: document.body.classList.contains('dark-mode')
+      }));
+    }
+
+    function loadProgress() {
+      const saved = JSON.parse(localStorage.getItem('epubReaderProgress'));
+      if (saved) {
+        fontSize = saved.fontSize || 16;
+        reader.style.fontSize = fontSize + 'px';
+        if (saved.darkMode) document.body.classList.add('dark-mode');
+        setTimeout(() => {
+          reader.scrollTop = saved.scroll || 0;
+        }, 0);
+        scaleImages();
+      }
+    }
+
+    function loadLastBook() {
+      const tx = db.transaction("lastBook", "readonly");
+      const store = tx.objectStore("lastBook");
+      const getRequest = store.get(1);
+      getRequest.onsuccess = async () => {
+        if (getRequest.result) {
+          fileName.textContent = getRequest.result.name;
+          await loadEpubFromBuffer(new Uint8Array(getRequest.result.data));
+        } else {
+          fileName.textContent = "No file selected";
+        }
+      };
+    }
+
+    // ✅ Load chapters, scale images, fix images
+    async function loadEpubFromBuffer(buffer) {
+      try {
+        zip = await JSZip.loadAsync(buffer);
+        chapters = await getChaptersInOrder();
+        reader.innerHTML = '';
+        for (let c of chapters) {
+          try {
+            const content = await zip.files[c].async('string');
+            const div = document.createElement('div');
+            div.innerHTML = content;
+            div.querySelectorAll('style,link').forEach(e => e.remove());
+            reader.appendChild(div);
+
+            await fixImages(div);
+            scaleImages();
+          } catch (err) {
+            console.warn("Failed to load chapter:", c, err);
+          }
+        }
+        loadProgress();
+      } catch (e) {
+        console.error("Failed to load EPUB buffer:", e);
+        alert("Error loading EPUB. See console.");
+      }
+    }
+
+    // ✅ Image scaling for mobile relative to font size
+    function scaleImages() {
+      const imgs = reader.querySelectorAll('img');
+      imgs.forEach(img => {
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.maxHeight = (fontSize * 8) + 'px';
+      });
+    }
+
+    // ✅ Fix images to load from EPUB ZIP
+    async function fixImages(div) {
+      const imgs = div.querySelectorAll('img');
+      for (let img of imgs) {
+        let src = img.getAttribute('src');
+        if (!src || src.startsWith('data:')) continue;
+
+        const path = resolvePathFromChapter(div, src);
+        if (zip.files[path]) {
+          try {
+            const fileData = await zip.files[path].async('base64');
+            const mime = path.endsWith('.png') ? 'image/png' :
+              path.endsWith('.jpg') || path.endsWith('.jpeg') ? 'image/jpeg' :
+              path.endsWith('.gif') ? 'image/gif' : 'image/*';
+            img.src = `data:${mime};base64,${fileData}`;
+          } catch (err) {
+            console.warn("Failed to load image", path, err);
+          }
+        }
+      }
+    }
+
+    // Resolve relative image path based on chapter path
+    function resolvePathFromChapter(chapterDiv, imgSrc) {
+      let chapterIndex = Array.from(reader.children).indexOf(chapterDiv);
+      if (chapterIndex === -1) return imgSrc;
+      const chapterPath = chapters[chapterIndex];
+      return resolvePath(chapterPath, imgSrc);
+    }
+
+    async function getChaptersInOrder() {
+      const opfFile = Object.keys(zip.files).find(f => f.endsWith('.opf'));
+      if (!opfFile) return Object.keys(zip.files).filter(f => f.endsWith('.html') || f.endsWith('.xhtml'));
+      try {
+        const opfContent = await zip.files[opfFile].async('string');
+        const xml = new DOMParser().parseFromString(opfContent, 'application/xml');
+        const items = {};
+        xml.querySelectorAll('manifest item').forEach(i => items[i.getAttribute('id')] = i.getAttribute('href'));
+        const spine = [];
+        xml.querySelectorAll('spine itemref').forEach(r => {
+          const href = items[r.getAttribute('idref')];
+          if (href) spine.push(resolvePath(opfFile, href));
+        });
+        return spine;
+      } catch (e) {
+        console.error("Error parsing OPF:", e);
+        return Object.keys(zip.files).filter(f => f.endsWith('.html') || f.endsWith('.xhtml'));
+      }
+    }
+
+    function resolvePath(base, rel) {
+      const p = base.split('/').slice(0, -1);
+      rel.split('/').forEach(r => r === '..' ? p.pop() : p.push(r));
+      return p.join('/');
+    }
+
+    // Font size buttons
+    document.getElementById('increase').onclick = () => {
+      fontSize += 2;
+      reader.style.fontSize = fontSize + 'px';
+      saveProgress();
+      scaleImages();
+    }
+    document.getElementById('decrease').onclick = () => {
+      if (fontSize > 8) {
+        fontSize -= 2;
+        reader.style.fontSize = fontSize + 'px';
+        saveProgress();
+        scaleImages();
+      }
+    }
+
+    // Dark mode
+    document.getElementById('toggleDark').onclick = () => {
+      document.body.classList.toggle('dark-mode');
+      saveProgress();
+    }
+
+    // Fullscreen
+    document.getElementById('fullscreenBtn').onclick = () => {
+      !document.fullscreenElement ? document.documentElement.requestFullscreen() : document.exitFullscreen();
+    }
+
+    // Save scroll continuously
+    reader.addEventListener('scroll', saveProgress);
+
+    // ✅ Hamburger slide on scroll
+    let lastScroll = 0;
+    reader.addEventListener('scroll', () => {
+      const st = reader.scrollTop;
+      if (st > lastScroll && st > 50) {
+        menuBtn.style.transform = 'translateY(-150%)';
+      } else {
+        menuBtn.style.transform = 'translateY(0)';
+      }
+      lastScroll = st <= 0 ? 0 : st;
+    });
+
+    // ✅ Close menu when clicking outside
+    document.addEventListener('click', e => {
+      if (!menu.contains(e.target) && e.target !== menuBtn) {
+        menu.style.display = 'none';
+      }
+    });
+
+    // Load last progress on page load
+    window.addEventListener('load', loadProgress);
+
+    (() => {
+      const ENTRY = 'EPUB Reader v2',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
