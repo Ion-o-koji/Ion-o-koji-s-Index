@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DM Assistant v2</title>
+  <style>
+    :root {
+      --bg: #0b0b0d;
+      --panel: #16161b;
+      --panel-alt: #1e1e25;
+      --accent: #f5c542;
+      --text: #eaeaea;
+      --muted: #9a9a9a;
+      --radius: 16px;
+      --shadow: 0 10px 28px rgba(0, 0, 0, .6);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #111 0%, var(--bg) 65%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px;
+      background: linear-gradient(to bottom, #000, #0c0c12);
+      border-bottom: 1px solid #222;
+    }
+
+    header h1 {
+      margin: 0;
+      text-align: center;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+
+    main {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    details.panel {
+      background: linear-gradient(180deg, var(--panel), var(--panel-alt));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    summary {
+      list-style: none;
+      padding: 14px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #1b1b22, #14141a);
+      cursor: pointer;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .panel-content {
+      padding: 14px;
+      animation: fade .25s ease;
+    }
+
+    @keyframes fade {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      background: #0d0d12;
+      color: var(--text);
+      border: 1px solid #2b2b35;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 6px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 14px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), #c9a635);
+      color: #000;
+    }
+
+    button:active {
+      transform: scale(.96);
+    }
+
+    .result {
+      background: #0e0e14;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 8px;
+      max-height: 360px;
+      overflow-y: auto;
+      box-shadow: inset 0 0 0 1px #222;
+    }
+
+    .stat {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin: 8px 0;
+    }
+
+    .hp-btn {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 4px 8px;
+      background: #222;
+      border-radius: 8px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>DM Assistant</h1>
+  </header>
+  <main>
+
+    <!-- DICE -->
+    <details class="panel" open>
+      <summary>🎲 Dice Roller</summary>
+      <div class="panel-content">
+        <input id="diceIn" placeholder="2d20+5">
+        <button onclick="roll()">Roll</button>
+        <p id="diceOut"></p>
+      </div>
+    </details>
+
+    <!-- NPC -->
+    <details class="panel">
+      <summary>🧙 NPC Generator</summary>
+      <div class="panel-content">
+        <button onclick="npc()">Generate NPC</button>
+        <p id="npcOut"></p>
+      </div>
+    </details>
+
+    <!-- ENCOUNTER -->
+    <details class="panel">
+      <summary>⚔️ Encounter Generator</summary>
+      <div class="panel-content">
+        <select id="encDiff">
+          <option>Easy</option>
+          <option>Medium</option>
+          <option>Hard</option>
+          <option>Deadly</option>
+        </select>
+        <button onclick="encounter()">Generate</button>
+        <p id="encOut"></p>
+      </div>
+    </details>
+
+    <!-- INITIATIVE -->
+    <details class="panel">
+      <summary>🗂 Initiative Tracker</summary>
+      <div class="panel-content">
+        <input id="iName" placeholder="Name">
+        <input id="iVal" type="number" placeholder="Initiative">
+        <button onclick="addInit()">Add</button>
+        <ul id="initList"></ul>
+      </div>
+    </details>
+
+    <!-- HP -->
+    <details class="panel">
+      <summary>❤️ NPC / Monster HP</summary>
+      <div class="panel-content">
+        <input id="hpName" placeholder="Name">
+        <input id="hpMax" type="number" placeholder="Max HP">
+        <button onclick="addHP()">Add</button>
+        <ul id="hpList"></ul>
+      </div>
+    </details>
+
+    <!-- LOOKUP -->
+    <details class="panel">
+      <summary>📖 Rules, Spells, Magic Items & Stat Blocks</summary>
+      <div class="panel-content">
+        <select id="lookupType">
+          <option value="spells">Spell</option>
+          <option value="monsters">Creature / NPC</option>
+          <option value="equipment">Weapon / Equipment</option>
+          <option value="magic-items">Magic Item</option>
+          <option value="conditions">Condition</option>
+          <option value="rules">Rule</option>
+        </select>
+        <input id="lookupQuery" placeholder='fireball, "Longsword", "+1 Longsword"'>
+        <button onclick="lookup()">Search SRD</button>
+        <div id="lookupOut" class="result"></div>
+      </div>
+    </details>
+
+  </main>
+
+  <script>
+    // UTIL
+    const r = a => a[Math.floor(Math.random() * a.length)];
+
+    /* DICE */
+    function roll() {
+      let m = diceIn.value.match(/(\d+)d(\d+)([+-]\d+)?/);
+      if (!m) {
+        diceOut.textContent = "Invalid dice.";
+        return;
+      }
+      let t = 0,
+        res = [];
+      for (let i = 0; i < m[1]; i++) {
+        let x = 1 + Math.random() * m[2] | 0;
+        res.push(x);
+        t += x;
+      }
+      if (m[3]) t += +m[3];
+      diceOut.textContent = `[${res.join(", ")}] = ${t}`;
+    }
+
+    /* ---------- NPC GENERATOR (EXPANDED) ---------- */
+
+    const npcNames = [
+      "Alric", "Nyssa", "Borin", "Elowen", "Keth", "Maribel", "Thorne", "Ilyra",
+      "Vask", "Seraphine", "Dorn", "Mira", "Halvek", "Ysabel"
+    ];
+
+    const npcRaces = [
+      "Human", "Elf", "Dwarf", "Halfling", "Tiefling", "Half-Orc", "Gnome"
+    ];
+
+    const npcAges = [
+      "young", "middle-aged", "elderly", "weathered", "surprisingly youthful"
+    ];
+
+    const npcJobs = [
+      "merchant", "soldier", "priest", "scribe", "smuggler", "innkeeper",
+      "noble retainer", "apprentice mage", "hunter", "criminal fixer"
+    ];
+
+    const npcStatus = [
+      "respected", "ignored", "feared", "secretly powerful", "barely surviving",
+      "well-connected", "in debt"
+    ];
+
+    const npcTraits = [
+      "charming", "bitter", "nervous", "arrogant", "soft-spoken", "hot-tempered",
+      "idealistic", "suspicious", "world-weary", "earnest"
+    ];
+
+    const npcDesires = [
+      "to protect their family",
+      "to gain political power",
+      "to escape their past",
+      "to prove themselves",
+      "to uncover forbidden knowledge",
+      "to destroy a rival"
+    ];
+
+    const npcFears = [
+      "being exposed",
+      "losing someone they love",
+      "divine punishment",
+      "financial ruin",
+      "violent retribution",
+      "their own corruption"
+    ];
+
+    const npcRelationships = [
+      "owes money to a dangerous group",
+      "is secretly helping a rival faction",
+      "has history with a party member",
+      "is being blackmailed",
+      "is under magical influence",
+      "is protecting someone guilty"
+    ];
+
+    const npcSecrets = [
+      "is a cult member",
+      "committed a serious crime",
+      "is not who they claim to be",
+      "is magically cursed",
+      "is a spy",
+      "caused a past tragedy"
+    ];
+
+    const npcSecretSeverity = [
+      "minor but embarrassing",
+      "dangerous if revealed",
+      "life-destroying",
+      "could start a war"
+    ];
+
+    function npc() {
+      npcOut.innerHTML = `
+    <b>${r(npcNames)}</b>, a ${r(npcAges)} ${r(npcRaces)} ${r(npcJobs)}<br>
+    Status: ${r(npcStatus)}<br>
+    Personality: ${r(npcTraits)} & ${r(npcTraits)}<br>
+    Wants: ${r(npcDesires)}<br>
+    Fears: ${r(npcFears)}<br>
+    Relationship: ${r(npcRelationships)}<br>
+    <b>Secret:</b> ${r(npcSecrets)} (${r(npcSecretSeverity)})
+  `;
+    }
+
+    /* ---------- ENCOUNTER GENERATOR (EXPANDED) ---------- */
+
+    const encounterLocations = [
+      "forest trail", "mountain pass", "abandoned village", "busy market",
+      "ancient ruins", "tavern", "sewers", "roadside shrine", "city alley"
+    ];
+
+    const encounterSituations = [
+      "an ambush in progress",
+      "a tense standoff",
+      "the aftermath of violence",
+      "a negotiation gone wrong",
+      "a ritual being performed",
+      "creatures feeding or resting"
+    ];
+
+    const encounterEnemies = {
+      Easy: [
+        "desperate bandits", "hungry wolves", "panicked cultists",
+        "street thugs", "territorial goblins"
+      ],
+      Medium: [
+        "organized mercenaries", "ghouls", "fanatical cult enforcers",
+        "ogre muscle", "trained monster handlers"
+      ],
+      Hard: [
+        "veteran assassins", "wights", "trolls",
+        "elite guards", "monstrous predators"
+      ],
+      Deadly: [
+        "young dragon", "necromancer with guards",
+        "demonic emissary", "war mage and escorts"
+      ]
+    };
+
+    const encounterComplications = [
+      "hazardous terrain",
+      "civilians caught in the middle",
+      "poor visibility",
+      "unstable structures",
+      "time pressure"
+    ];
+
+    const encounterTwists = [
+      "one enemy wants to surrender",
+      "the enemies are being coerced",
+      "reinforcements will arrive",
+      "the real threat escapes",
+      "the situation isn’t what it seems"
+    ];
+
+    const encounterResolutions = [
+      "bribery or negotiation could end this",
+      "a show of force may scatter them",
+      "clever deception avoids combat",
+      "helping them changes the outcome",
+      "combat is the worst option"
+    ];
+
+    function encounter() {
+      encOut.innerHTML = `
+    <b>Location:</b> ${r(encounterLocations)}<br>
+    <b>Situation:</b> ${r(encounterSituations)}<br>
+    <b>Opposition:</b> ${r(encounterEnemies[encDiff.value])}<br>
+    <b>Complication:</b> ${r(encounterComplications)}<br>
+    <b>Twist:</b> ${r(encounterTwists)}<br>
+    <b>Alternate Resolution:</b> ${r(encounterResolutions)}
+  `;
+    }
+
+    /* INIT */
+    let init = [];
+
+    function addInit() {
+      if (!iName.value || !iVal.value) return;
+      init.push({
+        n: iName.value,
+        v: +iVal.value
+      });
+      init.sort((a, b) => b.v - a.v);
+      initList.innerHTML = init.map(x => `<li>${x.n} (${x.v})</li>`).join("");
+    }
+
+    /* HP */
+    let hps = [];
+
+    function addHP() {
+      if (!hpName.value || !hpMax.value) return;
+      hps.push({
+        n: hpName.value,
+        m: +hpMax.value,
+        c: +hpMax.value
+      });
+      renderHP();
+    }
+
+    function renderHP() {
+      hpList.innerHTML = "";
+      hps.forEach((h, i) => {
+        hpList.innerHTML +=
+          `<li>${h.n}: ${h.c}/${h.m}
+   <span class="hp-btn" onclick="hps[${i}].c--;renderHP()">−</span>
+   <span class="hp-btn" onclick="hps[${i}].c++;renderHP()">+</span></li>`;
+      });
+    }
+
+    /* LOOKUP */
+    async function lookup() {
+      let q = lookupQuery.value.trim();
+      const type = lookupType.value;
+      if (!q) return;
+
+      let exact = false;
+      const quoteMatch = q.match(/^"(.*)"$/);
+      if (quoteMatch) {
+        q = quoteMatch[1];
+        exact = true;
+      }
+
+      lookupOut.innerHTML = "Loading…";
+
+      try {
+        const list = await fetch(`https://www.dnd5eapi.co/api/${type}`).then(r => r.json());
+        let item;
+        if (exact) item = list.results.find(x => x.name.toLowerCase() === q.toLowerCase());
+        else item = list.results.find(x => x.name.toLowerCase().includes(q.toLowerCase()));
+        if (!item) {
+          lookupOut.innerHTML = "No result.";
+          return;
+        }
+        const d = await fetch(`https://www.dnd5eapi.co${item.url}`).then(r => r.json());
+
+        // SPELLS
+        if (type === "spells") {
+          lookupOut.innerHTML =
+            `<b>${d.name}</b> (Level ${d.level} ${d.school.name})<br>
+      <b>Casting:</b> ${d.casting_time}<br>
+      <b>Range:</b> ${d.range}<br>
+      <b>Components:</b> ${d.components.join(", ")} ${d.material||""}<br>
+      <b>Duration:</b> ${d.duration}<br><br>
+      ${d.desc.join("<br><br>")}
+      ${d.higher_level?`<br><br><b>At Higher Levels:</b><br>${d.higher_level.join("<br>")}`:""}`;
+        }
+
+        // EQUIPMENT / WEAPONS
+        if (type === "equipment") {
+          lookupOut.innerHTML =
+            `<b>${d.name}</b><br>
+      Category: ${d.equipment_category.name}<br>
+      Cost: ${d.cost?.quantity||"-"} ${d.cost?.unit||""}<br>
+      Weight: ${d.weight||"-"}<br>
+      Damage: ${d.damage?`${d.damage.damage_dice} ${d.damage.damage_type.name}`:"—"}<br>
+      Properties: ${(d.properties||[]).map(p=>p.name).join(", ")}`;
+        }
+
+        // MAGIC ITEMS
+        if (type === "magic-items") {
+          // Try exact first
+          let exactUrl = `https://api.open5e.com/magicitems/?search=${encodeURIComponent(q)}`;
+          let exactData = await fetch(exactUrl).then(r => r.json());
+          let result = exactData.results.find(x => x.name.toLowerCase() === q.toLowerCase());
+
+          // If no exact, try partial
+          if (!result && !quoteMatch) {
+            result = exactData.results[0];
+          }
+          if (!result) {
+            lookupOut.innerHTML = "No magic item found.";
+            return;
+          }
+
+          lookupOut.innerHTML = `
+    <b>${result.name}</b><br>
+    Rarity: ${result.rarity || "Unknown"}<br>
+    Attunement: ${result.attunement || "No"}<br><br>
+    ${result.desc || "No description available"}
+  `;
+          return;
+        }
+
+        // MONSTERS / NPCs
+        if (type === "monsters") {
+          lookupOut.innerHTML =
+            `<b>${d.name}</b><br>
+      AC ${d.armor_class[0].value} | HP ${d.hit_points}<br>
+      <div class="stat">
+      <div>STR ${d.strength}</div><div>DEX ${d.dexterity}</div><div>CON ${d.constitution}</div>
+      <div>INT ${d.intelligence}</div><div>WIS ${d.wisdom}</div><div>CHA ${d.charisma}</div>
+      </div>
+      <b>Actions</b><br>${(d.actions||[]).map(a=>`<b>${a.name}:</b> ${a.desc}`).join("<br><br>")}`;
+        }
+
+        // CONDITIONS / RULES
+        if (type === "conditions" || type === "rules") {
+          lookupOut.innerHTML = `<b>${d.name}</b><br><br>${(d.desc||[]).join("<br><br>")}`;
+        }
+
+      } catch (err) {
+        lookupOut.innerHTML = "Failed to fetch data.";
+        console.error(err);
+      }
+    }
+
+    (() => {
+      const ENTRY = 'DM Assistant v2',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
