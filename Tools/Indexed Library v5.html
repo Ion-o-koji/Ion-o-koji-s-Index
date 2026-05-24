@@ -1634,6 +1634,7 @@
               <option value="14">14 days</option>
             </select>
           </div>
+          <button class="setting-sm-btn" id="fetchDatesBtn" style="width:100%;">Fetch all modified dates</button>
           <div class="setting-row">
             <span class="setting-label">Open in same tab</span>
             <button class="setting-toggle" id="setOpenSameTab"></button>
@@ -1726,12 +1727,12 @@
       {
         owner: 'ImPot8o',
         repo: 'single-html-file-applications',
-        label: 'ImPot8o'
+        label: "ImPot8o's Index"
       },
       {
         owner: 'CoolDude2349',
         repo: 'Offline-HTML-Games-Pack',
-        label: 'CoolDude2349'
+        label: "CoolDude2349's Index"
       },
     ];
 
@@ -1880,12 +1881,11 @@
     }
 
     // ==================== DEFAULT SETTINGS ====================
-
     const DEFAULT_SETTINGS = {
       defaultView: 'grid',
       defaultSort: 'name',
       defaultSortDir: 'asc',
-      filesPerPage: 50,
+      filesPerPage: 100,
       openSameTab: false,
       confirmDownload: false,
       githubToken: '',
@@ -1922,7 +1922,6 @@
     const ALLOWED_EXT = ['html', 'htm', 'md', 'markdown'];
 
     // ==================== RATE-LIMIT GUARDS ====================
-
     let isRefreshing = false;
     let bgFetchGeneration = 0;
 
@@ -2463,14 +2462,33 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       document.getElementById('filterBtn').classList.remove('active');
     }
 
+    // "Natural" direction per sort key: the direction that makes the most sense
+    // as a default and that the arrow-down icon represents.
+    //   name      → asc  (A → Z)
+    //   size      → desc (biggest first)
+    //   modified  → desc (newest first)
+    //   lastOpened→ desc (most recently opened first)
+    const NATURAL_DIR = {
+      name: 'asc',
+      size: 'desc',
+      modified: 'desc',
+      lastOpened: 'desc'
+    };
+
     function syncFilterPanel() {
       document.querySelectorAll('.filter-option').forEach(btn => {
         const sort = btn.dataset.sort;
         btn.classList.toggle('active', state.sortBy === sort);
         const arrowEl = document.getElementById('arrow-' + sort);
         if (arrowEl) {
-          const isDesc = state.sortBy === sort && state.sortDir === 'desc';
-          arrowEl.innerHTML = isDesc ? '<i data-lucide="arrow-up" style="width:12px;height:12px;"></i>' : '<i data-lucide="arrow-down" style="width:12px;height:12px;"></i>';
+          // Arrow-down = natural direction for this key.
+          // For inactive buttons always show arrow-down (previews the default).
+          // For the active button, flip to arrow-up only when reversed.
+          const isActive = state.sortBy === sort;
+          const isNatural = !isActive || state.sortDir === NATURAL_DIR[sort];
+          arrowEl.innerHTML = isNatural ?
+            '<i data-lucide="arrow-down" style="width:12px;height:12px;"></i>' :
+            '<i data-lucide="arrow-up" style="width:12px;height:12px;"></i>';
           lucide.createIcons({
             nodes: [arrowEl]
           });
@@ -2513,7 +2531,8 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
         state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
       } else {
         state.sortBy = key;
-        state.sortDir = 'asc';
+        // Use the natural direction for each sort key on first press
+        state.sortDir = NATURAL_DIR[key] || 'asc';
       }
       savePrefs();
       syncFilterPanel();
@@ -2545,41 +2564,147 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       return arr;
     }
 
+    // ==================== BADGE IN-PLACE UPDATE ====================
+    // Updates only the new-badge dot on each rendered card without re-rendering
+    // the whole grid. This prevents the card entrance animations from firing
+    // every time a batch of dates arrives in the background.
+    function updateBadgesInPlace() {
+      document.querySelectorAll('.file-btn[data-path]').forEach(card => {
+        const path = card.dataset.path;
+        const newState = isNewFile(path);
+        const existing = card.querySelector('.new-badge');
+        if (newState) {
+          const cls = 'new-badge' + (newState === 'new' ? '' : ' recent');
+          const title = newState === 'new' ? 'Added in the last day' : 'Recently updated';
+          if (existing) {
+            existing.className = cls;
+            existing.title = title;
+          } else {
+            const span = document.createElement('span');
+            span.className = cls;
+            span.title = title;
+            card.insertBefore(span, card.firstChild);
+          }
+        } else if (existing) {
+          existing.remove();
+        }
+      });
+    }
+
     // ==================== BACKGROUND DATE FETCH ====================
-    // FIX: This function now:
-    //  1. Captures the current generation ID. If refreshRepo() is called again
-    //     while this loop is running, bgFetchGeneration increments and every
-    //     check below causes an early return, stopping all stale requests.
-    //  2. Uses a 3-second inter-batch delay (was 400ms) to be kind to the
-    //     GitHub unauthenticated rate limit (60 req/hour).
-    //  3. Only fetches dates not already cached in state.fileMeta.
+    // Two paths depending on whether a GitHub token is present:
+    //
+    //  FAST PATH (token set): GitHub GraphQL API — batch up to 10 files per
+    //  request. For 60 files this is 6 requests instead of 60, with 500ms
+    //  delays. Completes in ~3 seconds vs several minutes on the slow path.
+    //
+    //  SLOW PATH (no token): GitHub REST API, 2 files per request, 3-second
+    //  inter-batch delay. Gentle enough not to exhaust the 60 req/hour limit.
+    //
+    //  Both paths use the generation counter to abort when a new refresh starts.
     async function fetchModifiedDatesBackground() {
       const myGeneration = bgFetchGeneration;
       const unfetched = state.files.filter(f => !state.fileMeta[f.path]?.modified);
       if (!unfetched.length) return;
 
-      const BATCH = 2;
-      for (let i = 0; i < unfetched.length; i += BATCH) {
-        if (bgFetchGeneration !== myGeneration) return;
+      const token = state.settings.githubToken;
 
-        await Promise.all(unfetched.slice(i, i + BATCH).map(async file => {
+      if (token) {
+        // FAST PATH: GraphQL batch queries
+        // GitHub GraphQL lets us ask for last-commit-date for N files in one request.
+        // We alias each file as f0, f1, f2... and read them back from the response.
+        const BATCH = 10;
+        for (let i = 0; i < unfetched.length; i += BATCH) {
           if (bgFetchGeneration !== myGeneration) return;
-          const ts = await fetchModifiedDate(file.path);
-          if (ts && bgFetchGeneration === myGeneration) {
-            state.fileMeta[file.path] = {
-              ...state.fileMeta[file.path],
-              modified: ts
-            };
-          }
-        }));
 
-        if (bgFetchGeneration !== myGeneration) return;
-        saveFileMeta();
-        if (state.sortBy === 'modified' || state.settings.newFileDays) renderFiles();
+          const batch = unfetched.slice(i, i + BATCH);
+          const aliases = batch.map((f, idx) =>
+            `f${idx}: history(path: ${JSON.stringify(f.path)}, first: 1) { nodes { committedDate } }`
+          ).join('\n');
 
-        if (i + BATCH < unfetched.length) {
-          await new Promise(r => setTimeout(r, 3000));
+          const query = `{
+            repository(owner: ${JSON.stringify(state.owner)}, name: ${JSON.stringify(state.repo)}) {
+              defaultBranchRef {
+                target {
+                  ... on Commit {
+                    ${aliases}
+                  }
+                }
+              }
+            }
+          }`;
+
+          try {
+            const res = await fetch('https://api.github.com/graphql', {
+              method: 'POST',
+              headers: {
+                'Authorization': `bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                query
+              })
+            });
+            if (res.ok && bgFetchGeneration === myGeneration) {
+              const data = await res.json();
+              const target = data?.data?.repository?.defaultBranchRef?.target;
+              if (target) {
+                batch.forEach((file, idx) => {
+                  const nodes = target[`f${idx}`]?.nodes;
+                  if (nodes?.[0]?.committedDate) {
+                    const ts = new Date(nodes[0].committedDate).getTime();
+                    state.fileMeta[file.path] = {
+                      ...state.fileMeta[file.path],
+                      modified: ts
+                    };
+                  }
+                });
+              }
+            }
+          } catch (e) {
+            /* ignore network errors */ }
+
+          if (bgFetchGeneration !== myGeneration) return;
+          saveFileMeta();
+          // Use in-place badge update to avoid triggering card entrance animations
+          if (state.settings.newFileDays) updateBadgesInPlace();
+          if (state.sortBy === 'modified') renderFiles();
+
+          if (i + BATCH < unfetched.length) await new Promise(r => setTimeout(r, 500));
         }
+
+      } else {
+        // SLOW PATH: REST per-file (no token, rate limit is 60 req/hour)
+        const BATCH = 2;
+        for (let i = 0; i < unfetched.length; i += BATCH) {
+          if (bgFetchGeneration !== myGeneration) return;
+
+          await Promise.all(unfetched.slice(i, i + BATCH).map(async file => {
+            if (bgFetchGeneration !== myGeneration) return;
+            const ts = await fetchModifiedDate(file.path);
+            if (ts && bgFetchGeneration === myGeneration) {
+              state.fileMeta[file.path] = {
+                ...state.fileMeta[file.path],
+                modified: ts
+              };
+            }
+          }));
+
+          if (bgFetchGeneration !== myGeneration) return;
+          saveFileMeta();
+          // Use in-place badge update to avoid triggering card entrance animations
+          if (state.settings.newFileDays) updateBadgesInPlace();
+          if (state.sortBy === 'modified') renderFiles();
+
+          if (i + BATCH < unfetched.length) await new Promise(r => setTimeout(r, 3000));
+        }
+      }
+
+      // Signal completion by restoring the button
+      const btn = document.getElementById('fetchDatesBtn');
+      if (btn) {
+        btn.textContent = 'Fetch all modified dates';
+        btn.disabled = false;
       }
     }
 
@@ -2936,6 +3061,17 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       saveSettings();
       renderFiles();
     });
+    document.getElementById('fetchDatesBtn').addEventListener('click', () => {
+      const btn = document.getElementById('fetchDatesBtn');
+      btn.textContent = 'Fetching…';
+      btn.disabled = true;
+      // Clear all cached modified dates so we get a fresh fetch for every file
+      state.files.forEach(f => {
+        if (state.fileMeta[f.path]) delete state.fileMeta[f.path].modified;
+      });
+      bgFetchGeneration++;
+      fetchModifiedDatesBackground();
+    });
     document.getElementById('setOpenSameTab').addEventListener('click', () => {
       state.settings.openSameTab = !state.settings.openSameTab;
       syncSettingsUI();
@@ -3028,6 +3164,9 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
     document.addEventListener('click', e => {
       if (state.filterOpen && !e.target.closest('#filterPanel') && !e.target.closest('#filterBtn')) closeFilterPanel();
     });
+    document.addEventListener('scroll', () => {
+      if (state.filterOpen) closeFilterPanel();
+    }, true);
 
     document.getElementById('gridViewBtn').addEventListener('click', () => {
       state.viewMode = 'grid';
