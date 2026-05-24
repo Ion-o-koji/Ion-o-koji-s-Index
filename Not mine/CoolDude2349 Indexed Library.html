@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <!-- By Ion-o-koji -->
+<!-- My code, CoolDude2349 Github -->
 <html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline-HTML-Games-Pack</title>
+  <title>CoolDude2349 Indexed Library</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -161,7 +162,6 @@
       background: var(--muted)
     }
 
-    /* ---- Repo title btn ---- */
     #repoTitleBtn {
       background: none;
       border: none;
@@ -191,7 +191,6 @@
       color: var(--accent);
     }
 
-    /* ---- Modal shared ---- */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -268,7 +267,6 @@
       gap: 10px;
     }
 
-    /* ---- Repo modal ---- */
     .repo-section-label {
       font-size: 10px;
       font-weight: 700;
@@ -356,7 +354,6 @@
       opacity: 0.85;
     }
 
-    /* ---- Controls bar ---- */
     .controls-bar {
       display: flex;
       align-items: center;
@@ -475,7 +472,6 @@
       color: var(--fg);
     }
 
-    /* ---- Filter panel ---- */
     .filter-panel {
       position: fixed;
       z-index: 200;
@@ -612,7 +608,6 @@
       background: var(--bg);
     }
 
-    /* ---- File grid ---- */
     .file-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -665,12 +660,10 @@
       transform: translateY(-1px);
     }
 
-    /* suppress animation during search */
     .file-grid.no-anim .file-btn {
       animation: none;
     }
 
-    /* List view */
     .file-grid.list-view .file-btn {
       flex-direction: row;
       justify-content: flex-start;
@@ -723,7 +716,6 @@
       }
     }
 
-    /* New / updated badge */
     .new-badge {
       position: absolute;
       top: 6px;
@@ -741,7 +733,6 @@
       box-shadow: 0 0 6px rgba(245, 166, 35, 0.6);
     }
 
-    /* Card actions */
     .card-actions {
       position: absolute;
       top: 5px;
@@ -775,7 +766,6 @@
       color: var(--accent);
     }
 
-    /* File loading overlay */
     .file-btn.file-loading::before {
       content: '';
       position: absolute;
@@ -857,7 +847,6 @@
       text-align: center;
     }
 
-    /* ---- Pagination ---- */
     .pagination-bar {
       display: flex;
       align-items: center;
@@ -892,7 +881,6 @@
       cursor: default;
     }
 
-    /* ---- Sidebar ---- */
     .sidebar-overlay {
       position: fixed;
       inset: 0;
@@ -995,7 +983,6 @@
       background: rgba(232, 97, 77, 0.08);
     }
 
-    /* Settings section in sidebar */
     .settings-section {
       border-top: 1px solid var(--border);
       padding: 14px 20px;
@@ -1173,7 +1160,6 @@
       background: rgba(232, 97, 77, 0.08);
     }
 
-    /* ---- Toast ---- */
     .toast-container {
       position: fixed;
       bottom: 20px;
@@ -1232,7 +1218,6 @@
       }
     }
 
-    /* ---- Skeleton ---- */
     .skeleton {
       background: linear-gradient(90deg, var(--card) 25%, var(--border) 50%, var(--card) 75%);
       background-size: 200% 100%;
@@ -1256,7 +1241,6 @@
       }
     }
 
-    /* Header loading bar */
     .header-loading-bar {
       position: absolute;
       bottom: 0;
@@ -1284,7 +1268,6 @@
       }
     }
 
-    /* ---- Search ---- */
     .search-wrap {
       position: relative;
       padding: 0 16px 6px;
@@ -1350,7 +1333,6 @@
       color: var(--accent);
     }
 
-    /* ---- Scroll to top ---- */
     .scroll-top-btn {
       position: fixed;
       bottom: 24px;
@@ -1384,7 +1366,6 @@
       box-shadow: 0 8px 24px rgba(245, 166, 35, 0.4);
     }
 
-    /* ---- Tooltip ---- */
     .file-tooltip {
       position: fixed;
       z-index: 150;
@@ -1425,7 +1406,6 @@
       font-weight: 500;
     }
 
-    /* ---- Empty state ---- */
     .empty-state {
       display: flex;
       flex-direction: column;
@@ -1435,7 +1415,6 @@
       color: var(--muted);
     }
 
-    /* ---- Confirm dialog ---- */
     .confirm-dialog {
       position: fixed;
       inset: 0;
@@ -1555,7 +1534,6 @@
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <div class="file-tooltip" id="fileTooltip"></div>
 
-  <!-- Confirm dialog -->
   <div class="confirm-dialog" id="confirmDialog">
     <div class="confirm-box">
       <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;" id="confirmTitle"></div>
@@ -1567,7 +1545,6 @@
     </div>
   </div>
 
-  <!-- Repo picker modal -->
   <div class="modal-overlay" id="repoModalOverlay">
     <div class="modal-box">
       <div class="modal-header">
@@ -1588,7 +1565,6 @@
     </div>
   </div>
 
-  <!-- Filter panel -->
   <div class="filter-panel" id="filterPanel">
     <div class="filter-panel-title">Sort &amp; Filter</div>
     <button class="filter-toggle on" id="filterPinsTop">
@@ -1602,15 +1578,12 @@
     <button class="filter-option" data-sort="lastOpened"><span class="opt-left"><i data-lucide="clock" style="width:13px;height:13px;"></i> Last Opened</span><span class="opt-arrow" id="arrow-lastOpened"><i data-lucide="arrow-down" style="width:12px;height:12px;"></i></span></button>
   </div>
 
-  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main menu">
     <div style="padding:18px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;">
       <h2 style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;">Menu</h2>
       <button id="closeSidebarBtn" style="background:none;border:none;color:var(--fg);cursor:pointer;padding:4px;border-radius:6px;"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
     </div>
-    <!-- Scrollable content: pins + settings + refresh -->
     <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">
-      <!-- Pinned -->
       <div style="padding:20px 20px 14px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
           <i data-lucide="pin" style="width:14px;height:14px;color:var(--accent);"></i>
@@ -1619,7 +1592,6 @@
         <div id="pinnedList" style="display:flex;flex-direction:column;gap:6px;"></div>
         <p id="pinnedEmpty" style="color:var(--muted);font-size:12px;line-height:1.6;padding:4px 0;">No pinned items yet. Tap the pin icon on a file card to add it here.</p>
       </div>
-      <!-- Settings section (inline, visible without needing to scroll far) -->
       <div class="settings-section">
         <div class="settings-header" id="settingsHeader">
           <div class="settings-header-label">
@@ -1628,7 +1600,6 @@
           <i data-lucide="chevron-down" class="settings-header-chevron" style="width:14px;height:14px;"></i>
         </div>
         <div class="settings-content" id="settingsContent">
-          <!-- Default View -->
           <div class="setting-row">
             <span class="setting-label">Default view</span>
             <select class="setting-select" id="setDefaultView">
@@ -1636,7 +1607,6 @@
               <option value="list">List</option>
             </select>
           </div>
-          <!-- Default Sort -->
           <div class="setting-row">
             <span class="setting-label">Default sort</span>
             <select class="setting-select" id="setDefaultSort">
@@ -1646,7 +1616,6 @@
               <option value="lastOpened">Last opened</option>
             </select>
           </div>
-          <!-- Files per page -->
           <div class="setting-row">
             <span class="setting-label">Files per page</span>
             <select class="setting-select" id="setFilesPerPage">
@@ -1656,51 +1625,44 @@
               <option value="0">All</option>
             </select>
           </div>
-          <!-- New file days -->
           <div class="setting-row">
             <span class="setting-label">New badge (days)</span>
             <select class="setting-select" id="setNewDays">
+              <option value="0">Off</option>
               <option value="1">1 day</option>
               <option value="3">3 days</option>
               <option value="7">7 days</option>
               <option value="14">14 days</option>
-              <option value="0">Off</option>
             </select>
           </div>
-          <!-- Open in same tab -->
           <div class="setting-row">
             <span class="setting-label">Open in same tab</span>
             <button class="setting-toggle" id="setOpenSameTab"></button>
           </div>
-          <!-- Confirm download -->
           <div class="setting-row">
             <span class="setting-label">Confirm download</span>
             <button class="setting-toggle" id="setConfirmDownload"></button>
           </div>
-          <!-- GitHub token -->
           <div style="display:flex;flex-direction:column;gap:4px;">
             <span class="setting-label">GitHub token (private repos)</span>
             <input class="setting-input" type="password" id="setGithubToken" placeholder="ghp_xxxxxxxx" spellcheck="false" autocomplete="off">
             <button class="setting-sm-btn" id="saveTokenBtn" style="margin-top:2px;">Save token</button>
           </div>
-          <!-- Import / Export -->
           <div class="setting-btn-row">
             <button class="setting-sm-btn" id="exportSettingsBtn">Export all</button>
             <label class="setting-sm-btn" style="cursor:pointer;text-align:center;">Import all<input type="file" id="importSettingsInput" accept=".json" style="display:none;"></label>
           </div>
-          <!-- Clear all data -->
           <button class="setting-sm-btn danger" id="clearDataBtn">Clear all data</button>
         </div>
-        <!-- Refresh button at bottom of scroll area -->
         <div style="padding:14px 20px;margin-top:auto;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
           <button class="sidebar-action" id="sidebarRefresh">
             <i data-lucide="refresh-cw" style="width:15px;height:15px;color:var(--muted);"></i>Refresh Repository
           </button>
         </div>
       </div>
+    </div>
   </aside>
 
-  <!-- Main -->
   <div id="mainScreen" style="position:relative;z-index:1;min-height:100vh;">
     <header id="mainHeader" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(8,9,10,0.82);backdrop-filter:blur(16px);position:sticky;top:0;z-index:30;overflow:hidden;">
       <div style="display:flex;align-items:center;gap:12px;">
@@ -1754,20 +1716,15 @@
   <button class="scroll-top-btn" id="scrollTopBtn" aria-label="Scroll to top"><i data-lucide="arrow-up" style="width:16px;height:16px;"></i></button>
 
   <script>
-    // ==================== CONFIG — edit this section ====================
-    // Optional: enter your GitHub Personal Access Token here to access private repos
-    // It can also be set in the Settings panel in the sidebar.
+    // ==================== CONFIG ====================
     const GITHUB_TOKEN_HARDCODED = '';
 
-    // Add preset repositories here:
     const PRESET_REPOS = [{
         owner: 'CoolDude2349',
         repo: 'Offline-HTML-Games-Pack',
-        label: 'Offline-HTML-Games-Pack'
+        label: 'CoolDude2349'
       },
-      // { owner: 'owner', repo: 'repo-name', label: 'Display Name' },
     ];
-    // =====================================================================
 
     // ==================== FOLDER SYMBOL MAP ====================
     const FOLDER_SYMBOL_MAP = [{
@@ -1898,6 +1855,10 @@
         keys: ['productive'],
         symbol: '👨‍🏫'
       },
+      {
+        keys: ['ugs games'],
+        symbol: '🏭'
+      },
     ];
 
     function getFolderSymbol(fp) {
@@ -1910,6 +1871,7 @@
     }
 
     // ==================== DEFAULT SETTINGS ====================
+
     const DEFAULT_SETTINGS = {
       defaultView: 'grid',
       defaultSort: 'name',
@@ -1918,7 +1880,7 @@
       openSameTab: false,
       confirmDownload: false,
       githubToken: '',
-      newFileDays: 3,
+      newFileDays: 0,
     };
 
     // ==================== STATE ====================
@@ -1949,6 +1911,11 @@
     };
 
     const ALLOWED_EXT = ['html', 'htm', 'md', 'markdown'];
+
+    // ==================== RATE-LIMIT GUARDS ====================
+
+    let isRefreshing = false;
+    let bgFetchGeneration = 0;
 
     // ==================== PERSISTENCE ====================
     function savePins() {
@@ -2019,7 +1986,6 @@
           ...d
         };
       } catch (e) {}
-      // Apply hardcoded token if no saved token
       if (!state.settings.githubToken && GITHUB_TOKEN_HARDCODED) state.settings.githubToken = GITHUB_TOKEN_HARDCODED;
     }
 
@@ -2080,8 +2046,9 @@
         headers: getAuthHeaders()
       });
       if (res.status === 404) throw new Error('Repository not found.');
-      if (res.status === 403) throw new Error('GitHub API rate limit hit. Try again in a minute.');
+      if (res.status === 403) throw new Error('GitHub API rate limit hit. Try again in a minute, or add a token in Settings.');
       if (res.status === 401) throw new Error('Invalid GitHub token. Check your settings.');
+      if (res.status === 429) throw new Error('Rate limited. Wait a moment and try again.');
       if (!res.ok) throw new Error('GitHub API error: ' + res.status);
       const data = await res.json();
       if (data.private && !state.settings.githubToken) throw new Error('This repository is private. Add a GitHub token in Settings.');
@@ -2092,6 +2059,7 @@
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`, {
         headers: getAuthHeaders()
       });
+      if (res.status === 403) throw new Error('GitHub API rate limit hit. Try again in a minute, or add a token in Settings.');
       if (!res.ok) throw new Error('Failed to fetch repository tree: ' + res.status);
       const data = await res.json();
       if (data.truncated) toast('Large repo — some files may be missing', 'error');
@@ -2101,13 +2069,14 @@
     async function fetchFileContent(path) {
       const token = state.settings.githubToken;
       if (token) {
-        // Use Contents API (supports private repos, returns base64)
-        const res = await fetch(`https://api.github.com/repos/${state.owner}/${state.repo}/contents/${encodeURIComponent(path)}?ref=${state.branch}`, {
-          headers: {
-            ...getAuthHeaders(),
-            'Accept': 'application/vnd.github.v3.raw'
+        const res = await fetch(
+          `https://api.github.com/repos/${state.owner}/${state.repo}/contents/${encodeURIComponent(path)}?ref=${state.branch}`, {
+            headers: {
+              ...getAuthHeaders(),
+              'Accept': 'application/vnd.github.v3.raw'
+            }
           }
-        });
+        );
         if (!res.ok) throw new Error('Failed to fetch file');
         return res.text();
       }
@@ -2118,9 +2087,11 @@
 
     async function fetchModifiedDate(path) {
       try {
-        const res = await fetch(`https://api.github.com/repos/${state.owner}/${state.repo}/commits?path=${encodeURIComponent(path)}&per_page=1`, {
-          headers: getAuthHeaders()
-        });
+        const res = await fetch(
+          `https://api.github.com/repos/${state.owner}/${state.repo}/commits?path=${encodeURIComponent(path)}&per_page=1`, {
+            headers: getAuthHeaders()
+          }
+        );
         if (!res.ok) return null;
         const data = await res.json();
         if (!data[0]) return null;
@@ -2430,8 +2401,8 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
         const btn = document.createElement('button');
         btn.className = 'repo-preset-btn' + (p.owner === state.owner && p.repo === state.repo ? ' current' : '');
         btn.innerHTML = `<i data-lucide="book-open" style="width:15px;height:15px;flex-shrink:0;color:var(--accent);"></i>
-      <div style="flex:1;text-align:left;min-width:0;"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(p.label||p.repo)}</div><div style="font-size:11px;color:var(--muted);">${escHtml(p.owner)} / ${escHtml(p.repo)}</div></div>
-      ${p.owner===state.owner&&p.repo===state.repo?'<i data-lucide="check" style="width:14px;height:14px;flex-shrink:0;"></i>':''}`;
+      <div style="flex:1;text-align:left;min-width:0;"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(p.label || p.repo)}</div><div style="font-size:11px;color:var(--muted);">${escHtml(p.owner)} / ${escHtml(p.repo)}</div></div>
+      ${p.owner === state.owner && p.repo === state.repo ? '<i data-lucide="check" style="width:14px;height:14px;flex-shrink:0;"></i>' : ''}`;
         btn.addEventListener('click', () => {
           switchRepo(p.owner, p.repo);
           closeRepoModal();
@@ -2449,7 +2420,10 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
     function closeRepoModal() {
       document.getElementById('repoModalOverlay').classList.remove('open');
     }
+
     async function switchRepo(owner, repo) {
+      // FIX: Skip if this exact repo is currently loading.
+      if (state.owner === owner && state.repo === repo && isRefreshing) return;
       state.owner = owner;
       state.repo = repo;
       state.activeFolder = '';
@@ -2510,7 +2484,7 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
         const sym = getFolderSymbol(f);
         const count = state.files.filter(fi => fi.folder === f).length;
         const indent = '\u00A0\u00A0'.repeat(depth);
-        h += `<option value="${escHtml(f)}">${indent}${sym?sym+' ':''}${escHtml(label)} (${count})</option>`;
+        h += `<option value="${escHtml(f)}">${indent}${sym ? sym + ' ' : ''}${escHtml(label)} (${count})</option>`;
       }
       sel.innerHTML = h;
       sel.value = state.activeFolder || '';
@@ -2521,6 +2495,10 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
     }
 
     // ==================== SORT ====================
+    // FIX: Sorting by "modified" no longer auto-triggers background API fetches.
+    // The old code called fetchModifiedDatesBackground() whenever the sort
+    // changed to "modified", even if the feature was disabled. Now it only
+    // fetches if the user has explicitly enabled newFileDays > 0.
     function applySortBy(key) {
       if (state.sortBy === key) {
         state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
@@ -2532,7 +2510,9 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       syncFilterPanel();
       state.currentPage = 1;
       renderFiles();
-      if (key === 'modified') fetchModifiedDatesBackground();
+      if (key === 'modified' && state.settings.newFileDays > 0) {
+        fetchModifiedDatesBackground();
+      }
     }
 
     function sortFiles(files) {
@@ -2555,21 +2535,42 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       });
       return arr;
     }
+
+    // ==================== BACKGROUND DATE FETCH ====================
+    // FIX: This function now:
+    //  1. Captures the current generation ID. If refreshRepo() is called again
+    //     while this loop is running, bgFetchGeneration increments and every
+    //     check below causes an early return, stopping all stale requests.
+    //  2. Uses a 3-second inter-batch delay (was 400ms) to be kind to the
+    //     GitHub unauthenticated rate limit (60 req/hour).
+    //  3. Only fetches dates not already cached in state.fileMeta.
     async function fetchModifiedDatesBackground() {
+      const myGeneration = bgFetchGeneration;
       const unfetched = state.files.filter(f => !state.fileMeta[f.path]?.modified);
       if (!unfetched.length) return;
+
       const BATCH = 2;
       for (let i = 0; i < unfetched.length; i += BATCH) {
+        if (bgFetchGeneration !== myGeneration) return;
+
         await Promise.all(unfetched.slice(i, i + BATCH).map(async file => {
+          if (bgFetchGeneration !== myGeneration) return;
           const ts = await fetchModifiedDate(file.path);
-          if (ts) state.fileMeta[file.path] = {
-            ...state.fileMeta[file.path],
-            modified: ts
-          };
+          if (ts && bgFetchGeneration === myGeneration) {
+            state.fileMeta[file.path] = {
+              ...state.fileMeta[file.path],
+              modified: ts
+            };
+          }
         }));
+
+        if (bgFetchGeneration !== myGeneration) return;
         saveFileMeta();
         if (state.sortBy === 'modified' || state.settings.newFileDays) renderFiles();
-        if (i + BATCH < unfetched.length) await new Promise(r => setTimeout(r, 400));
+
+        if (i + BATCH < unfetched.length) {
+          await new Promise(r => setTimeout(r, 3000));
+        }
       }
     }
 
@@ -2606,7 +2607,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
         } else files = sortFiles(files);
       }
 
-      // Pagination
       const perPage = parseInt(state.settings.filesPerPage) || 0;
       const totalFiles = files.length;
       let totalPages = 1;
@@ -2633,12 +2633,12 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
         const iconHtml = folderSym ? `<span class="file-icon file-emoji">${folderSym}</span>` : `<i data-lucide="${fileIcon(file.extension)}" class="file-icon" style="color:${col};"></i>`;
         const delay = isSearch ? 0 : Math.min(i * 25, 350);
         const newState = isNewFile(file.path);
-        const newBadge = newState ? `<span class="new-badge${newState==='new'?'':' recent'}" title="${newState==='new'?'Added in the last day':'Recently updated'}"></span>` : '';
+        const newBadge = newState ? `<span class="new-badge${newState === 'new' ? '' : ' recent'}" title="${newState === 'new' ? 'Added in the last day' : 'Recently updated'}"></span>` : '';
         const folderPathHtml = showFolder && file.folder ? `<span class="file-folder-path">${escHtml(file.folder)}</span>` : '';
         h += `<div class="file-btn" data-path="${escHtml(file.path)}" style="animation-delay:${delay}ms;" tabindex="0" role="button" aria-label="Open ${escHtml(file.fullName)}">
       ${newBadge}
       <div class="card-actions">
-        <button class="card-action-btn${pinned?' pinned':''}" data-pin="${escHtml(file.path)}" title="${pinned?'Unpin':'Pin'}"><i data-lucide="${pinned?'pin-off':'pin'}" style="width:12px;height:12px;"></i></button>
+        <button class="card-action-btn${pinned ? ' pinned' : ''}" data-pin="${escHtml(file.path)}" title="${pinned ? 'Unpin' : 'Pin'}"><i data-lucide="${pinned ? 'pin-off' : 'pin'}" style="width:12px;height:12px;"></i></button>
         <button class="card-action-btn" data-download="${escHtml(file.path)}" title="Download"><i data-lucide="download" style="width:12px;height:12px;"></i></button>
       </div>
       ${iconHtml}
@@ -2714,6 +2714,12 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
     }
 
     // ==================== TOOLTIP ====================
+    // FIX: Tooltip no longer makes any API calls.
+    // Previously it called fetchModifiedDate() on every hover, burning one
+    // request per file moused over. Now it only shows cached data.
+    // If the user enables newFileDays, dates are loaded in the background
+    // at the safe 3-second-per-batch rate, and the tooltip picks them up
+    // from the cache once they arrive.
     let tooltipTimeout = null,
       currentTooltipPath = null;
 
@@ -2725,9 +2731,9 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       const opens = state.openCount[file.path] || 0;
       let rows = '';
       rows += `<div class="tooltip-row"><span class="t-label">Size</span><span class="t-val">${formatBytes(file.size)}</span></div>`;
-      rows += `<div class="tooltip-row"><span class="t-label">Modified</span><span class="t-val" id="tip-modified">${relativeTime(meta.modified)||'—'}</span></div>`;
-      rows += `<div class="tooltip-row"><span class="t-label">Avg load</span><span class="t-val">${avg?avg+' ms':'—'}</span></div>`;
-      rows += `<div class="tooltip-row"><span class="t-label">Opens</span><span class="t-val">${opens||0}</span></div>`;
+      rows += `<div class="tooltip-row"><span class="t-label">Modified</span><span class="t-val">${relativeTime(meta.modified) || '—'}</span></div>`;
+      rows += `<div class="tooltip-row"><span class="t-label">Avg load</span><span class="t-val">${avg ? avg + ' ms' : '—'}</span></div>`;
+      rows += `<div class="tooltip-row"><span class="t-label">Opens</span><span class="t-val">${opens || 0}</span></div>`;
       if (lastOp) rows += `<div class="tooltip-row"><span class="t-label">Last opened</span><span class="t-val">${relativeTime(lastOp)}</span></div>`;
       if (file.folder) rows += `<div class="tooltip-row"><span class="t-label">Folder</span><span class="t-val" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px;">${escHtml(file.folder)}</span></div>`;
       tip.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(file.fullName)}</div>${rows}`;
@@ -2744,19 +2750,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       tip.style.top = top + 'px';
       requestAnimationFrame(() => tip.classList.add('visible'));
       currentTooltipPath = file.path;
-      if (!state.fileMeta[file.path]?.modified) {
-        fetchModifiedDate(file.path).then(ts => {
-          if (ts && currentTooltipPath === file.path) {
-            state.fileMeta[file.path] = {
-              ...state.fileMeta[file.path],
-              modified: ts
-            };
-            saveFileMeta();
-            const el = document.getElementById('tip-modified');
-            if (el) el.textContent = relativeTime(ts);
-          }
-        });
-      }
     }
 
     function hideTooltip() {
@@ -2770,6 +2763,19 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
 
     // ==================== REFRESH REPO ====================
     async function refreshRepo() {
+      // FIX: Block concurrent refreshes. Without this guard, clicking Refresh
+      // quickly or switching repos in rapid succession would fire multiple
+      // overlapping API requests.
+      if (isRefreshing) {
+        toast('Already loading, please wait…');
+        return;
+      }
+
+      // FIX: Invalidate any background fetch still running from the previous
+      // load by bumping the generation counter.
+      bgFetchGeneration++;
+
+      isRefreshing = true;
       closeSidebar();
       showLoading();
       try {
@@ -2789,13 +2795,18 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
         renderPinned();
         updateAllBtnState();
         toast('Loaded ' + state.files.length + ' files', 'success');
-        // Kick off background fetch for new-file badges if enabled
-        if (state.settings.newFileDays) fetchModifiedDatesBackground();
+        // FIX: Only kick off background date fetching if the user has explicitly
+        // opted in via newFileDays. This was the primary cause of rate limit
+        // exhaustion — it ran on every load with the old default of 3.
+        if (state.settings.newFileDays > 0) {
+          fetchModifiedDatesBackground();
+        }
       } catch (e) {
         document.getElementById('fileGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i data-lucide="wifi-off" style="width:48px;height:48px;margin-bottom:14px;opacity:0.25;"></i><p style="font-size:15px;font-weight:600;margin-bottom:4px;">Could not load</p><p style="font-size:12px;">${escHtml(e.message)}</p></div>`;
         lucide.createIcons();
         toast(e.message, 'error');
       } finally {
+        isRefreshing = false;
         setLoading(false);
       }
     }
@@ -2884,15 +2895,12 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
     }
 
     // ==================== EVENT LISTENERS ====================
-
-    // Sidebar
     document.getElementById('openSidebarBtn').addEventListener('click', openSidebar);
     document.getElementById('closeSidebarBtn').addEventListener('click', closeSidebar);
     document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
     document.getElementById('sidebarRefresh').addEventListener('click', refreshRepo);
     document.getElementById('refreshBtn').addEventListener('click', refreshRepo);
 
-    // Settings toggle
     document.getElementById('settingsHeader').addEventListener('click', () => {
       const hdr = document.getElementById('settingsHeader'),
         cnt = document.getElementById('settingsContent');
@@ -2900,7 +2908,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       cnt.classList.toggle('open');
     });
 
-    // Settings inputs
     document.getElementById('setDefaultView').addEventListener('change', e => {
       state.settings.defaultView = e.target.value;
       saveSettings();
@@ -2940,6 +2947,7 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       if (e.target.files[0]) importAllSettings(e.target.files[0]);
       e.target.value = '';
     });
+
     document.getElementById('clearDataBtn').addEventListener('click', async () => {
       const ok = await showConfirm('Clear all data', 'This will wipe all pins, history, load times, and preferences. Settings and token will also be reset. This cannot be undone.', 'Clear everything', true);
       if (!ok) return;
@@ -2968,7 +2976,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       toast('All data cleared');
     });
 
-    // Repo picker
     document.getElementById('repoTitleBtn').addEventListener('click', e => {
       e.stopPropagation();
       openRepoModal();
@@ -2991,7 +2998,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       if (e.key === 'Enter') document.getElementById('loadCustomRepo').click();
     });
 
-    // Filter panel
     document.getElementById('filterBtn').addEventListener('click', e => {
       e.stopPropagation();
       state.filterOpen ? closeFilterPanel() : openFilterPanel();
@@ -3014,7 +3020,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       if (state.filterOpen && !e.target.closest('#filterPanel') && !e.target.closest('#filterBtn')) closeFilterPanel();
     });
 
-    // Grid / List / All
     document.getElementById('gridViewBtn').addEventListener('click', () => {
       state.viewMode = 'grid';
       savePrefs();
@@ -3038,8 +3043,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       state.currentPage = 1;
       renderFiles();
     });
-
-    // Folder select
     document.getElementById('folderSelect').addEventListener('change', e => {
       state.activeFolder = e.target.value;
       updateAllBtnState();
@@ -3047,7 +3050,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       renderFiles();
     });
 
-    // Search — debounced to fix double-animation bug
     let searchDebounceTimer = null;
     document.getElementById('searchInput').addEventListener('input', e => {
       clearTimeout(searchDebounceTimer);
@@ -3064,7 +3066,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       renderFiles();
     });
 
-    // Pagination
     document.getElementById('prevPageBtn').addEventListener('click', () => {
       if (state.currentPage > 1) {
         state.currentPage--;
@@ -3084,7 +3085,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       });
     });
 
-    // File grid — click
     document.getElementById('fileGrid').addEventListener('click', e => {
       const pinBtn = e.target.closest('[data-pin]');
       if (pinBtn) {
@@ -3116,7 +3116,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       }
     });
 
-    // Tooltip — 200ms delay, hide on scroll/touch
     document.getElementById('fileGrid').addEventListener('mouseover', e => {
       const card = e.target.closest('.file-btn');
       if (!card || e.target.closest('.card-actions')) {
@@ -3126,7 +3125,7 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       const f = getFileByPath(card.dataset.path);
       if (!f) return;
       clearTimeout(tooltipTimeout);
-      tooltipTimeout = setTimeout(() => showTooltip(f, card), 200);
+      tooltipTimeout = setTimeout(() => showTooltip(f, card), 300);
     });
     document.getElementById('fileGrid').addEventListener('mouseleave', () => {
       clearTimeout(tooltipTimeout);
@@ -3195,7 +3194,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       }
     });
 
-    // Scroll to top
     const scrollTopBtn = document.getElementById('scrollTopBtn');
     window.addEventListener('scroll', () => {
       scrollTopBtn.classList.toggle('visible', window.scrollY > 250);
@@ -3207,7 +3205,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
       behavior: 'smooth'
     }));
 
-    // Escape
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         closeSidebar();
@@ -3221,7 +3218,6 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
     function init() {
       loadAllState();
       lucide.createIcons();
-      // Apply saved view mode
       if (state.viewMode === 'list') {
         document.getElementById('listViewBtn').classList.add('active');
         document.getElementById('gridViewBtn').classList.remove('active');
@@ -3234,7 +3230,7 @@ ul,ol{padding-left:24px;}li{margin:4px 0;}hr{border:none;border-top:1px solid #2
     init();
 
     (() => {
-      const ENTRY = 'Offline-HTML-Games-Pack',
+      const ENTRY = 'CoolDude2349 Indexed Library',
         KEY = 'Ion-o-koji Watermark';
       const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
       logs.push(ENTRY);
