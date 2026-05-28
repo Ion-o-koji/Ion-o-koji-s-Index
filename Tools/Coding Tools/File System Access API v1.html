@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File System Access API v1</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      text-align: center;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+      transition: background-color 0.2s;
+    }
+
+    #fetchBtn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    #fetchBtn:hover {
+      background-color: #0056b3;
+    }
+
+    #fetchBtn:disabled {
+      background-color: #a0c4ff;
+      cursor: not-allowed;
+    }
+
+    #saveBtn {
+      background-color: #28a745;
+      color: white;
+      display: none;
+    }
+
+    #saveBtn:hover {
+      background-color: #1e7e34;
+    }
+
+    #preview {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 20px;
+      display: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #555;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h2>File System Access API Demo</h2>
+    <p>Click "Fetch Photo" to download a random image from Lorem Picsum.</p>
+
+    <button id="fetchBtn">Fetch Photo</button>
+    <button id="saveBtn">Save to Disk</button>
+
+    <p id="status"></p>
+
+    <img id="preview" alt="Fetched preview">
+  </div>
+
+  <script>
+    const fetchBtn = document.getElementById('fetchBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const statusEl = document.getElementById('status');
+    const previewEl = document.getElementById('preview');
+
+    let imageBlob = null; // This will hold the downloaded data
+
+    // 1. Fetch the image from Lorem Picsum
+    fetchBtn.addEventListener('click', async () => {
+      fetchBtn.disabled = true;
+      saveBtn.style.display = 'none';
+      previewEl.style.display = 'none';
+      statusEl.textContent = '⏳ Downloading image...';
+      statusEl.style.color = '#555';
+
+      try {
+        // Fetch a random 800x600 image
+        const response = await fetch('https://picsum.photos/800/600');
+
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        // Convert the response to a Blob (binary large object)
+        imageBlob = await response.blob();
+
+        // Create a temporary URL to show the image in the <img> tag
+        const objectUrl = URL.createObjectURL(imageBlob);
+        previewEl.src = objectUrl;
+        previewEl.style.display = 'block';
+
+        statusEl.textContent = '✅ Download complete! You can now save it.';
+        statusEl.style.color = '#28a745';
+
+        // Show the save button
+        saveBtn.style.display = 'inline-block';
+
+      } catch (error) {
+        statusEl.textContent = `❌ Error fetching image: ${error.message}`;
+        statusEl.style.color = '#dc3545';
+      } finally {
+        fetchBtn.disabled = false;
+      }
+    });
+
+    // 2. Save the image using the File System Access API
+    saveBtn.addEventListener('click', async () => {
+      if (!imageBlob) return;
+
+      // Check if the browser supports the API
+      if (!window.showSaveFilePicker) {
+        alert('Your browser does not support the File System Access API.\nPlease use Chrome, Edge, or Opera.');
+        return;
+      }
+
+      try {
+        // Open the native "Save As" dialog
+        const handle = await window.showSaveFilePicker({
+          suggestedName: 'picsum-photo.jpg', // Default filename
+          types: [{
+            description: 'JPEG Image',
+            accept: {
+              'image/jpeg': ['.jpg', '.jpeg']
+            },
+          }],
+        });
+
+        // Create a writable stream to the selected file
+        const writable = await handle.createWritable();
+
+        // Write the Blob data to the stream
+        await writable.write(imageBlob);
+
+        // Close the stream to finish saving
+        await writable.close();
+
+        statusEl.textContent = '🎉 File saved successfully!';
+        statusEl.style.color = '#007bff';
+
+      } catch (error) {
+        // If the user clicks "Cancel" on the save dialog, it throws an AbortError
+        if (error.name === 'AbortError') {
+          statusEl.textContent = '🚫 Save cancelled by user.';
+          statusEl.style.color = '#ffc107';
+        } else {
+          statusEl.textContent = `❌ Error saving file: ${error.message}`;
+          statusEl.style.color = '#dc3545';
+        }
+      }
+    });
+
+    (() => {
+      const ENTRY = 'File System Access API v1',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+
+</body>
+
+</html>
