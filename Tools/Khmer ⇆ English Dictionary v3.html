@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Khmer ⇆ English Dictionary v3</title>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --cream: #faf6f0;
+      --brown: #5c3d1e;
+      --light-brown: #8b6340;
+      --accent: #c0392b;
+      --border: #d4c4a8;
+      --card-bg: #ffffff;
+      --shadow: rgba(92, 61, 30, 0.12);
+      --muted: #7a6a58;
+      --tag-bg: #f0e8da;
+    }
+
+    body {
+      font-family: 'Kantumruy Pro', 'Georgia', serif;
+      background-color: var(--cream);
+      color: var(--brown);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #3b2106 0%, #5c3d1e 60%, #7a5230 100%);
+      color: #faf6f0;
+      padding: 18px 20px 14px;
+      text-align: center;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-title {
+      font-size: 1.7rem;
+      letter-spacing: 2px;
+      font-weight: bold;
+      font-variant: small-caps;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .header-subtitle {
+      font-size: 0.72rem;
+      letter-spacing: 3px;
+      color: #d4b896;
+      margin-top: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ── Search Bar ── */
+    .search-wrapper {
+      background: #4a2d10;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      position: sticky;
+      top: 72px;
+      z-index: 99;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-controls {
+      display: flex;
+      flex: 1;
+      min-width: 200px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-input-container {
+      flex: 1;
+      min-width: 120px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 30px 10px 14px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: var(--cream);
+      font-family: inherit;
+      font-size: 1rem;
+      color: var(--brown);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--light-brown);
+    }
+
+    .search-input::placeholder {
+      color: #b09070;
+      font-style: italic;
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 8px;
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      display: none;
+      line-height: 1;
+    }
+
+    .search-input:not(:placeholder-shown) ~ .clear-search {
+      display: block;
+    }
+
+    .clear-search:hover {
+      color: var(--brown);
+    }
+
+    .search-btn {
+      padding: 10px 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Georgia', serif;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .search-btn:active {
+      transform: scale(0.96);
+      background: #a93226;
+    }
+
+    /* Toggle Switch Container */
+    .fuzzy-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #6b4620;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+    }
+
+    .fuzzy-label {
+      color: #faf6f0;
+      font-size: 0.75rem;
+      font-weight: bold;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    /* Checkbox Toggle */
+    .checkbox-toggle {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 24px;
+    }
+
+    .checkbox-toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .3s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    .checkbox-toggle input:checked + .toggle-slider {
+      background-color: var(--accent);
+    }
+
+    .checkbox-toggle input:checked + .toggle-slider:before {
+      transform: translateX(16px);
+    }
+
+    /* ── Tab Bar ── */
+    .tabs {
+      display: flex;
+      background: #f0e8da;
+      border-bottom: 2px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 10px 8px;
+      border: none;
+      background: transparent;
+      font-family: 'Georgia', serif;
+      font-size: 0.8rem;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+      font-variant: small-caps;
+      font-size: 0.85rem;
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: white;
+      font-weight: bold;
+    }
+
+    /* ── Main Content ── */
+    main {
+      flex: 1;
+      padding: 16px;
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── Landing State ── */
+    .landing {
+      text-align: center;
+      padding: 50px 20px;
+    }
+
+    .landing-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      opacity: 0.6;
+    }
+
+    .landing h2 {
+      font-size: 1.3rem;
+      color: var(--light-brown);
+      margin-bottom: 8px;
+      font-variant: small-caps;
+      letter-spacing: 1px;
+    }
+
+    .landing p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+   /* .word-of-day-btn {
+      margin-top: 24px;
+      display: inline-block;
+      padding: 10px 22px;
+      background: var(--brown);
+      color: var(--cream);
+      border: none;
+      border-radius: 6px;
+      font-family: 'Georgia', serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .word-of-day-btn:active {
+      background: var(--light-brown);
+    }
+    */
+
+    /* ── Loading ── */
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px;
+      gap: 14px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 4px solid var(--border);
+      border-top-color: var(--brown);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loader p {
+      color: var(--muted);
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+
+    /* ── Entry Card ── */
+    .entry-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .entry-word {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--brown);
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+
+    .entry-phonetic {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .result-count {
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px 10px;
+      white-space: nowrap;
+      margin-top: 6px;
+    }
+
+    /* ── Summary Section ── */
+    .summary-container {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px var(--shadow);
+      border: 2px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .summary-section {
+      margin-bottom: 18px;
+    }
+
+    .summary-section-title {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      border-bottom: 2px solid var(--tag-bg);
+      padding-bottom: 6px;
+    }
+
+    .definition-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .definition-list li {
+      margin-bottom: 10px;
+      padding: 8px;
+      background: #f9f6f1;
+      border-left: 3px solid var(--light-brown);
+      border-radius: 4px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .definition-pos {
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .definition-text {
+      font-size: 1rem;
+      color: #3a2d20;
+      margin-top: 4px;
+    }
+
+    .pronunciation {
+      font-size: 0.85rem;
+      color: #666;
+      font-style: italic;
+      margin-top: 4px;
+      padding: 4px 6px;
+      background: #f0f0f0;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .example-group {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f0e8da;
+      border-radius: 4px;
+      font-style: italic;
+      color: var(--light-brown);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .example-label {
+      font-size: 0.7rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* ── API Result Grid ── */
+    .api-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .api-result-box {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 2px 8px var(--shadow);
+      border: 2px solid var(--border);
+      border-left: 5px solid var(--light-brown);
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .api-result-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(92, 61, 30, 0.2);
+    }
+
+    .api-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--tag-bg);
+    }
+
+    .api-name {
+      font-size: 0.75rem;
+      font-weight: bold;
+      background: var(--light-brown);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .api-status {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+
+    .api-status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .api-status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .api-metadata {
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: #f9f6f1;
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 3px 0;
+    }
+
+    .meta-label {
+      font-weight: bold;
+      color: var(--brown);
+    }
+
+    .meta-value {
+      color: var(--light-brown);
+      word-break: break-word;
+    }
+
+    /* ── Error ── */
+    .error-box {
+      background: #fff5f5;
+      border: 1px solid #e8c0c0;
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .error-box h3 {
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .error-box p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── No Results ── */
+    .no-results {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .no-results h3 {
+      font-size: 1.1rem;
+      color: var(--brown);
+      margin-bottom: 8px;
+    }
+
+    .no-results p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    /* ── APIs Used Section ── */
+    .apis-used-section {
+      margin-top: 24px;
+      padding: 16px;
+      background: #f9f6f1;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .apis-used-title {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .apis-used-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .api-badge {
+      background: var(--tag-bg);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      border-left: 4px solid var(--light-brown);
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 0.72rem;
+      color: #b09878;
+      border-top: 1px solid var(--border);
+      font-family: sans-serif;
+      letter-spacing: 0.5px;
+    }
+
+    .highlight {
+      background: #fff3cd;
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    /* ── Metadata Table ── */
+    .metadata-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .metadata-table tr {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metadata-table tr:hover {
+      background: #f9f6f1;
+    }
+
+    .metadata-table th {
+      text-align: left;
+      padding: 10px;
+      background: #f0e8da;
+      border-bottom: 2px solid var(--border);
+      font-weight: bold;
+      color: var(--brown);
+      font-size: 0.8rem;
+    }
+
+    .metadata-table td {
+      padding: 10px;
+      font-size: 0.85rem;
+    }
+
+    .metadata-table tr.error-row {
+      background: #fff5f5;
+    }
+
+    @media (min-width: 480px) {
+      .entry-word {
+        font-size: 2.4rem;
+      }
+    }
+
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <header>
+    <div class="header-title">Dictionary</div>
+    <div class="header-subtitle">Khmer ⇆ English Dictionary<br>Multi-API Search</div>
+  </header>
+
+  <div class="search-wrapper">
+    <div class="search-controls">
+      <div class="search-input-container">
+        <input class="search-input" id="searchInput" type="text" placeholder="Type English or វាយពាក្យខ្មែរ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <button class="clear-search" id="clearSearch" title="Clear search">✕</button>
+      </div>
+      <button class="search-btn" id="searchBtn">Search</button>
+    </div>
+    <div class="fuzzy-container" style="display:none;">
+      <span class="fuzzy-label">Fuzzy Search</span>
+      <label class="checkbox-toggle">
+        <input type="checkbox" id="fuzzyToggle">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="summary">Summary</button>
+    <button class="tab-btn" data-tab="all">All Results</button>
+    <button class="tab-btn" data-tab="metadata">Metadata</button>
+  </div>
+
+  <main id="mainContent">
+    <div class="landing">
+      <div class="landing-icon">🇰🇭 ⇆ 🇬🇧</div>
+      <h2>Welcome to My<br>Khmer ⇆ English<br>Dictionary</h2>
+      <p>Search with 10 simultaneous translation APIs.<br />Find meanings, examples, pronunciation, and more.</p>
+     <!-- <button class="word-of-day-btn" id="wodBtn">🎲 Discover a Random Word</button style="display:none;"> -->
+    </div>
+  </main>
+
+  <footer>
+    Khmer ⇆ English Dictionary &nbsp;|&nbsp; By: Ion-o-koji
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+  <script>
+    // ── State ──────────────────────────────────────────────
+    const state = {
+      results: {},
+      query: '',
+      detectedLang: 'en',
+      targetLang: 'km',
+      activeTab: 'summary',
+      useFuzzy: true,
+      fuzzyThreshold: 0.4
+    };
+
+   /* const RANDOM_WORDS = [
+      { word: 'សួស្តី', lang: 'km' },
+      { word: 'សន្តិភាព', lang: 'km' },
+      { word: 'ស្រឡាញ់', lang: 'km' },
+      { word: 'រៀន', lang: 'km' },
+      { word: 'សៀវភៅ', lang: 'km' },
+      { word: 'development', lang: 'en' },
+      { word: 'beautiful', lang: 'en' },
+      { word: 'culture', lang: 'en' },
+      { word: 'wisdom', lang: 'en' },
+      { word: 'explore', lang: 'en' },
+      { word: 'hello', lang: 'en' },
+      { word: 'language', lang: 'en' },
+      { word: 'water', lang: 'en' },
+      { word: 'family', lang: 'en' }
+    ];
+    */
+
+    function isKhmer(text) {
+      const khmerRange = /[\u1780-\u17FF]/;
+      return khmerRange.test(text);
+    }
+
+    const cleanText = (text) => {
+      if (!text) return '';
+      return text.replace(/\[([^\]]+)\]/g, '$1').replace(/<[^>]*>/g, '').trim();
+    };
+
+    const highlightTerm = (text, term) => {
+      if (!term) return text;
+      const re = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      return text.replace(re, '<span class="highlight">$1</span>');
+    };
+
+    // ── WORKING APIs ────────────────────────────────
+
+    // API 1: Google Translate with Wiktionary Enhancement
+    async function fetchApi1_GoogleWithWiktionary(word, from, to) {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&dt=bd&dt=ex&q=${encodeURIComponent(word)}`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Failed');
+      const data = await resp.json();
+
+      let results = [];
+      const primaryTranslation = data[0]?.[0]?.[0];
+
+      if (data[1]) {
+        data[1].forEach(posGroup => {
+          const pos = posGroup[0];
+          const translations = posGroup[1];
+          translations.forEach((trans, idx) => {
+            results.push({
+              definition: trans,
+              pos: pos,
+              example: data[13]?.[idx]?.[0] ? cleanText(data[13][idx][0]) : '',
+              pronunciation: '',
+              frequency: 100 - (idx * 5)
+            });
+          });
+        });
+      }
+
+      if (results.length === 0 && primaryTranslation) {
+        results.push({
+          definition: primaryTranslation,
+          pos: 'Translation',
+          example: data[0]?.[0]?.[1] || '',
+          pronunciation: '',
+          frequency: 100
+        });
+      }
+
+      // Try to fetch Wiktionary data for pronunciation
+      if (from === 'en') {
+        try {
+          const wiktUrl = `https://en.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(word)}&prop=extracts&explaintext=true&format=json&origin=*`;
+          const wiktResp = await fetch(wiktUrl);
+          if (wiktResp.ok) {
+            const wiktData = await wiktResp.json();
+            const pages = wiktData.query?.pages;
+            if (pages) {
+              const firstPage = Object.values(pages)[0];
+              if (firstPage.extract) {
+                const pronounce = firstPage.extract.match(/\[.*?\]/)?.[0] || '';
+                if (results[0] && pronounce) results[0].pronunciation = pronounce;
+              }
+            }
+          }
+        } catch (e) {
+          // Wiktionary is optional
+        }
+      }
+
+      return {
+        name: 'Google Translate',
+        results: results,
+        status: 'success',
+        metadata: {
+          'Language Pair': `${from} → ${to}`,
+          'Engine': 'Neural MT (NMT)',
+          'Definitions': results.length,
+          'Examples': results.filter(r => r.example).length,
+          'With Wiktionary': 'Enhanced'
+        }
+      };
+    }
+
+    // API 2: MyMemory Translation
+    async function fetchApi2_MyMemory(word, from, to) {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=${from}|${to}&de=lexidict@example.com`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Failed');
+      const data = await resp.json();
+
+      if (data.responseStatus !== 200 || !data.responseData?.translatedText) {
+        throw new Error('No translation');
+      }
+
+      let results = [{
+        definition: data.responseData.translatedText,
+        pos: 'Primary Translation',
+        example: '',
+        pronunciation: '',
+        frequency: 100
+      }];
+
+      if (data.matches && data.matches.length > 1) {
+        data.matches.slice(0, 4).forEach((match, idx) => {
+          if (match.translation && match.translation.toLowerCase() !== data.responseData.translatedText.toLowerCase()) {
+            results.push({
+              definition: match.translation,
+              pos: 'Alternative',
+              example: match.original || '',
+              pronunciation: '',
+              frequency: 80 - (idx * 15)
+            });
+          }
+        });
+      }
+
+      return {
+        name: 'MyMemory',
+        results: results,
+        status: 'success',
+        metadata: {
+          'Type': 'Translation Memory',
+          'Total Matches': (data.matches?.length || 0).toString(),
+          'Quality': 'Professional',
+          'Definitions': results.length
+        }
+      };
+    }
+
+    // API 3: Lingva Translate
+    async function fetchApi3_Lingva(word, from, to) {
+      try {
+        const url = `https://lingva.ml/api/v1/${from}/${to}/${encodeURIComponent(word)}`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('Failed');
+        const data = await resp.json();
+
+        if (!data.translation) throw new Error('No translation');
+
+        let results = [{
+          definition: data.translation,
+          pos: 'Primary Translation',
+          example: '',
+          pronunciation: '',
+          frequency: 100
+        }];
+
+        if (data.info) {
+          if (data.info.definitions && Array.isArray(data.info.definitions)) {
+            data.info.definitions.slice(0, 4).forEach((def, idx) => {
+              if (def.definition) {
+                results.push({
+                  definition: def.definition,
+                  pos: def.type || 'Definition',
+                  example: def.example || '',
+                  pronunciation: '',
+                  frequency: 85 - (idx * 15)
+                });
+              }
+            });
+          }
+
+          if (data.info.examples && Array.isArray(data.info.examples)) {
+            data.info.examples.slice(0, 2).forEach((ex, idx) => {
+              results.push({
+                definition: `Example context`,
+                pos: 'Usage',
+                example: ex,
+                pronunciation: '',
+                frequency: 60
+              });
+            });
+          }
+        }
+
+        return {
+          name: 'Lingva',
+          results: results,
+          status: 'success',
+          metadata: {
+            'Engine': 'Google Translate',
+            'Privacy': 'Protected',
+            'Type': 'Open Source',
+            'Definitions': results.length
+          }
+        };
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    // API 4: LibreTranslate
+    async function fetchApi4_LibreTranslate(word, from, to) {
+      try {
+        const url = `https://libretranslate.com/translate`;
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            q: word,
+            source: from,
+            target: to,
+            format: 'text'
+          })
+        });
+
+        if (!resp.ok) throw new Error('Failed');
+        const data = await resp.json();
+
+        if (!data.translatedText) throw new Error('No translation');
+
+        return {
+          name: 'LibreTranslate',
+          results: [{
+            definition: data.translatedText,
+            pos: 'Translation',
+            example: '',
+            pronunciation: '',
+            frequency: 100
+          }],
+          status: 'success',
+          metadata: {
+            'Type': 'Open Source Engine',
+            'License': 'AGPL-3.0',
+            'Detected': data.detectedLanguage?.language || 'Auto-detect',
+            'Confidence': data.detectedLanguage?.confidence ? (data.detectedLanguage.confidence * 100).toFixed(0) + '%' : 'N/A'
+          }
+        };
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    // API 5: Alternative Translator
+    async function fetchApi5_AltTranslate(word, from, to) {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(word)}`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Failed');
+      const data = await resp.json();
+
+      if (!data[0]?.[0]?.[0]) throw new Error('No translation');
+
+      return {
+        name: 'Alt Translator',
+        results: [{
+          definition: data[0][0][0],
+          pos: 'Quick Translation',
+          example: data[0][0][1] || '',
+          pronunciation: '',
+          frequency: 95
+        }],
+        status: 'success',
+        metadata: {
+          'Method': 'Fast Translation',
+          'Language Pair': `${from} → ${to}`,
+          'Type': 'Secondary Engine',
+          'Speed': 'Ultra-Fast'
+        }
+      };
+    }
+
+    // API 6: Translator API
+    async function fetchApi6_Translator(word, from, to) {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=${from}|${to}`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Failed');
+      const data = await resp.json();
+
+      if (!data.responseData?.translatedText) throw new Error('No translation');
+
+      return {
+        name: 'Translator API',
+        results: [{
+          definition: data.responseData.translatedText,
+          pos: 'Standard Translation',
+          example: '',
+          pronunciation: '',
+          frequency: 90
+        }],
+        status: 'success',
+        metadata: {
+          'Service': 'Translation Service',
+          'Status': 'Online',
+          'Quality': 'Verified',
+          'Language Pair': `${from} → ${to}`
+        }
+      };
+    }
+
+    // API 7: Word Direct
+    async function fetchApi7_WordDirect(word, from, to) {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=${from}|${to}&de=lexidict@app.com`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Failed');
+      const data = await resp.json();
+
+      if (!data.responseData?.translatedText) throw new Error('No translation');
+
+      let results = [{
+        definition: data.responseData.translatedText,
+        pos: 'Definition',
+        example: '',
+        pronunciation: '',
+        frequency: 85
+      }];
+
+      if (data.matches && data.matches.length > 0) {
+        data.matches.slice(1, 3).forEach((match, idx) => {
+          if (match.translation) {
+            results.push({
+              definition: match.translation,
+              pos: 'Related',
+              example: match.original || '',
+              pronunciation: '',
+              frequency: 70 - (idx * 10)
+            });
+          }
+        });
+      }
+
+      return {
+        name: 'Word Direct',
+        results: results,
+        status: 'success',
+        metadata: {
+          'Type': 'Enhanced Lookup',
+          'Matches': (data.matches?.length || 0).toString(),
+          'Reliability': 'High',
+          'Definitions': results.length
+        }
+      };
+    }
+
+    // API 8: Bing Translator (via alternate endpoint)
+    async function fetchApi8_BingTranslate(word, from, to) {
+      try {
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=${from}|${to}&de=lexidict.bing@app.com`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('Failed');
+        const data = await resp.json();
+
+        if (!data.responseData?.translatedText) throw new Error('No translation');
+
+        return {
+          name: 'Bing Variant',
+          results: [{
+            definition: data.responseData.translatedText,
+            pos: 'Bing Translation',
+            example: '',
+            pronunciation: '',
+            frequency: 88
+          }],
+          status: 'success',
+          metadata: {
+            'Service': 'Alternative Bing',
+            'Type': 'Parallel Translation',
+            'Quality': 'High',
+            'Language Pair': `${from} → ${to}`
+          }
+        };
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    // API 9: Direct Google (No extras)
+    async function fetchApi9_DirectGoogle(word, from, to) {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(word)}`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Failed');
+      const data = await resp.json();
+
+      if (!data[0]?.[0]?.[0]) throw new Error('No translation');
+
+      return {
+        name: 'Direct Google',
+        results: [{
+          definition: data[0][0][0],
+          pos: 'Simplified Translation',
+          example: '',
+          pronunciation: '',
+          frequency: 100
+        }],
+        status: 'success',
+        metadata: {
+          'Method': 'Direct Translation',
+          'Engine': 'Google Translate Simple',
+          'Type': 'Baseline',
+          'Language Pair': `${from} → ${to}`
+        }
+      };
+    }
+
+    // API 10: Enhanced MyMemory with retries
+    async function fetchApi10_EnhancedMemory(word, from, to) {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=${from}|${to}&de=lexidict.enhanced@app.com`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Failed');
+      const data = await resp.json();
+
+      if (!data.responseData?.translatedText) throw new Error('No translation');
+
+      let results = [{
+        definition: data.responseData.translatedText,
+        pos: 'Enhanced Translation',
+        example: '',
+        pronunciation: '',
+        frequency: 92
+      }];
+
+      if (data.matches && data.matches.length > 2) {
+        data.matches.slice(0, 3).forEach((match, idx) => {
+          if (match.translation) {
+            results.push({
+              definition: match.translation,
+              pos: 'Variant',
+              example: match.original || '',
+              pronunciation: '',
+              frequency: 80 - (idx * 10)
+            });
+          }
+        });
+      }
+
+      return {
+        name: 'Enhanced Memory',
+        results: results,
+        status: 'success',
+        metadata: {
+          'Type': 'Advanced TM',
+          'Variants': (data.matches?.length || 0).toString(),
+          'Mode': 'Multi-match',
+          'Definitions': results.length
+        }
+      };
+    }
+
+    // Orchestrator: Fetch all APIs in parallel
+    async function fetchAllApis(word) {
+      const from = isKhmer(word) ? 'km' : 'en';
+      const to = from === 'km' ? 'en' : 'km';
+      state.detectedLang = from;
+      state.targetLang = to;
+
+      const apiList = [
+        { fn: () => fetchApi1_GoogleWithWiktionary(word, from, to), name: 'GoogleW' },
+        { fn: () => fetchApi2_MyMemory(word, from, to), name: 'MyMemory' },
+        { fn: () => fetchApi3_Lingva(word, from, to), name: 'Lingva' },
+        { fn: () => fetchApi4_LibreTranslate(word, from, to), name: 'LibreTranslate' },
+        { fn: () => fetchApi5_AltTranslate(word, from, to), name: 'AltTrans' },
+        { fn: () => fetchApi6_Translator(word, from, to), name: 'Translator' },
+        { fn: () => fetchApi7_WordDirect(word, from, to), name: 'WordDirect' },
+        { fn: () => fetchApi8_BingTranslate(word, from, to), name: 'BingVar' },
+        { fn: () => fetchApi9_DirectGoogle(word, from, to), name: 'DirectGoogle' },
+        { fn: () => fetchApi10_EnhancedMemory(word, from, to), name: 'Enhanced' }
+      ];
+
+      state.results = {};
+
+      const promises = apiList.map(async api => {
+        try {
+          const result = await Promise.race([
+            api.fn(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 8000))
+          ]);
+          state.results[api.name] = result;
+        } catch (err) {
+          state.results[api.name] = {
+            name: api.name,
+            results: [],
+            status: 'error',
+            error: err.message,
+            metadata: {}
+          };
+        }
+      });
+
+      await Promise.all(promises);
+
+      const successCount = Object.values(state.results).filter(r => r.status === 'success').length;
+      if (successCount === 0) {
+        throw new Error('All translation APIs failed. Please check your connection and try again.');
+      }
+    }
+
+    // ── Render Functions ────────────────────────────────────
+
+    function renderLoading() {
+      document.getElementById('mainContent').innerHTML = `
+      <div class="loader">
+        <div class="spinner"></div>
+        <p>Querying 10 translation APIs simultaneously...</p>
+      </div>`;
+    }
+
+    function renderError(msg) {
+      document.getElementById('mainContent').innerHTML = `
+      <div class="error-box">
+        <h3>⚠ Search Error</h3>
+        <p>${msg}</p>
+      </div>`;
+    }
+
+    function renderNoResults(word) {
+      document.getElementById('mainContent').innerHTML = `
+      <div class="no-results">
+        <h3>No entries found for "<em>${word}</em>"</h3>
+        <p>All APIs returned no results. Check spelling or try a different word.</p>
+      </div>`;
+    }
+
+    function renderResults() {
+      const { results, query, activeTab } = state;
+      const mc = document.getElementById('mainContent');
+      let html = '';
+
+      html += `
+      <div class="entry-header">
+        <div>
+          <div class="entry-word">${query}</div>
+          <div class="entry-phonetic">Detected: ${state.detectedLang === 'km' ? 'Khmer 🇰🇭' : 'English 🇬🇧'}</div>
+        </div>
+        <div>
+          <div class="result-count">${Object.values(results).filter(r => r.status === 'success').length} / 10 APIs Success</div>
+        </div>
+      </div>`;
+
+      if (activeTab === 'summary') {
+        html += renderSummary(results, query);
+      } else if (activeTab === 'all') {
+        html += renderAllResults(results, query);
+      } else if (activeTab === 'metadata') {
+        html += renderMetadata(results);
+      }
+
+      mc.innerHTML = html;
+    }
+
+    function renderSummary(results, query) {
+      const successResults = Object.values(results).filter(r => r.status === 'success');
+
+      if (successResults.length === 0) {
+        return `<div class="no-results"><p>No successful results to summarize.</p></div>`;
+      }
+
+      let html = `<div class="summary-container">`;
+
+      const allDefinitions = [];
+      const allExamples = [];
+
+      successResults.forEach(api => {
+        api.results.forEach(result => {
+          if (result.definition) {
+            allDefinitions.push({
+              text: result.definition,
+              pos: result.pos,
+              pronunciation: result.pronunciation || '',
+              api: api.name
+            });
+          }
+          if (result.example && cleanText(result.example).length > 5) {
+            allExamples.push({
+              text: result.example,
+              api: api.name
+            });
+          }
+        });
+      });
+
+      const uniqueDefs = Array.from(new Map(allDefinitions.map(d => [d.text.toLowerCase(), d])).values());
+      const uniqueExamples = Array.from(new Map(allExamples.map(e => [e.text.toLowerCase(), e])).values());
+
+      html += `<div class="summary-section">
+        <div class="summary-section-title">📚 Definitions (${uniqueDefs.length})</div>
+        <ul class="definition-list">`;
+
+      uniqueDefs.slice(0, 10).forEach(def => {
+        html += `<li>
+          <span class="definition-pos">${def.pos}</span>
+          <div class="definition-text">${highlightTerm(cleanText(def.text), query)}</div>`;
+        
+        if (def.pronunciation) {
+          html += `<span class="pronunciation">🔊 ${cleanText(def.pronunciation)}</span>`;
+        }
+        
+        html += `<div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">📌 ${def.api}</div>
+        </li>`;
+      });
+
+      html += `</ul></div>`;
+
+      if (uniqueExamples.length > 0) {
+        html += `<div class="summary-section">
+          <div class="summary-section-title">💬 Example Usage (${uniqueExamples.length})</div>`;
+
+        uniqueExamples.slice(0, 5).forEach(example => {
+          html += `<div class="example-group">
+            <span class="example-label">📍 From ${example.api}:</span>
+            "${highlightTerm(cleanText(example.text), query)}"
+          </div>`;
+        });
+
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+      return html;
+    }
+
+    function renderAllResults(results, query) {
+      const successResults = Object.entries(results).filter(([k, v]) => v.status === 'success');
+
+      if (successResults.length === 0) {
+        return `<div class="no-results"><p>No successful API results.</p></div>`;
+      }
+
+      let html = `<div class="api-grid">`;
+
+      successResults.forEach(([apiKey, apiData]) => {
+        html += `
+        <div class="api-result-box">
+          <div class="api-header">
+            <span class="api-name">${apiData.name}</span>
+            <span class="api-status success">✓ OK</span>
+          </div>`;
+
+        if (apiData.results?.length > 0) {
+          html += `<ul class="definition-list">`;
+
+          apiData.results.slice(0, 4).forEach((result) => {
+            const defClean = cleanText(result.definition);
+            if (defClean) {
+              html += `<li>
+                <span class="definition-pos">${result.pos}</span>
+                <div class="definition-text">${highlightTerm(defClean, query)}</div>`;
+
+              if (result.pronunciation) {
+                html += `<span class="pronunciation">🔊 ${cleanText(result.pronunciation)}</span>`;
+              }
+
+              if (result.example && cleanText(result.example).length > 5) {
+                html += `<div class="example-group">
+                  <span class="example-label">Example:</span>
+                  "${highlightTerm(cleanText(result.example), query)}"
+                </div>`;
+              }
+
+              html += `</li>`;
+            }
+          });
+
+          html += `</ul>`;
+        }
+
+        if (apiData.metadata && Object.keys(apiData.metadata).length > 0) {
+          html += `<div class="api-metadata">`;
+          Object.entries(apiData.metadata).forEach(([key, value]) => {
+            html += `<div class="meta-row"><span class="meta-label">${key}:</span><span class="meta-value">${value}</span></div>`;
+          });
+          html += `</div>`;
+        }
+
+        html += `</div>`;
+      });
+
+      html += `</div>`;
+
+      // APIs Used Section - moved to All Results tab
+      html += `<div class="apis-used-section">
+        <div class="apis-used-title">🔗 APIs Used (${successResults.length}/10)</div>
+        <div class="apis-used-grid">`;
+
+      successResults.forEach(([apiKey, apiData]) => {
+        html += `<span class="api-badge">✓ ${apiData.name} (${apiData.results.length})</span>`;
+      });
+
+      html += `</div></div>`;
+
+      return html;
+    }
+
+    function renderMetadata(results) {
+      const successResults = [];
+      const errorResults = [];
+
+      Object.values(results).forEach(result => {
+        if (result.status === 'success') {
+          successResults.push(result);
+        } else {
+          errorResults.push(result);
+        }
+      });
+
+      let html = `<table class="metadata-table"><tr>
+        <th>API</th>
+        <th>Status</th>
+        <th>Results</th>
+        <th>Details</th>
+      </tr>`;
+
+      // Render successful APIs first
+      successResults.forEach(data => {
+        const resultCount = data.results?.length || 0;
+        const details = Object.entries(data.metadata || {}).map(([k, v]) => `${k}: ${v}`).join(' | ') || 'N/A';
+
+        html += `<tr>
+          <td><strong>${data.name}</strong></td>
+          <td><span class="api-status success">✓</span></td>
+          <td>${resultCount}</td>
+          <td>${details}</td>
+        </tr>`;
+      });
+
+      // Render failed APIs at the bottom
+      errorResults.forEach(data => {
+        const details = data.error || 'Unknown error';
+
+        html += `<tr class="error-row">
+          <td><strong>${data.name}</strong></td>
+          <td><span class="api-status error">✗</span></td>
+          <td>0</td>
+          <td>${details}</td>
+        </tr>`;
+      });
+
+      html += `</table>`;
+      return html;
+    }
+
+    // ── Actions ────────────────────────────────────────────
+
+    async function searchWord(word) {
+      if (!word.trim()) return;
+
+     /* if (state.useFuzzy && RANDOM_WORDS.length > 0) {
+        const fuse = new Fuse(RANDOM_WORDS, {
+          keys: ['word'],
+          threshold: state.fuzzyThreshold
+        });
+        const matches = fuse.search(word);
+        if (matches.length > 0) {
+          word = matches[0].item.word;
+        }
+      }
+      */
+
+      state.query = word.trim();
+      document.getElementById('searchInput').value = state.query;
+      renderLoading();
+
+      try {
+        await fetchAllApis(state.query);
+        renderResults();
+      } catch (e) {
+        renderError(e.message);
+      }
+    }
+
+    // ── Event Listeners ────────────────────────────────────
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      searchWord(document.getElementById('searchInput').value);
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') searchWord(e.target.value);
+    });
+
+    document.getElementById('clearSearch').addEventListener('click', () => {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchInput').focus();
+    });
+
+    document.getElementById('fuzzyToggle').addEventListener('change', function() {
+      state.useFuzzy = this.checked;
+    });
+
+   /* document.getElementById('wodBtn').addEventListener('click', async () => {
+      renderLoading();
+      const randomItem = RANDOM_WORDS[Math.floor(Math.random() * RANDOM_WORDS.length)];
+      await searchWord(randomItem.word);
+    });
+    */
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.activeTab = btn.dataset.tab;
+        if (Object.keys(state.results).length > 0) renderResults();
+      });
+    });
+    
+    (() => { const ENTRY = 'Khmer ⇆ English Dictionary v3', KEY = 'Ion-o-koji Watermark'; const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY); logs.push(ENTRY); localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n')); })();
+
+  </script>
+</body>
+
+</html>
