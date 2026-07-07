@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apple Maps to Google Maps v2</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f2f2f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+    }
+
+    .icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1c1c1e;
+      margin-bottom: 0.35rem;
+    }
+
+    .subtitle {
+      color: #8e8e93;
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 40px 14px 14px;
+      border: 1.5px solid #d1d1d6;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      color: #1c1c1e;
+    }
+
+    input:focus {
+      border-color: #007aff;
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #c7c7cc;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 11px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .clear-btn.visible {
+      display: flex;
+    }
+
+    #btn {
+      background: #007aff;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    #btn:hover:not(:disabled) {
+      background: #0062cc;
+    }
+
+    #btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    #btn:disabled {
+      background: #aeaeb2;
+      cursor: not-allowed;
+    }
+
+    .loader {
+      display: none;
+      margin: 1.25rem auto 0;
+      width: 26px;
+      height: 26px;
+      border: 3px solid #e5e5ea;
+      border-top-color: #007aff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #status-msg {
+      display: none;
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: #8e8e93;
+      font-style: italic;
+    }
+
+    #result {
+      display: none;
+      margin-top: 1.25rem;
+      padding: 1.2rem;
+      background: #f2f2f7;
+      border-radius: 14px;
+      text-align: left;
+    }
+
+    .result-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #8e8e93;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #1c1c1e;
+      margin-bottom: 0.75rem;
+      word-break: break-word;
+    }
+
+    .result-coords {
+      font-size: 0.8rem;
+      color: #8e8e93;
+      margin-bottom: 0.75rem;
+      font-family: monospace;
+    }
+
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      background: #007aff;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+
+    .google-btn:hover {
+      background: #0062cc;
+    }
+
+    #error-msg {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.9rem 1rem;
+      background: #fff2f2;
+      border: 1px solid #ffd0d0;
+      border-radius: 12px;
+      color: #c0392b;
+      font-size: 0.875rem;
+      text-align: left;
+      line-height: 1.6;
+    }
+
+    .tips {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #f2f2f7;
+      text-align: left;
+    }
+
+    .tips-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #c7c7cc;
+      margin-bottom: 0.5rem;
+    }
+
+    .tips ul {
+      padding-left: 1.1rem;
+      color: #8e8e93;
+      font-size: 0.8rem;
+      line-height: 1.8;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="icon">🗺️</div>
+    <h1>Maps Converter</h1>
+    <p class="subtitle">Paste an Apple Maps link to open it in Google Maps</p>
+    <div class="input-wrap">
+      <input type="text" id="appleLink" placeholder="https://maps.apple/p/…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="clear-btn" id="clearBtn" aria-label="Clear">&#x2715;</button>
+    </div>
+    <button id="btn" onclick="convertLink()">Convert to Google Maps</button>
+    <div class="loader" id="loader"></div>
+    <div id="status-msg"></div>
+    <div id="result">
+      <div class="result-label">Location found</div>
+      <div class="result-name" id="result-name"></div>
+      <div class="result-coords" id="result-coords"></div>
+      <a id="googleUrl" class="google-btn" target="_blank" href="#">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+          <circle cx="12" cy="9" r="2.5" />
+        </svg>
+        Open in Google Maps
+      </a>
+    </div>
+    <div id="error-msg"></div>
+    <div class="tips">
+      <div class="tips-title">Supported formats</div>
+      <ul>
+        <li>Short share links &mdash; maps.apple/p/&hellip;</li>
+        <li>Standard links &mdash; maps.apple.com/?ll=&hellip;</li>
+        <li>Links with place names or coordinates</li>
+      </ul>
+    </div>
+  </div>
+  <script>
+    // Calls the Replit backend which reliably follows Apple Maps redirects.
+    // Replit email is Mission email +9
+    // Public CORS proxies don't work for the maps.apple domain.
+    const API = "https://map-converter--hijjguuj.replit.app/api/convert";
+
+    const inputEl = document.getElementById("appleLink");
+    const clearBtn = document.getElementById("clearBtn");
+    const loaderEl = document.getElementById("loader");
+    const statusMsg = document.getElementById("status-msg");
+    const resultDiv = document.getElementById("result");
+    const resultName = document.getElementById("result-name");
+    const resultCoords = document.getElementById("result-coords");
+    const googleUrlEl = document.getElementById("googleUrl");
+    const errorMsg = document.getElementById("error-msg");
+    const btnEl = document.getElementById("btn");
+
+    inputEl.addEventListener("input", () => {
+      clearBtn.classList.toggle("visible", inputEl.value.length > 0);
+      hideAll();
+    });
+    clearBtn.addEventListener("click", () => {
+      inputEl.value = "";
+      clearBtn.classList.remove("visible");
+      hideAll();
+      inputEl.focus();
+    });
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") convertLink();
+    });
+
+    function hideAll() {
+      resultDiv.style.display = "none";
+      errorMsg.style.display = "none";
+      statusMsg.style.display = "none";
+    }
+
+    function showError(html) {
+      errorMsg.innerHTML = html;
+      errorMsg.style.display = "block";
+    }
+
+    function setStatus(msg) {
+      statusMsg.textContent = msg;
+      statusMsg.style.display = msg ? "block" : "none";
+    }
+
+    function showResult(data) {
+      if (data.name) {
+        resultName.textContent = data.name;
+        resultName.style.display = "block";
+      } else {
+        resultName.style.display = "none";
+      }
+      if (data.lat && data.lng) {
+        resultCoords.textContent = data.lat + ", " + data.lng;
+        resultCoords.style.display = "block";
+      } else {
+        resultCoords.style.display = "none";
+      }
+      googleUrlEl.href = data.googleUrl;
+      resultDiv.style.display = "block";
+    }
+
+    async function convertLink() {
+        const raw = inputEl.value.trim();
+        if (!raw) {
+          inputEl.focus();
+          return;
+        }
+        hideAll();
+        btnEl.disabled = true;
+        loaderEl.style.display = "block";
+        setStatus("Resolving link...");
+        try {
+          const resp = await fetch(API + "?url=" + encodeURIComponent(raw), {
+            signal: AbortSignal.timeout(15000)
+          });
+          const data = await resp.json();
+          setStatus("");
+          if (!resp.ok || !data.googleUrl) {
+            showError("<strong>Could not convert this link.</strong><br><br>" + (data.error || "Unknown error."));
+            return;
+          }
+          showResult(data);
+        } catch (err) {
+          setStatus("");
+          showError("<strong>Request failed.</strong><br><br>Check your internet connection and try again.");
+        } finally {
+          btnEl.disabled = false;
+          loaderEl.style.display = "none";
+        }
+      }
+      (() => {
+        const ENTRY = 'Apple Maps to Google Maps v2',
+          KEY = 'Ion-o-koji Watermark';
+        const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+        logs.push(ENTRY);
+        localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+      })();
+
+  </script>
+</body>
+
+</html>
