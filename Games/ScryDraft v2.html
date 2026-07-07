@@ -1,0 +1,2696 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#161b22">
+  <title>ScryDraft v2</title>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+    :root {
+      --bg: 215 20% 11%;
+      --fg: 210 10% 92%;
+      --card: 215 17% 15%;
+      --card-fg: 210 10% 92%;
+      --secondary: 215 12% 20%;
+      --secondary-fg: 210 15% 88%;
+      --muted: 215 12% 18%;
+      --muted-fg: 215 8% 65%;
+      --accent: 215 16% 22%;
+      --border: 215 13% 25%;
+      --ring: 210 8% 65%;
+      --destructive: 0 60% 45%;
+      --destructive-fg: 210 20% 96%;
+      --radius: .5rem;
+      --gold: #c8a84b;
+      --gold-dim: #8a7030;
+      --gold-bg: rgba(200, 168, 75, .1);
+      --nav-h: 56px;
+      --header-h: 50px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none
+    }
+
+    body {
+      background: hsl(var(--bg));
+      color: hsl(var(--fg));
+      font-family: Inter, sans-serif;
+      font-size: 14px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar {
+      width: 3px;
+      height: 3px
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: hsla(215, 8%, 65%, .2);
+      border-radius: 2px
+    }
+
+    /* ── LAYOUT ── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      height: 100dvh
+    }
+
+    #hdr {
+      height: var(--header-h);
+      flex-shrink: 0;
+      background: hsl(var(--card));
+      border-bottom: 1px solid hsl(var(--border));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 .85rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    #content {
+      flex: 1;
+      overflow: hidden;
+      position: relative
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      padding: .7rem .7rem calc(env(safe-area-inset-bottom, 0px) + .7rem);
+      display: none;
+    }
+
+    .screen.active {
+      display: block
+    }
+
+    #nav {
+      height: var(--nav-h);
+      flex-shrink: 0;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: hsl(var(--card));
+      border-top: 1px solid hsl(var(--border));
+      display: flex;
+      position: relative;
+      z-index: 10;
+    }
+
+    .nb {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .15rem;
+      border: none;
+      background: none;
+      color: hsl(var(--muted-fg));
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color .15s;
+      padding: .35rem .25rem;
+    }
+
+    .nb svg {
+      width: 21px;
+      height: 21px;
+      stroke-width: 1.8
+    }
+
+    .nb.active {
+      color: var(--gold)
+    }
+
+    .nb.active svg {
+      filter: drop-shadow(0 0 5px var(--gold))
+    }
+
+    /* ── TYPE SYSTEM ── */
+    .font-serif {
+      font-family: Cinzel, serif
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    .text-gold {
+      color: var(--gold)
+    }
+
+    .text-muted {
+      color: hsl(var(--muted-fg))
+    }
+
+    .logo {
+      font-family: Cinzel, serif;
+      font-size: 1.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #e8d08b, #c8a84b, #8a7030);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: .07em;
+    }
+
+    .panel-title {
+      font-family: Cinzel, serif;
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--gold);
+      margin-bottom: .6rem;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: .8rem;
+    }
+
+    .section {
+      margin-bottom: .6rem
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .35rem;
+      padding: .48rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--secondary));
+      color: hsl(var(--secondary-fg));
+      font-size: .82rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: Inter, sans-serif;
+      white-space: nowrap;
+      transition: background .12s, transform .1s;
+      min-height: 40px;
+    }
+
+    .btn:active {
+      transform: scale(.97)
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #c8a84b, #8a7030);
+      color: #1a1510;
+      border-color: #c8a84b;
+      font-weight: 700;
+    }
+
+    .btn-gold:active {
+      background: linear-gradient(135deg, #d4b460, #9a8040)
+    }
+
+    .btn-danger {
+      background: hsl(var(--destructive));
+      color: hsl(var(--destructive-fg));
+      border-color: hsl(var(--destructive))
+    }
+
+    .btn-sm {
+      padding: .3rem .6rem;
+      font-size: .75rem;
+      min-height: 32px
+    }
+
+    .btn-xs {
+      padding: .18rem .45rem;
+      font-size: .7rem;
+      min-height: 28px
+    }
+
+    .btn-full {
+      width: 100%;
+      display: flex
+    }
+
+    .btn:disabled,
+    .btn[disabled] {
+      opacity: .45;
+      cursor: not-allowed;
+      pointer-events: none
+    }
+
+    /* ── INPUTS ── */
+    input,
+    select,
+    textarea {
+      background: hsl(var(--muted));
+      color: hsl(var(--fg));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: .45rem .7rem;
+      font-size: .83rem;
+      font-family: Inter, sans-serif;
+      width: 100%;
+      outline: none;
+      transition: border-color .15s;
+      min-height: 40px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: hsl(var(--ring))
+    }
+
+    select {
+      appearance: none;
+      background-repeat: no-repeat;
+      background-position: right .65rem center;
+      padding-right: 2rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%238899aa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    }
+
+    label {
+      font-size: .73rem;
+      color: hsl(var(--muted-fg));
+      margin-bottom: .22rem;
+      display: block
+    }
+
+    input[type=number] {
+      text-align: center
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none
+    }
+
+    /* ── TOGGLE GROUP ── */
+    .toggle-group {
+      display: flex;
+      background: hsl(var(--muted));
+      border-radius: var(--radius);
+      padding: .18rem;
+      gap: .12rem
+    }
+
+    .tgl {
+      flex: 1;
+      padding: .3rem .4rem;
+      border-radius: calc(var(--radius) - .1rem);
+      border: none;
+      background: none;
+      color: hsl(var(--muted-fg));
+      font-size: .75rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: Inter, sans-serif;
+      transition: background .12s, color .12s;
+      text-align: center;
+    }
+
+    .tgl.active {
+      background: hsl(var(--card));
+      color: hsl(var(--fg));
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .35)
+    }
+
+    /* ── CHIPS ── */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: .24rem .55rem;
+      border-radius: 1rem;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--secondary));
+      color: hsl(var(--secondary-fg));
+      font-size: .73rem;
+      cursor: pointer;
+      transition: border-color .12s, color .12s;
+      white-space: nowrap;
+    }
+
+    .chip.active {
+      border-color: var(--gold);
+      color: var(--gold)
+    }
+
+    /* ── FLEXBOX HELPERS ── */
+    .row {
+      display: flex;
+      gap: .45rem;
+      align-items: center
+    }
+
+    .row-between {
+      display: flex;
+      gap: .45rem;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: .45rem
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .45rem
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .35rem
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid hsl(var(--border));
+      margin: .6rem 0
+    }
+
+    .hidden {
+      display: none !important
+    }
+
+    /* ── RTC PILL ── */
+    #rtc-pill {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      background: hsl(var(--secondary));
+      border: 1px solid hsl(var(--border));
+      border-radius: 1rem;
+      padding: .22rem .55rem;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: hsl(var(--muted-fg));
+      transition: color .3s, border-color .3s;
+    }
+
+    #rtc-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: hsl(var(--muted-fg));
+      transition: background .3s, box-shadow .3s;
+      flex-shrink: 0
+    }
+
+    #rtc-pill.hosting {
+      color: var(--gold);
+      border-color: var(--gold-dim)
+    }
+
+    #rtc-pill.hosting #rtc-dot {
+      background: var(--gold);
+      box-shadow: 0 0 5px var(--gold)
+    }
+
+    #rtc-pill.watching {
+      color: #4ade80;
+      border-color: #16a34a
+    }
+
+    #rtc-pill.watching #rtc-dot {
+      background: #4ade80;
+      box-shadow: 0 0 5px #4ade80
+    }
+
+    /* ── MODALS ── */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .82);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: .85rem;
+    }
+
+    .modal {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: .75rem;
+      padding: 1.1rem;
+      max-width: 420px;
+      width: 100%;
+      max-height: 92dvh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-title {
+      font-family: Cinzel, serif;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: .75rem
+    }
+
+    .modal-x {
+      position: absolute;
+      top: .55rem;
+      right: .55rem;
+      background: none;
+      border: none;
+      color: hsl(var(--muted-fg));
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: .2rem;
+      line-height: 1
+    }
+
+    /* ── TOAST ── */
+    #toasts {
+      position: fixed;
+      bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + .5rem);
+      right: .65rem;
+      z-index: 300;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: .3rem;
+      pointer-events: none;
+      max-width: calc(100vw - 1.3rem);
+    }
+
+    .toast {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: .45rem .7rem;
+      font-size: .76rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      pointer-events: auto;
+      transform: translateX(110%);
+      transition: transform .22s;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
+    }
+
+    .toast.show {
+      transform: none
+    }
+
+    .toast.success {
+      border-color: #16a34a;
+      color: #4ade80
+    }
+
+    .toast.error {
+      border-color: hsl(var(--destructive));
+      color: #f87171
+    }
+
+    .toast.warning {
+      border-color: #a16207;
+      color: #fbbf24
+    }
+
+    .toast.info {
+      border-color: hsl(var(--ring));
+      color: hsl(var(--fg))
+    }
+
+    /* ── SPINNER ── */
+    .spin {
+      border: 2px solid hsl(var(--border));
+      border-left-color: var(--gold);
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      animation: _spin .75s linear infinite;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    @keyframes _spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* ── CARD FLIP ── */
+    .card3d {
+      perspective: 650px
+    }
+
+    .c-inner {
+      transition: transform .42s cubic-bezier(.4, 0, .2, 1);
+      transform-style: preserve-3d;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .c-inner.flipped {
+      transform: rotateY(180deg)
+    }
+
+    .c-front,
+    .c-back {
+      backface-visibility: hidden;
+      position: absolute;
+      inset: 0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .c-back {
+      transform: rotateY(180deg)
+    }
+
+    .c-front {
+      background: url('https://c1.scryfall.com/file/scryfall-card-backs/large/59/597b79b3-7d77-4261-871a-60dd17403388.jpg') center/cover;
+    }
+
+    /* ── FOIL ── */
+    .foil-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(135deg, transparent 18%, rgba(255, 255, 255, .38) 32%, rgba(180, 80, 255, .28) 44%, rgba(80, 220, 255, .28) 55%, rgba(255, 220, 60, .28) 66%, transparent 80%);
+      background-size: 200% 200%;
+      animation: _shim 2.3s infinite linear;
+      mix-blend-mode: color-dodge;
+    }
+
+    @keyframes _shim {
+      0% {
+        background-position: -100% -100%
+      }
+
+      100% {
+        background-position: 200% 200%
+      }
+    }
+
+    /* ── CARD GRIDS ── */
+    .pack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+      gap: .38rem;
+    }
+
+    .pack-card {
+      aspect-ratio: 0.716;
+      cursor: pointer;
+      position: relative;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .pool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+      gap: .28rem;
+    }
+
+    .pool-card {
+      cursor: pointer;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid hsl(var(--border));
+      position: relative;
+    }
+
+    .pool-card img,
+    .pack-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block
+    }
+
+    .pool-card.foil {
+      border-color: var(--gold)
+    }
+
+    /* ── RARITY COLORS ── */
+    .rc {
+      color: #aaa
+    }
+
+    .ru {
+      color: #b8d4e4
+    }
+
+    .rr {
+      color: #c8a84b
+    }
+
+    .rm {
+      color: #e06020
+    }
+
+    /* ── STATS ── */
+    .stat-chip {
+      background: hsl(var(--muted));
+      border-radius: var(--radius);
+      padding: .32rem .4rem;
+      text-align: center;
+    }
+
+    .stat-v {
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1.15
+    }
+
+    .stat-l {
+      font-size: .58rem;
+      color: hsl(var(--muted-fg));
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-top: .05rem
+    }
+
+    /* ── INFO BANNER ── */
+    .info-banner {
+      background: hsl(var(--muted));
+      border-radius: var(--radius);
+      padding: .4rem .55rem;
+      font-size: .72rem;
+      color: hsl(var(--muted-fg));
+      display: flex;
+      align-items: flex-start;
+      gap: .38rem;
+      line-height: 1.45;
+    }
+
+    /* ── ASSIGNMENT CARD ── */
+    .assign-card {
+      background: hsl(var(--secondary));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .assign-hdr {
+      padding: .4rem .55rem;
+      font-size: .8rem;
+      font-weight: 600;
+      truncate: true;
+      border-bottom: 1px solid hsl(var(--border))
+    }
+
+    .assign-img {
+      width: 100%;
+      aspect-ratio: .716;
+      position: relative;
+      cursor: pointer
+    }
+
+    .assign-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block
+    }
+
+    .assign-info {
+      padding: .45rem .55rem
+    }
+
+    .assign-name {
+      font-size: .78rem;
+      font-weight: 600;
+      margin-bottom: .28rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .assign-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .color-pips {
+      display: flex;
+      gap: .18rem;
+      flex-wrap: wrap
+    }
+
+    .color-pip {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, .35);
+      flex-shrink: 0
+    }
+
+    .rank-badge {
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      background: hsl(var(--muted));
+      border-radius: .2rem;
+      padding: .1rem .3rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: hsl(var(--muted-fg))
+    }
+
+    .assign-actions {
+      padding: .35rem .55rem;
+      border-top: 1px solid hsl(var(--border))
+    }
+
+    /* ── SESSION CODE ── */
+    .code-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: .45em;
+      color: var(--gold);
+      text-align: center;
+      padding: .55rem .5rem;
+      background: hsl(var(--muted));
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+      text-indent: .45em;
+      /* offset for letter-spacing */
+    }
+
+    /* ── DIGIT INPUTS ── */
+    .digits {
+      display: flex;
+      gap: .3rem;
+      justify-content: center
+    }
+
+    .dgt {
+      width: 2.55rem;
+      height: 3.1rem;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.35rem;
+      font-weight: 700;
+      background: hsl(var(--muted));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      color: hsl(var(--fg));
+      outline: none;
+      caret-color: var(--gold);
+      transition: border-color .15s;
+      min-height: unset;
+      width: 2.55rem;
+      padding: 0;
+    }
+
+    .dgt:focus {
+      border-color: var(--gold)
+    }
+
+    /* ── PLAYER ROW ── */
+    .player-row {
+      display: flex;
+      align-items: center;
+      gap: .38rem;
+      background: hsl(var(--muted));
+      border-radius: var(--radius);
+      padding: .3rem .45rem;
+      border: 1px solid hsl(var(--border));
+    }
+
+    .player-row input {
+      background: none;
+      border: none;
+      padding: .08rem .2rem;
+      font-size: .82rem;
+      flex: 1;
+      min-height: auto;
+      width: auto;
+    }
+
+    .player-row input:focus {
+      outline: none;
+      border: none
+    }
+
+    /* ── HISTORY ── */
+    .hist-item {
+      background: hsl(var(--muted));
+      border-radius: var(--radius);
+      padding: .45rem .55rem;
+      margin-bottom: .35rem;
+      font-size: .75rem;
+    }
+
+    .hist-date {
+      font-size: .65rem;
+      color: hsl(var(--muted-fg));
+      margin-bottom: .2rem
+    }
+
+    /* ── BOOSTER SLOT LABELS ── */
+    .slot-badge {
+      display: inline-block;
+      font-size: .55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      padding: .08rem .28rem;
+      border-radius: .2rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .sb-c {
+      background: rgba(180, 180, 180, .12);
+      color: #aaa
+    }
+
+    .sb-u {
+      background: rgba(184, 212, 228, .12);
+      color: #b8d4e4
+    }
+
+    .sb-r {
+      background: rgba(200, 168, 75, .14);
+      color: #c8a84b
+    }
+
+    .sb-m {
+      background: rgba(224, 96, 32, .14);
+      color: #e06020
+    }
+
+    .sb-f {
+      background: rgba(180, 80, 255, .14);
+      color: #c870ff
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(min-width:640px) {
+      .pack-grid {
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr))
+      }
+
+      .pool-grid {
+        grid-template-columns: repeat(auto-fill, minmax(76px, 1fr))
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <!-- HEADER -->
+    <header id="hdr">
+      <span class="logo">ScryDraft</span>
+      <div id="rtc-pill">
+        <div id="rtc-dot"></div><span id="rtc-label">Offline</span>
+      </div>
+    </header>
+
+    <!-- SCREENS -->
+    <div id="content">
+
+      <!-- ══ ROULETTE ══ -->
+      <div class="screen active" id="s-roulette">
+
+        <!-- Range -->
+        <div class="panel section">
+          <div class="panel-title">EDHREC Rank Range</div>
+          <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.5rem" id="range-chips">
+            <button class="chip active" data-min="1" data-max="100">Top 100</button>
+            <button class="chip" data-min="1" data-max="500">Top 500</button>
+            <button class="chip" data-min="101" data-max="500">101–500</button>
+            <button class="chip" data-min="501" data-max="1000">501–1000</button>
+          </div>
+          <div class="grid2">
+            <div><label>Min Rank</label><input type="number" id="rl-min" value="1" min="1" max="999"></div>
+            <div><label>Max Rank</label><input type="number" id="rl-max" value="100" min="2" max="1000"></div>
+          </div>
+        </div>
+
+        <!-- Players -->
+        <div class="panel section">
+          <div class="row-between" style="margin-bottom:.5rem">
+            <div class="panel-title" style="margin:0">Players</div>
+            <div class="row" style="gap:.3rem">
+              <button class="btn btn-xs" id="rl-rem">−</button>
+              <button class="btn btn-xs" id="rl-add">+</button>
+            </div>
+          </div>
+          <div class="col" id="rl-players"></div>
+        </div>
+
+        <!-- Timer -->
+        <div class="panel section">
+          <div class="panel-title">Match Timer</div>
+          <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.5rem">
+            <button class="chip timer-p" data-mins="30">30m</button>
+            <button class="chip timer-p" data-mins="45">45m</button>
+            <button class="chip timer-p" data-mins="60">60m</button>
+            <button class="chip timer-p" data-mins="90">90m</button>
+          </div>
+          <div class="row" style="margin-bottom:.5rem">
+            <input type="number" id="rl-timer-mins" placeholder="Custom min" style="text-align:left;padding-left:.7rem">
+            <span class="text-muted" style="white-space:nowrap;font-size:.8rem">min</span>
+          </div>
+          <div id="timer-box" class="hidden" style="margin-top:.1rem">
+            <div id="rl-timer" class="font-mono" style="font-size:2.6rem;font-weight:700;color:var(--gold);text-align:center;letter-spacing:.04em;line-height:1.1">45:00</div>
+            <div class="row" style="justify-content:center;margin-top:.45rem;gap:.35rem">
+              <button class="btn btn-sm" id="tmr-start">Start</button>
+              <button class="btn btn-sm hidden" id="tmr-pause">Pause</button>
+              <button class="btn btn-sm btn-danger" id="tmr-reset">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Roll button -->
+        <div class="section">
+          <button class="btn btn-gold btn-full" id="rl-roll" style="font-size:.9rem;min-height:46px">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Roll Commanders
+          </button>
+        </div>
+
+        <!-- Assignments -->
+        <div class="section">
+          <div class="row-between" style="margin-bottom:.5rem">
+            <div class="panel-title" style="margin:0">Assignments</div>
+            <button class="btn btn-xs hidden" id="rl-copy">Copy All</button>
+          </div>
+          <div id="rl-grid" class="col">
+            <div class="text-muted" style="text-align:center;padding:1.5rem 0;font-size:.82rem" id="rl-empty">Roll to assign commanders.</div>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div class="panel section">
+          <div class="panel-title">Session History</div>
+          <div id="rl-history" class="text-muted" style="font-size:.78rem">No sessions yet.</div>
+        </div>
+      </div>
+
+      <!-- ══ DRAFT ══ -->
+      <div class="screen" id="s-draft">
+
+        <!-- Setup -->
+        <div class="panel section">
+          <div class="panel-title">Booster Setup</div>
+          <label>Booster Type</label>
+          <div class="toggle-group section" id="btype-group">
+            <button class="tgl active" data-bt="play">Play</button>
+            <button class="tgl" data-bt="draft">Draft</button>
+            <button class="tgl" data-bt="collector">Collector</button>
+          </div>
+          <div class="info-banner section" id="btype-info">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="flex-shrink:0;margin-top:1px">
+              <circle cx="12" cy="12" r="10" stroke-width="2" />
+              <path d="M12 8v4M12 16h.01" stroke-linecap="round" stroke-width="2" />
+            </svg>
+            <span id="btype-desc">14 cards: 6C · 1C/Spec · 3U · 1Wildcard · 1R/M (14.3% M) · 1Land · 1Foil wildcard. Always exactly 1 foil.</span>
+          </div>
+          <label>Set</label>
+          <select id="draft-set" class="section">
+            <option value="">Loading sets…</option>
+          </select>
+          <button class="btn btn-gold btn-full" id="draft-open" disabled style="min-height:44px">Open Pack</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="panel section hidden" id="draft-stats-box">
+          <div class="row-between" style="margin-bottom:.5rem">
+            <div class="panel-title" style="margin:0">Session Stats</div>
+            <button class="btn btn-xs btn-danger" id="draft-reset-stats">Reset</button>
+          </div>
+          <div class="grid3" style="gap:.3rem">
+            <div class="stat-chip">
+              <div class="stat-v" id="ds-packs">0</div>
+              <div class="stat-l">Packs</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-v rr" id="ds-rares">0</div>
+              <div class="stat-l">Rares</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-v rm" id="ds-mythics">0</div>
+              <div class="stat-l">Mythics</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-v" id="ds-foils">0</div>
+              <div class="stat-l">Foils</div>
+            </div>
+            <div class="stat-chip" style="grid-column:span 2">
+              <div class="stat-v text-gold" id="ds-value">$0.00</div>
+              <div class="stat-l">Est. Value</div>
+            </div>
+          </div>
+          <div class="info-banner" style="margin-top:.45rem">
+            Mythic rate: <strong id="ds-rate" style="margin-left:.25rem">0%</strong>&nbsp;<span style="color:hsl(var(--muted-fg))">(target ~14.3%)</span>
+          </div>
+        </div>
+
+        <!-- Pack area -->
+        <div class="section hidden" id="pack-area">
+          <div class="row-between" style="margin-bottom:.45rem">
+            <div class="panel-title" style="margin:0" id="pack-title">Play Booster</div>
+            <button class="btn btn-xs" id="pack-reveal-all">Reveal All</button>
+          </div>
+          <div class="pack-grid" id="pack-grid"></div>
+        </div>
+
+        <!-- Pool -->
+        <div class="panel section hidden" id="pool-area">
+          <div class="row-between" style="margin-bottom:.5rem">
+            <div class="panel-title" style="margin:0">Pool <span class="text-muted font-mono" id="pool-count" style="font-size:.78rem">(0)</span></div>
+            <button class="btn btn-xs" id="draft-export">Export MTGA</button>
+          </div>
+          <div class="pool-grid" id="pool-grid"></div>
+        </div>
+
+      </div>
+
+      <!-- ══ WATCH ══ -->
+      <div class="screen" id="s-watch">
+
+        <!-- Host -->
+        <div class="panel section">
+          <div class="panel-title">Host a Session</div>
+          <div id="w-host-setup">
+            <p class="text-muted" style="font-size:.78rem;margin-bottom:.6rem;line-height:1.5">
+              Generate a 6-digit code. Share it with friends so they can spectate in real time.
+            </p>
+            <button class="btn btn-gold btn-full" id="w-host-start" style="min-height:44px">Start Hosting</button>
+          </div>
+          <div id="w-host-active" class="hidden">
+            <label>Your Session Code</label>
+            <div class="code-display" id="w-host-code">──────</div>
+            <div class="row" style="margin-top:.5rem;gap:.35rem">
+              <button class="btn btn-full" id="w-host-copy">Copy Code</button>
+              <button class="btn btn-xs btn-danger" id="w-host-stop">Stop</button>
+            </div>
+            <div class="divider"></div>
+            <div class="row-between text-muted" style="font-size:.72rem;margin-bottom:.35rem">
+              <span>Connected Spectators</span>
+              <span id="w-spec-count" style="background:hsl(var(--muted));padding:.1rem .4rem;border-radius:.8rem;font-weight:700">0</span>
+            </div>
+            <div class="col" id="w-spec-list">
+              <div class="text-muted" style="font-size:.73rem;text-align:center;padding:.4rem">Waiting for connections…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Join -->
+        <div class="panel section">
+          <div class="panel-title">Join a Session</div>
+          <div id="w-join-setup">
+            <p class="text-muted" style="font-size:.78rem;margin-bottom:.55rem;line-height:1.5">Enter the host's 6-digit code to watch live.</p>
+            <label>Session Code</label>
+            <div class="digits" id="digit-row" style="margin-bottom:.6rem">
+              <input class="dgt" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+              <input class="dgt" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+              <input class="dgt" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+              <input class="dgt" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+              <input class="dgt" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+              <input class="dgt" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+            </div>
+            <button class="btn btn-gold btn-full" id="w-join-btn" style="min-height:44px">Connect</button>
+          </div>
+          <div id="w-join-active" class="hidden">
+            <div class="info-banner" style="border-color:#16a34a;color:#4ade80;margin-bottom:.55rem">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Connected — watching live
+            </div>
+            <button class="btn btn-full btn-danger" id="w-disconnect">Disconnect</button>
+          </div>
+        </div>
+
+        <!-- Manual SDP -->
+        <details class="panel section">
+          <summary style="cursor:pointer;color:hsl(var(--muted-fg));font-size:.73rem;list-style:none;display:flex;align-items:center;justify-content:space-between;user-select:none">
+            Advanced: Manual SDP (Offline / LAN)
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </summary>
+          <div class="col" style="margin-top:.6rem">
+            <p class="text-muted" style="font-size:.72rem;line-height:1.45">Use if PeerJS relay fails (corporate/restrictive NAT). Works fully offline on a local network.</p>
+            <textarea id="sdp-in" style="min-height:72px;font-family:'JetBrains Mono',monospace;font-size:.7rem;resize:vertical" placeholder="Paste SDP offer/answer JSON…"></textarea>
+            <div class="grid2">
+              <button class="btn btn-sm" id="sdp-offer">Generate Offer</button>
+              <button class="btn btn-sm" id="sdp-apply">Apply SDP</button>
+            </div>
+          </div>
+        </details>
+
+        <!-- Footer -->
+        <div class="text-muted section" style="font-size:.62rem;line-height:1.5;text-align:center;padding:.3rem 0">
+          Card data &amp; imagery via <a href="https://scryfall.com" target="_blank" style="color:hsl(var(--ring))">Scryfall</a>. Commander rankings via Scryfall (EDHREC rank).<br>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav id="nav">
+      <button class="nb active" data-s="roulette">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Roulette
+      </button>
+      <button class="nb" data-s="draft">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        Draft
+      </button>
+      <button class="nb" data-s="watch">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+        </svg>
+        Watch
+      </button>
+    </nav>
+  </div>
+
+  <!-- CARD MODAL -->
+  <div class="modal-bg hidden" id="card-modal" onclick="closeCardModal()">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:300px;padding:.6rem">
+      <button class="modal-x" onclick="closeCardModal()">✕</button>
+      <img id="modal-img" src="" alt="Card" style="width:100%;border-radius:7px;display:block">
+    </div>
+  </div>
+  <div id="toasts"></div>
+
+  <script type="module">
+    // ═══════════════════════════════════════════════
+    // 1. STATE & GLOBALS
+    // ═══════════════════════════════════════════════
+    const S = {
+      commanders: [],
+      currentSession: {
+        players: ['Player 1', 'Player 2', 'Player 3', 'Player 4'],
+        assignments: [],
+        range: {
+          min: 1,
+          max: 100
+        },
+        usedIds: new Set(),
+        timerSecs: 2700,
+        timerInt: null,
+      },
+      sets: [],
+      setCards: [],
+      draftBoosterType: 'play', // 'play' | 'draft' | 'collector'
+      pool: [],
+      stats: {
+        packs: 0,
+        rares: 0,
+        mythics: 0,
+        foils: 0,
+        value: 0
+      },
+      rtc: {
+        role: null,
+        peer: null,
+        peerId: null,
+        conns: [],
+        status: 'idle'
+      },
+    };
+    let currentScreen = 'roulette';
+
+    const BOOSTER_INFO = {
+      play: {
+        label: 'Play Booster',
+        cards: 14,
+        desc: '14 cards: 6C · 1C/Spec · 3U · 1Wildcard(non-foil) · 1R/M(14.3%M) · 1Land · 1Foil wildcard. Always exactly 1 foil.',
+      },
+      draft: {
+        label: 'Draft Booster',
+        cards: 15,
+        desc: '15 cards: 10C · 3U · 1R/M(12.5%M) · 1Land. ~25% chance one common replaced by a foil of any rarity. 0–1 foils.',
+      },
+      collector: {
+        label: 'Collector Booster',
+        cards: 15,
+        desc: '15 cards: 1 foil R/M(33%M) · 3 non-foil R/M · 2 foil U · 2 non-foil U · 3 foil C · 3 non-foil C · 1 foil Land. ~7 foils. Note: special treatments (borderless, showcase) not simulated.',
+      },
+    };
+
+    // ═══════════════════════════════════════════════
+    // 2. UTILS
+    // ═══════════════════════════════════════════════
+    function toast(msg, type = 'info', ms = 3200) {
+      const c = document.getElementById('toasts');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      c.prepend(el);
+      requestAnimationFrame(() => {
+        el.classList.add('show');
+      });
+      if (ms > 0) setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 260);
+      }, ms);
+      return el;
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function copyText(text, btn) {
+      const orig = btn.textContent;
+      const done = () => {
+        btn.textContent = 'Copied!';
+        btn.disabled = true;
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.disabled = false;
+        }, 1800);
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      } else {
+        fallbackCopy(text, done);
+      }
+    }
+
+    function fallbackCopy(text, done) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;left:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      try {
+        document.execCommand('copy');
+        done();
+      } catch (e) {
+        alert('Copy failed — select manually.');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function getImg(card, size = 'normal') {
+      return card.image_uris?.[size] || card.image_uris?.normal ||
+        card.card_faces?.[0]?.image_uris?.[size] ||
+        card.card_faces?.[0]?.image_uris?.normal ||
+        'https://c1.scryfall.com/file/scryfall-card-backs/large/59/597b79b3-7d77-4261-871a-60dd17403388.jpg';
+    }
+
+    function pickRandom(pool, n, exclude = new Set()) {
+      const avail = pool.filter(c => !exclude.has(c.id));
+      if (!avail.length) return [];
+      const sh = [...avail].sort(() => Math.random() - .5);
+      return sh.slice(0, n);
+    }
+
+    function weightedRandom(weights) {
+      const r = Math.random();
+      let acc = 0;
+      for (const [k, v] of Object.entries(weights)) {
+        acc += v;
+        if (r < acc) return k;
+      }
+      return Object.keys(weights)[0];
+    }
+
+    function playBeep(freq = 440, dur = 0.3) {
+      try {
+        const ctx = new(window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.start();
+        osc.stop(ctx.currentTime + dur);
+      } catch (e) {}
+    }
+
+    function sleep(ms) {
+      return new Promise(r => setTimeout(r, ms));
+    }
+
+    window.closeCardModal = () => document.getElementById('card-modal').classList.add('hidden');
+    window.openCardModal = (src) => {
+      document.getElementById('modal-img').src = src;
+      document.getElementById('card-modal').classList.remove('hidden');
+    };
+
+    const COLOR_MAP = {
+      W: {
+        bg: '#F9FAF4',
+        border: '#c0cad4'
+      },
+      U: {
+        bg: '#0E68AB',
+        border: '#0E68AB'
+      },
+      B: {
+        bg: '#150B00',
+        border: '#444'
+      },
+      R: {
+        bg: '#D3202A',
+        border: '#D3202A'
+      },
+      G: {
+        bg: '#00733E',
+        border: '#00733E'
+      }
+    };
+
+    function pipsHtml(colors) {
+      if (!colors || !colors.length) return '<div class="color-pip" style="background:#777;border-color:#555" title="Colorless"></div>';
+      return colors.map(c => {
+        const s = COLOR_MAP[c];
+        return s ? `<div class="color-pip" style="background:${s.bg};border-color:${s.border}" title="${c}"></div>` : '';
+      }).join('');
+    }
+
+    // ═══════════════════════════════════════════════
+    // 3. INDEXEDDB
+    // ═══════════════════════════════════════════════
+    const dbP = new Promise((resolve, reject) => {
+      const req = indexedDB.open('ScryDraftDB', 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('commanders')) {
+          const s = db.createObjectStore('commanders', {
+            keyPath: 'name'
+          });
+          s.createIndex('edhrec_rank', 'edhrec_rank');
+        }
+        if (!db.objectStoreNames.contains('sets')) {
+          const s = db.createObjectStore('sets', {
+            keyPath: 'code'
+          });
+          s.createIndex('released_at', 'released_at');
+        }
+        if (!db.objectStoreNames.contains('setCards')) {
+          const s = db.createObjectStore('setCards', {
+            keyPath: ['set', 'id']
+          });
+          s.createIndex('set', 'set');
+        }
+        if (!db.objectStoreNames.contains('sessions')) {
+          db.createObjectStore('sessions', {
+            keyPath: 'id',
+            autoIncrement: true
+          });
+        }
+        if (!db.objectStoreNames.contains('meta')) {
+          db.createObjectStore('meta', {
+            keyPath: 'key'
+          });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    async function dbGet(store, key) {
+      const db = await dbP;
+      return new Promise((res, rej) => {
+        const r = db.transaction(store, 'readonly').objectStore(store).get(key);
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      });
+    }
+    async function dbPut(store, val) {
+      const db = await dbP;
+      return new Promise((res, rej) => {
+        const r = db.transaction(store, 'readwrite').objectStore(store).put(val);
+        r.onsuccess = () => res();
+        r.onerror = () => rej(r.error);
+      });
+    }
+    async function dbPutAll(store, items) {
+      const db = await dbP;
+      return new Promise((res, rej) => {
+        const tx = db.transaction(store, 'readwrite');
+        const st = tx.objectStore(store);
+        items.forEach(i => st.put(i));
+        tx.oncomplete = () => res();
+        tx.onerror = () => rej(tx.error);
+      });
+    }
+    async function dbGetAll(store) {
+      const db = await dbP;
+      return new Promise((res, rej) => {
+        const r = db.transaction(store, 'readonly').objectStore(store).getAll();
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      });
+    }
+    async function dbGetByIndex(store, idx, val) {
+      const db = await dbP;
+      return new Promise((res, rej) => {
+        const r = db.transaction(store, 'readonly').objectStore(store).index(idx).getAll(val);
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      });
+    }
+
+    // ═══════════════════════════════════════════════
+    // 4. SCRYFALL RATE-LIMITED QUEUE
+    // ═══════════════════════════════════════════════
+    const RATE = {
+      '/cards/search': 500,
+      '/cards/named': 500,
+      '/cards/collection': 500,
+      DEFAULT: 100
+    };
+    const Q = [];
+    let Qrunning = false,
+      pausedTill = 0;
+
+    function sfetch(url, opts = {}) {
+      return new Promise((res, rej) => {
+        Q.push({
+          url,
+          opts,
+          res,
+          rej
+        });
+        runQ();
+      });
+    }
+    async function runQ() {
+      if (Qrunning || !Q.length) return;
+      Qrunning = true;
+      while (Q.length) {
+        const wait = pausedTill - Date.now();
+        if (wait > 0) {
+          toast(`Rate limited — waiting ${Math.ceil(wait/1000)}s…`, 'warning', wait);
+          await sleep(wait);
+        }
+        const item = Q.shift();
+        try {
+          const r = await fetch(item.url, item.opts);
+          if (r.status === 429) {
+            pausedTill = Date.now() + 30000;
+            Q.unshift(item);
+            continue;
+          }
+          item.res(r);
+        } catch (e) {
+          item.rej(e);
+        }
+        const path = (() => {
+          try {
+            return new URL(item.url).pathname;
+          } catch {
+            return '';
+          }
+        })();
+        const delay = Object.entries(RATE).find(([k]) => path.includes(k))?.[1] ?? RATE.DEFAULT;
+        await sleep(delay);
+      }
+      Qrunning = false;
+    }
+
+    // ═══════════════════════════════════════════════
+    // 5. COMMANDER ROULETTE
+    // ═══════════════════════════════════════════════
+    async function loadCommanders() {
+      try {
+        const meta = await dbGet('meta', 'commanders_ts');
+        const now = Date.now();
+        if (meta && now - meta.value < 7 * 86400000) {
+          const cached = await dbGetAll('commanders');
+          if (cached.length) {
+            S.commanders = cached.sort((a, b) => a.edhrec_rank - b.edhrec_rank);
+            return;
+          }
+        }
+        const ldr = toast('Syncing commanders from Scryfall…', 'info', 0);
+        let url = 'https://api.scryfall.com/cards/search?q=is%3Acommander+f%3Acommander&order=edhrec&dir=asc&unique=cards';
+        let all = [];
+        while (url && all.length < 1000) {
+          const r = await sfetch(url);
+          if (!r.ok) break;
+          const d = await r.json();
+          all.push(...d.data.filter(c => c.edhrec_rank));
+          url = d.has_more ? d.next_page : null;
+        }
+        S.commanders = all.slice(0, 1000);
+        await dbPutAll('commanders', S.commanders);
+        await dbPut('meta', {
+          key: 'commanders_ts',
+          value: now
+        });
+        ldr.classList.remove('show');
+        setTimeout(() => ldr.remove(), 260);
+        toast('Commanders ready!', 'success');
+      } catch (e) {
+        toast('Failed to load commanders.', 'error');
+      }
+    }
+
+    function renderPlayers() {
+      const el = document.getElementById('rl-players');
+      el.innerHTML = '';
+      S.currentSession.players.forEach((p, i) => {
+        const row = document.createElement('div');
+        row.className = 'player-row';
+        row.innerHTML = `<span class="text-muted font-mono" style="font-size:.7rem;flex-shrink:0">${i+1}</span><input type="text" value="${p}" placeholder="Player ${i+1}" class="rl-pname">`;
+        el.appendChild(row);
+      });
+    }
+
+    document.getElementById('rl-add').onclick = () => {
+      if (S.currentSession.players.length < 8) {
+        S.currentSession.players.push(`Player ${S.currentSession.players.length+1}`);
+        renderPlayers();
+      }
+    };
+    document.getElementById('rl-rem').onclick = () => {
+      if (S.currentSession.players.length > 1) {
+        S.currentSession.players.pop();
+        renderPlayers();
+      }
+    };
+
+    // Range chips
+    document.querySelectorAll('#range-chips .chip').forEach(btn => {
+      btn.onclick = e => {
+        document.querySelectorAll('#range-chips .chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('rl-min').value = btn.dataset.min;
+        document.getElementById('rl-max').value = btn.dataset.max;
+      };
+    });
+
+    document.getElementById('rl-roll').onclick = async () => {
+      const min = parseInt(document.getElementById('rl-min').value) || 1;
+      const max = parseInt(document.getElementById('rl-max').value) || 100;
+      document.querySelectorAll('.rl-pname').forEach((inp, i) => {
+        S.currentSession.players[i] = inp.value || `Player ${i+1}`;
+      });
+      if (!S.commanders.length) {
+        toast('Commanders still loading…', 'warning');
+        return;
+      }
+      const pool = S.commanders.filter(c => c.edhrec_rank >= min && c.edhrec_rank <= max);
+      if (pool.length < S.currentSession.players.length) {
+        toast(`Only ${pool.length} commanders in rank ${min}–${max}. Expand range.`, 'error');
+        return;
+      }
+      const picked = pickRandom(pool, S.currentSession.players.length);
+      S.currentSession.assignments = S.currentSession.players.map((p, i) => ({
+        player: p,
+        commander: picked[i]
+      }));
+      S.currentSession.usedIds = new Set(picked.map(c => c.id));
+      S.currentSession.range = {
+        min,
+        max
+      };
+      saveSession();
+      renderAssignments(true);
+      document.getElementById('rl-copy').classList.remove('hidden');
+      if (S.rtc.role === 'host') broadcast();
+    };
+
+    function renderAssignments(animate = false) {
+      const grid = document.getElementById('rl-grid');
+      const empty = document.getElementById('rl-empty');
+      const asgn = S.currentSession.assignments;
+      if (!asgn.length) {
+        grid.innerHTML = '';
+        grid.appendChild(empty);
+        empty.style.display = '';
+        return;
+      }
+      empty.style.display = 'none';
+      grid.innerHTML = '';
+      asgn.forEach((a, i) => {
+        const img = getImg(a.commander, 'normal');
+        const delay = animate ? i * 380 : 0;
+        const card = document.createElement('div');
+        card.className = 'assign-card';
+        card.innerHTML = `
+      <div class="assign-hdr" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.player)}</div>
+      <div class="assign-img card3d" onclick="openCardModal('${esc(img)}')">
+        <div class="c-inner${animate?'':' flipped'}" id="ac-${i}" style="width:100%;height:100%">
+          <div class="c-front" style="position:absolute;inset:0"></div>
+          <div class="c-back" style="position:absolute;inset:0">
+            <img src="${esc(img)}" alt="${esc(a.commander.name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+          </div>
+        </div>
+      </div>
+      <div class="assign-info">
+        <div class="assign-name" title="${esc(a.commander.name)}">${esc(a.commander.name)}</div>
+        <div class="assign-meta">
+          <div class="color-pips">${pipsHtml(a.commander.color_identity)}</div>
+          <div class="rank-badge">#${a.commander.edhrec_rank}</div>
+        </div>
+      </div>
+      <div class="assign-actions">
+        <button class="btn btn-xs btn-full" onclick="reroll(${i})">Reroll</button>
+      </div>`;
+        grid.appendChild(card);
+        if (animate) setTimeout(() => {
+          const el = document.getElementById(`ac-${i}`);
+          if (el) el.classList.add('flipped');
+        }, delay);
+      });
+    }
+
+    window.reroll = idx => {
+      const {
+        min,
+        max
+      } = S.currentSession.range;
+      const pool = S.commanders.filter(c => c.edhrec_rank >= min && c.edhrec_rank <= max);
+      const next = pickRandom(pool, 1, S.currentSession.usedIds)[0];
+      if (!next) {
+        toast('No unique commanders left in range.', 'warning');
+        return;
+      }
+      S.currentSession.usedIds.add(next.id);
+      S.currentSession.assignments[idx].commander = next;
+      renderAssignments(false);
+      const el = document.getElementById(`ac-${idx}`);
+      if (el) {
+        el.classList.remove('flipped');
+        setTimeout(() => el.classList.add('flipped'), 50);
+      }
+      saveSession();
+      if (S.rtc.role === 'host') broadcast();
+    };
+
+    document.getElementById('rl-copy').onclick = function() {
+      if (!S.currentSession.assignments.length) return;
+      const txt = S.currentSession.assignments.map(a => `${a.player} → ${a.commander.name}`).join('\n');
+      copyText(txt, this);
+    };
+
+    // Timer
+    document.querySelectorAll('.timer-p').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.timer-p').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('rl-timer-mins').value = btn.dataset.mins;
+        setTimerFromInput(parseInt(btn.dataset.mins));
+      };
+    });
+    document.getElementById('rl-timer-mins').addEventListener('input', e => {
+      const v = parseInt(e.target.value);
+      if (v > 0) setTimerFromInput(v);
+    });
+
+    function setTimerFromInput(mins) {
+      stopTimer();
+      S.currentSession.timerSecs = mins * 60;
+      document.getElementById('timer-box').classList.remove('hidden');
+      renderTimer();
+    }
+
+    function renderTimer() {
+      const t = S.currentSession.timerSecs;
+      const m = String(Math.floor(t / 60)).padStart(2, '0');
+      const s = String(t % 60).padStart(2, '0');
+      const el = document.getElementById('rl-timer');
+      el.textContent = `${m}:${s}`;
+      el.style.color = t > 0 && t <= 300 ? '#f87171' : 'var(--gold)';
+    }
+
+    function tickTimer() {
+      if (S.currentSession.timerSecs > 0) {
+        S.currentSession.timerSecs--;
+        renderTimer();
+        if (S.currentSession.timerSecs === 300) {
+          playBeep(660, .5);
+          toast('5 minutes remaining!', 'warning');
+        }
+        if (S.currentSession.timerSecs === 0) {
+          playBeep(440, 1);
+          setTimeout(() => playBeep(330, 1), 1200);
+          toast('Time is up!', 'error', 6000);
+          stopTimer();
+        }
+        if (S.currentSession.timerSecs % 5 === 0 && S.rtc.role === 'host') broadcast();
+      }
+    }
+
+    function startTimer() {
+      if (S.currentSession.timerInt) return;
+      S.currentSession.timerInt = setInterval(tickTimer, 1000);
+      document.getElementById('tmr-start').classList.add('hidden');
+      document.getElementById('tmr-pause').classList.remove('hidden');
+    }
+
+    function stopTimer() {
+      clearInterval(S.currentSession.timerInt);
+      S.currentSession.timerInt = null;
+      document.getElementById('tmr-start').classList.remove('hidden');
+      document.getElementById('tmr-pause').classList.add('hidden');
+    }
+    document.getElementById('tmr-start').onclick = startTimer;
+    document.getElementById('tmr-pause').onclick = stopTimer;
+    document.getElementById('tmr-reset').onclick = () => {
+      stopTimer();
+      const v = parseInt(document.getElementById('rl-timer-mins').value) || 45;
+      S.currentSession.timerSecs = v * 60;
+      renderTimer();
+    };
+
+    async function saveSession() {
+      if (!S.currentSession.assignments.length) return;
+      const rec = {
+        date: new Date().toISOString(),
+        assignments: S.currentSession.assignments.map(a => ({
+          player: a.player,
+          name: a.commander.name
+        }))
+      };
+      await dbPut('sessions', rec);
+      loadHistory();
+    }
+    async function loadHistory() {
+      const all = await dbGetAll('sessions');
+      const el = document.getElementById('rl-history');
+      if (!all.length) {
+        el.textContent = 'No sessions yet.';
+        return;
+      }
+      all.sort((a, b) => new Date(b.date) - new Date(a.date));
+      el.innerHTML = all.slice(0, 8).map(h => `
+    <div class="hist-item">
+      <div class="hist-date">${esc(new Date(h.date).toLocaleString())}</div>
+      <div>${h.assignments.map(a => `<span style="color:hsl(var(--ring))">${esc(a.player)}</span>: <span style="color:var(--gold)">${esc(a.name)}</span>`).join(' · ')}</div>
+    </div>`).join('');
+    }
+
+    // ═══════════════════════════════════════════════
+    // 6. DRAFT SIMULATOR
+    // ═══════════════════════════════════════════════
+
+    // Booster type toggle
+    document.querySelectorAll('#btype-group .tgl').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('#btype-group .tgl').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        S.draftBoosterType = btn.dataset.bt;
+        const info = BOOSTER_INFO[btn.dataset.bt];
+        document.getElementById('btype-desc').textContent = info.desc;
+        updateOpenBtn();
+      };
+    });
+
+    function updateOpenBtn() {
+      const btn = document.getElementById('draft-open');
+      btn.textContent = S.setCards.length ? `Open ${BOOSTER_INFO[S.draftBoosterType].label}` : 'Open Pack';
+    }
+
+    async function loadSets() {
+      try {
+        const meta = await dbGet('meta', 'sets_ts');
+        const now = Date.now();
+        if (meta && now - meta.value < 86400000) {
+          S.sets = await dbGetAll('sets');
+        } else {
+          const r = await sfetch('https://api.scryfall.com/sets');
+          if (r.ok) {
+            const d = await r.json();
+            const VALID = new Set(['core', 'expansion', 'masters', 'draft_innovation', 'funny']);
+            const EXCL = new Set(['token', 'memorabilia', 'promo', 'minigame', 'alchemy', 'arsenal', 'treasure_chest', 'spellbook', 'vanguard']);
+            S.sets = d.data.filter(s => VALID.has(s.set_type) && !EXCL.has(s.set_type))
+              .sort((a, b) => new Date(b.released_at) - new Date(a.released_at));
+            await dbPutAll('sets', S.sets);
+            await dbPut('meta', {
+              key: 'sets_ts',
+              value: now
+            });
+          }
+        }
+        const sel = document.getElementById('draft-set');
+        sel.innerHTML = '<option value="">— Choose a Set —</option>' +
+          S.sets.map(s => `<option value="${s.code}">${s.name} (${s.code.toUpperCase()})</option>`).join('');
+      } catch (e) {
+        toast('Failed to load sets.', 'error');
+      }
+    }
+
+    document.getElementById('draft-set').onchange = async e => {
+      const code = e.target.value;
+      if (!code) {
+        S.setCards = [];
+        document.getElementById('draft-open').disabled = true;
+        return;
+      }
+      await loadSetCards(code);
+    };
+
+    async function loadSetCards(code) {
+      const btn = document.getElementById('draft-open');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin"></span> Loading cards…';
+
+      const meta = await dbGet('meta', `set_${code}`);
+      if (meta && Date.now() - meta.value < 86400000) {
+        const cached = await dbGetByIndex('setCards', 'set', code);
+        if (cached.length) {
+          S.setCards = cached;
+          btn.disabled = false;
+          updateOpenBtn();
+          return;
+        }
+      }
+
+      let url = `https://api.scryfall.com/cards/search?q=e:${code}+is:booster&unique=prints&order=set`;
+      let all = [];
+      while (url) {
+        const r = await sfetch(url);
+        if (!r.ok) break;
+        const d = await r.json();
+        all.push(...d.data.map(c => ({
+          ...c,
+          set: code
+        })));
+        btn.innerHTML = `<span class="spin"></span> ${all.length} cards…`;
+        url = d.has_more ? d.next_page : null;
+      }
+      S.setCards = all;
+      await dbPutAll('setCards', all);
+      await dbPut('meta', {
+        key: `set_${code}`,
+        value: Date.now()
+      });
+      btn.disabled = false;
+      updateOpenBtn();
+    }
+
+    // ── BOOSTER GENERATION ──
+
+    function categorize(pool) {
+      return {
+        common: pool.filter(c => c.rarity === 'common'),
+        uncommon: pool.filter(c => c.rarity === 'uncommon'),
+        rare: pool.filter(c => c.rarity === 'rare'),
+        mythic: pool.filter(c => c.rarity === 'mythic'),
+        basic: pool.filter(c => c.type_line?.includes('Basic Land')),
+      };
+    }
+
+    function fallback(a, b) {
+      return a.length ? a : b;
+    }
+
+    /**
+     * PLAY BOOSTER — 14 cards (MKM 2024+)
+     * Slot 1–6  : 6 commons (no dupes)
+     * Slot 7    : common (98.5%) or special-guest proxy as rare/mythic (1.5%)
+     * Slot 8–10 : 3 uncommons
+     * Slot 11   : non-foil wildcard C:49% U:24.5% R:20% M:6.5%
+     * Slot 12   : rare/mythic (85.7% R, 14.3% M)
+     * Slot 13   : land (non-foil)
+     * Slot 14   : foil wildcard C:59% U:30% R:7% M:1.5%
+     * Guaranteed exactly 1 foil (slot 14).
+     */
+    function genPlayBooster(pool) {
+      const r = categorize(pool);
+      const excl = new Set();
+      const pack = [];
+
+      // 1–6 commons
+      pickRandom(fallback(r.common, pool), 6, excl)
+        .forEach(c => {
+          pack.push({
+            ...c,
+            foil: false
+          });
+          excl.add(c.id);
+        });
+
+      // 7 common or special guest
+      if (Math.random() < 0.015 && r.rare.length) {
+        // Special guest — simulated as a rare/mythic
+        const sg = pickRandom(Math.random() < 0.25 && r.mythic.length ? r.mythic : r.rare, 1, excl)[0];
+        if (sg) {
+          pack.push({
+            ...sg,
+            foil: false
+          });
+          excl.add(sg.id);
+        }
+      } else {
+        const c7 = pickRandom(fallback(r.common, pool), 1, excl)[0];
+        if (c7) {
+          pack.push({
+            ...c7,
+            foil: false
+          });
+          excl.add(c7.id);
+        }
+      }
+
+      // 8–10 uncommons
+      pickRandom(fallback(r.uncommon, r.common), 3, excl)
+        .forEach(c => {
+          pack.push({
+            ...c,
+            foil: false
+          });
+          excl.add(c.id);
+        });
+
+      // 11 non-foil wildcard
+      const wRarity = weightedRandom({
+        common: .49,
+        uncommon: .245,
+        rare: .20,
+        mythic: .065
+      });
+      const wCard = pickRandom(fallback(r[wRarity], r.common), 1, excl)[0];
+      if (wCard) {
+        pack.push({
+          ...wCard,
+          foil: false
+        });
+        excl.add(wCard.id);
+      }
+
+      // 12 rare/mythic
+      const isM12 = Math.random() < 0.143 && r.mythic.length;
+      const rm = pickRandom(isM12 ? r.mythic : fallback(r.rare, r.uncommon), 1, excl)[0];
+      if (rm) {
+        pack.push({
+          ...rm,
+          foil: false
+        });
+        excl.add(rm.id);
+      }
+
+      // 13 land (non-foil)
+      const landPool = fallback(r.basic, r.common);
+      const land = pickRandom(landPool, 1, new Set())[0];
+      if (land) pack.push({
+        ...land,
+        foil: false
+      });
+
+      // 14 foil wildcard (guaranteed foil, any rarity)
+      const fRarity = weightedRandom({
+        common: .59,
+        uncommon: .30,
+        rare: .07,
+        mythic: .015
+      });
+      const foilCard = pickRandom(fallback(r[fRarity], r.common), 1, new Set())[0];
+      if (foilCard) pack.push({
+        ...foilCard,
+        foil: true
+      });
+
+      return pack;
+    }
+
+    /**
+     * DRAFT BOOSTER — 15 cards (classic, pre-MKM)
+     * Slot 1–10 : 10 commons
+     * Slot 11–13: 3 uncommons
+     * Slot 14   : rare/mythic (87.5% R, 12.5% M)
+     * Slot 15   : basic land
+     * Bonus     : ~25% chance one common replaced by foil (any rarity, C:60% U:30% R:8% M:2%)
+     */
+    function genDraftBooster(pool) {
+      const r = categorize(pool);
+      const excl = new Set();
+      const pack = [];
+
+      // 10 commons
+      pickRandom(fallback(r.common, pool), 10, excl)
+        .forEach(c => {
+          pack.push({
+            ...c,
+            foil: false
+          });
+          excl.add(c.id);
+        });
+
+      // 3 uncommons
+      pickRandom(fallback(r.uncommon, r.common), 3, excl)
+        .forEach(c => {
+          pack.push({
+            ...c,
+            foil: false
+          });
+          excl.add(c.id);
+        });
+
+      // 1 rare/mythic (12.5% mythic)
+      const isM = Math.random() < 0.125 && r.mythic.length;
+      const rm = pickRandom(isM ? r.mythic : fallback(r.rare, r.uncommon), 1, excl)[0];
+      if (rm) {
+        pack.push({
+          ...rm,
+          foil: false
+        });
+        excl.add(rm.id);
+      }
+
+      // 1 basic land (or common if no basics)
+      const land = pickRandom(fallback(r.basic, r.common), 1, new Set())[0];
+      if (land) pack.push({
+        ...land,
+        foil: false
+      });
+
+      // Foil replacement: ~25% chance — replace one common with a foil of any rarity
+      if (Math.random() < 0.25) {
+        const fIdx = pack.findIndex(c => c.rarity === 'common' && !c.foil);
+        if (fIdx !== -1) {
+          const fRarity = weightedRandom({
+            common: .60,
+            uncommon: .30,
+            rare: .08,
+            mythic: .02
+          });
+          const fc = pickRandom(fallback(r[fRarity], r.common), 1, new Set())[0];
+          if (fc) pack[fIdx] = {
+            ...fc,
+            foil: true
+          };
+        }
+      }
+
+      return pack;
+    }
+
+    /**
+     * COLLECTOR BOOSTER — 15 cards
+     * Heavy foil, multiple rares/mythics. Special treatments not simulated (Scryfall lacks per-print frame data).
+     * Slot 1    : Foil rare/mythic (33% mythic, guaranteed at least rare)
+     * Slot 2    : Foil rare/mythic (25% mythic)
+     * Slot 3    : Non-foil rare/mythic (20% mythic)
+     * Slot 4    : Non-foil rare/mythic (14.3% mythic)
+     * Slot 5–6  : Foil uncommons (2×)
+     * Slot 7–8  : Non-foil uncommons (2×)
+     * Slot 9–11 : Foil commons (3×)
+     * Slot 12–14: Non-foil commons (3×)
+     * Slot 15   : Foil land/common
+     * Total: 7 foils, 3–4 expected rares/mythics
+     */
+    function genCollectorBooster(pool) {
+      const r = categorize(pool);
+      const pack = [];
+
+      function rmSlot(mythicRate, foil, exclude = new Set()) {
+        const isM = Math.random() < mythicRate && r.mythic.length;
+        const c = pickRandom(isM ? r.mythic : fallback(r.rare, r.uncommon), 1, exclude)[0];
+        return c ? {
+          ...c,
+          foil
+        } : null;
+      }
+
+      // Slots 1–4: rares/mythics
+      // Slot 1: foil (33% mythic), slots 2–4: non-foil
+      [
+        [.33, true],
+        [.25, false],
+        [.20, false],
+        [.143, false]
+      ].forEach(([rate, foil]) => {
+        const c = rmSlot(rate, foil);
+        if (c) pack.push(c);
+      });
+
+      // Slots 5–6: foil uncommons
+      pickRandom(fallback(r.uncommon, r.common), 2, new Set())
+        .forEach(c => pack.push({
+          ...c,
+          foil: true
+        }));
+
+      // Slots 7–8: non-foil uncommons
+      pickRandom(fallback(r.uncommon, r.common), 2, new Set())
+        .forEach(c => pack.push({
+          ...c,
+          foil: false
+        }));
+
+      // Slots 9–11: foil commons (3×)
+      pickRandom(fallback(r.common, pool), 3, new Set())
+        .forEach(c => pack.push({
+          ...c,
+          foil: true
+        }));
+
+      // Slots 12–14: non-foil commons (3×)
+      pickRandom(fallback(r.common, pool), 3, new Set())
+        .forEach(c => pack.push({
+          ...c,
+          foil: false
+        }));
+
+      // Slot 15: foil land
+      const fc = pickRandom(fallback(r.basic, r.common), 1, new Set())[0];
+      if (fc) pack.push({
+        ...fc,
+        foil: true
+      });
+
+      return pack;
+    }
+
+    function generateBooster() {
+      const pool = S.setCards;
+      switch (S.draftBoosterType) {
+        case 'draft':
+          return genDraftBooster(pool);
+        case 'collector':
+          return genCollectorBooster(pool);
+        default:
+          return genPlayBooster(pool);
+      }
+    }
+
+    document.getElementById('draft-open').onclick = () => {
+      if (!S.setCards.length) return;
+      const pack = generateBooster();
+
+      // Update stats
+      S.stats.packs++;
+      pack.forEach(c => {
+        if (c.rarity === 'rare') S.stats.rares++;
+        if (c.rarity === 'mythic') S.stats.mythics++;
+        if (c.foil) S.stats.foils++;
+        const price = c.foil ? (parseFloat(c.prices?.usd_foil) || parseFloat(c.prices?.usd) || 0) : (parseFloat(c.prices?.usd) || 0);
+        S.stats.value += price;
+      });
+      S.pool.push(...pack);
+      renderStats();
+      renderPack(pack);
+      renderPool();
+      if (S.rtc.role === 'host') broadcast();
+    };
+
+    function renderStats() {
+      const st = S.stats;
+      document.getElementById('ds-packs').textContent = st.packs;
+      document.getElementById('ds-rares').textContent = st.rares;
+      document.getElementById('ds-mythics').textContent = st.mythics;
+      document.getElementById('ds-foils').textContent = st.foils;
+      document.getElementById('ds-value').textContent = `$${st.value.toFixed(2)}`;
+      const total = st.rares + st.mythics;
+      const rate = total ? (st.mythics / total * 100).toFixed(1) : 0;
+      document.getElementById('ds-rate').textContent = `${rate}%`;
+      document.getElementById('draft-stats-box').classList.remove('hidden');
+    }
+
+    function rarityClass(r) {
+      return {
+        common: 'rc',
+        uncommon: 'ru',
+        rare: 'rr',
+        mythic: 'rm'
+      } [r] || '';
+    }
+
+    function renderPack(pack) {
+      const title = BOOSTER_INFO[S.draftBoosterType]?.label || 'Booster';
+      document.getElementById('pack-title').textContent = title;
+      document.getElementById('pack-area').classList.remove('hidden');
+
+      const grid = document.getElementById('pack-grid');
+      grid.innerHTML = '';
+      pack.forEach((card, i) => {
+        const img = getImg(card, 'normal');
+        const el = document.createElement('div');
+        el.className = 'pack-card card3d';
+        el.innerHTML = `
+      <div class="c-inner" id="pc-${i}" style="width:100%;height:100%;position:relative">
+        <div class="c-front" style="position:absolute;inset:0"></div>
+        <div class="c-back" style="position:absolute;inset:0">
+          <img src="${img}" alt="${card.name}" loading="lazy">
+          ${card.foil ? '<div class="foil-overlay"></div>' : ''}
+        </div>
+      </div>`;
+        el.onclick = () => {
+          const inner = document.getElementById(`pc-${i}`);
+          if (inner.classList.contains('flipped')) openCardModal(img);
+          else inner.classList.add('flipped');
+        };
+        grid.appendChild(el);
+      });
+    }
+
+    document.getElementById('pack-reveal-all').onclick = () => {
+      document.querySelectorAll('[id^="pc-"]').forEach(el => el.classList.add('flipped'));
+    };
+
+    function renderPool() {
+      const grid = document.getElementById('pool-grid');
+      const count = document.getElementById('pool-count');
+      if (!S.pool.length) {
+        document.getElementById('pool-area').classList.add('hidden');
+        return;
+      }
+      document.getElementById('pool-area').classList.remove('hidden');
+      count.textContent = `(${S.pool.length})`;
+      grid.innerHTML = '';
+      const sorted = [...S.pool].sort((a, b) => {
+        const r = {
+          mythic: 4,
+          rare: 3,
+          uncommon: 2,
+          common: 1
+        };
+        return (r[b.rarity] || 0) - (r[a.rarity] || 0);
+      });
+      sorted.forEach(c => {
+        const img = getImg(c, 'small');
+        const el = document.createElement('div');
+        el.className = `pool-card${c.foil?' foil':''}`;
+        el.innerHTML = `<img src="${img}" alt="${c.name}" loading="lazy">${c.foil?'<div class="foil-overlay" style="border-radius:4px"></div>':''}`;
+        el.onclick = () => openCardModal(getImg(c, 'normal'));
+        grid.appendChild(el);
+      });
+    }
+
+    document.getElementById('draft-reset-stats').onclick = () => {
+      S.stats = {
+        packs: 0,
+        rares: 0,
+        mythics: 0,
+        foils: 0,
+        value: 0
+      };
+      S.pool = [];
+      document.getElementById('draft-stats-box').classList.add('hidden');
+      document.getElementById('pack-area').classList.add('hidden');
+      document.getElementById('pool-area').classList.add('hidden');
+      renderStats();
+    };
+
+    document.getElementById('draft-export').onclick = function() {
+      if (!S.pool.length) return;
+      const grp = {};
+      S.pool.forEach(c => {
+        const k = `${c.name}|${c.set.toUpperCase()}|${c.collector_number}`;
+        grp[k] = (grp[k] || 0) + 1;
+      });
+      const lines = ['Deck'];
+      for (const [k, qty] of Object.entries(grp)) {
+        const [name, set, num] = k.split('|');
+        lines.push(`${qty} ${name} (${set}) ${num}`);
+      }
+      lines.push('', 'Sideboard');
+      const txt = lines.join('\n');
+      const blob = new Blob([txt], {
+        type: 'text/plain'
+      });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `ScryDraft-${new Date().toISOString().split('T')[0]}.txt`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      copyText(txt, this);
+    };
+
+    // ═══════════════════════════════════════════════
+    // 7. WEBRTC — 6-DIGIT CODES
+    // ═══════════════════════════════════════════════
+    function genCode() {
+      return String(Math.floor(100000 + Math.random() * 900000));
+    }
+
+    function setRTCState(status) {
+      S.rtc.status = status;
+      const pill = document.getElementById('rtc-pill');
+      const lbl = document.getElementById('rtc-label');
+      pill.className = '';
+      if (status === 'hosting') {
+        pill.classList.add('hosting');
+        lbl.textContent = 'Hosting';
+      } else if (status === 'watching') {
+        pill.classList.add('watching');
+        lbl.textContent = 'Live';
+      } else {
+        lbl.textContent = 'Offline';
+      }
+    }
+
+    function startHosting(attempt = 0) {
+      if (S.rtc.peer) S.rtc.peer.destroy();
+      const code = genCode();
+      S.rtc.peer = new window.Peer(code);
+
+      S.rtc.peer.on('open', id => {
+        S.rtc.peerId = id;
+        S.rtc.role = 'host';
+        S.rtc.conns = [];
+        document.getElementById('w-host-code').textContent = id;
+        document.getElementById('w-host-setup').classList.add('hidden');
+        document.getElementById('w-host-active').classList.remove('hidden');
+        setRTCState('hosting');
+      });
+
+      S.rtc.peer.on('error', err => {
+        if ((err.type === 'unavailable-id' || err.type === 'peer-unavailable') && attempt < 4) {
+          // Code collision — retry with a new code
+          setTimeout(() => startHosting(attempt + 1), 200);
+        } else {
+          toast(`Connection error: ${err.type}`, 'error');
+          setRTCState('idle');
+        }
+      });
+
+      S.rtc.peer.on('connection', conn => {
+        S.rtc.conns.push(conn);
+        renderSpectators();
+        conn.on('open', () => {
+          conn.send(JSON.stringify({
+            type: 'state',
+            tab: currentScreen,
+            boosterType: S.draftBoosterType,
+            roulette: {
+              assignments: S.currentSession.assignments,
+              timerSecs: S.currentSession.timerSecs
+            },
+            draft: {
+              pool: S.pool,
+              stats: S.stats
+            }
+          }));
+        });
+        conn.on('close', () => {
+          S.rtc.conns = S.rtc.conns.filter(c => c !== conn);
+          renderSpectators();
+        });
+      });
+    }
+
+    document.getElementById('w-host-start').onclick = () => startHosting();
+
+    document.getElementById('w-host-copy').onclick = function() {
+      copyText(S.rtc.peerId || '', this);
+    };
+    document.getElementById('w-host-stop').onclick = () => {
+      if (S.rtc.peer) S.rtc.peer.destroy();
+      S.rtc = {
+        role: null,
+        peer: null,
+        peerId: null,
+        conns: [],
+        status: 'idle'
+      };
+      document.getElementById('w-host-setup').classList.remove('hidden');
+      document.getElementById('w-host-active').classList.add('hidden');
+      setRTCState('idle');
+    };
+
+    function renderSpectators() {
+      const count = document.getElementById('w-spec-count');
+      const list = document.getElementById('w-spec-list');
+      count.textContent = S.rtc.conns.length;
+      if (!S.rtc.conns.length) {
+        list.innerHTML = '<div class="text-muted" style="font-size:.73rem;text-align:center;padding:.4rem">Waiting for connections…</div>';
+      } else {
+        list.innerHTML = S.rtc.conns.map(c => `
+      <div class="row" style="font-size:.72rem;background:hsl(var(--muted));border-radius:var(--radius);padding:.3rem .5rem">
+        <div style="width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0"></div>
+        <span class="font-mono" style="color:hsl(var(--ring))">${c.peer.substring(0,8)}…</span>
+      </div>`).join('');
+      }
+    }
+
+    // Digit inputs for join
+    const dgtInputs = document.querySelectorAll('.dgt');
+    dgtInputs.forEach((inp, i) => {
+      inp.addEventListener('input', e => {
+        const v = e.target.value.replace(/\D/, '');
+        inp.value = v;
+        if (v && i < dgtInputs.length - 1) dgtInputs[i + 1].focus();
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) {
+          dgtInputs[i - 1].focus();
+          dgtInputs[i - 1].value = '';
+        }
+        if (e.key === 'ArrowLeft' && i > 0) dgtInputs[i - 1].focus();
+        if (e.key === 'ArrowRight' && i < dgtInputs.length - 1) dgtInputs[i + 1].focus();
+      });
+      inp.addEventListener('paste', e => {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        paste.split('').forEach((ch, j) => {
+          if (dgtInputs[i + j]) dgtInputs[i + j].value = ch;
+        });
+        const next = dgtInputs[Math.min(i + paste.length, dgtInputs.length - 1)];
+        next.focus();
+      });
+    });
+
+    function getEnteredCode() {
+      return Array.from(dgtInputs).map(d => d.value).join('');
+    }
+
+    document.getElementById('w-join-btn').onclick = () => {
+      const code = getEnteredCode();
+      if (code.length !== 6) {
+        toast('Enter all 6 digits.', 'warning');
+        return;
+      }
+      if (S.rtc.peer) S.rtc.peer.destroy();
+      S.rtc.peer = new window.Peer();
+      S.rtc.peer.on('open', () => {
+        const conn = S.rtc.peer.connect(code);
+        S.rtc.conns = [conn];
+        conn.on('open', () => {
+          S.rtc.role = 'spectator';
+          S.rtc.status = 'watching';
+          document.getElementById('w-join-setup').classList.add('hidden');
+          document.getElementById('w-join-active').classList.remove('hidden');
+          setRTCState('watching');
+          toast('Connected — watching live', 'success');
+        });
+        conn.on('data', raw => {
+          try {
+            onHostData(typeof raw === 'string' ? JSON.parse(raw) : raw);
+          } catch {}
+        });
+        conn.on('close', () => {
+          toast('Host disconnected.', 'warning');
+          document.getElementById('w-disconnect').click();
+        });
+      });
+      S.rtc.peer.on('error', err => {
+        toast(`Connection failed: ${err.type}`, 'error');
+        setRTCState('idle');
+      });
+    };
+
+    document.getElementById('w-disconnect').onclick = () => {
+      if (S.rtc.peer) S.rtc.peer.destroy();
+      S.rtc = {
+        role: null,
+        peer: null,
+        peerId: null,
+        conns: [],
+        status: 'idle'
+      };
+      document.getElementById('w-join-setup').classList.remove('hidden');
+      document.getElementById('w-join-active').classList.add('hidden');
+      dgtInputs.forEach(d => d.value = '');
+      setRTCState('idle');
+    };
+
+    function broadcast() {
+      if (S.rtc.role !== 'host' || !S.rtc.conns.length) return;
+      const msg = JSON.stringify({
+        type: 'state',
+        tab: currentScreen,
+        boosterType: S.draftBoosterType,
+        roulette: {
+          assignments: S.currentSession.assignments,
+          timerSecs: S.currentSession.timerSecs
+        },
+        draft: {
+          pool: S.pool,
+          stats: S.stats
+        }
+      });
+      S.rtc.conns.forEach(c => {
+        if (c.open) c.send(msg);
+      });
+    }
+
+    function onHostData(data) {
+      if (data.type !== 'state') return;
+      // Sync booster type from host
+      if (data.boosterType) S.draftBoosterType = data.boosterType;
+      if (data.roulette) {
+        S.currentSession.assignments = data.roulette.assignments || [];
+        S.currentSession.timerSecs = data.roulette.timerSecs ?? S.currentSession.timerSecs;
+        if (currentScreen === 'roulette') {
+          renderAssignments(false);
+          renderTimer();
+        }
+      }
+      if (data.draft) {
+        S.pool = data.draft.pool || [];
+        S.stats = data.draft.stats || S.stats;
+        if (currentScreen === 'draft') {
+          renderStats();
+          if (S.pool.length > 0) {
+            const packSize = BOOSTER_INFO[S.draftBoosterType]?.cards || 14;
+            renderPack(S.pool.slice(-packSize));
+            renderPool();
+          }
+        }
+      }
+    }
+
+    // Manual SDP fallback
+    let sdpPc = null;
+    document.getElementById('sdp-offer').onclick = async () => {
+      sdpPc = new RTCPeerConnection({
+        iceServers: [{
+          urls: 'stun:stun.l.google.com:19302'
+        }]
+      });
+      sdpPc.createDataChannel('sd');
+      const offer = await sdpPc.createOffer();
+      await sdpPc.setLocalDescription(offer);
+      sdpPc.onicecandidate = e => {
+        if (!e.candidate) document.getElementById('sdp-in').value = JSON.stringify(sdpPc.localDescription);
+      };
+    };
+    document.getElementById('sdp-apply').onclick = async () => {
+      try {
+        const desc = JSON.parse(document.getElementById('sdp-in').value);
+        if (desc.type === 'offer') {
+          sdpPc = new RTCPeerConnection({
+            iceServers: [{
+              urls: 'stun:stun.l.google.com:19302'
+            }]
+          });
+          sdpPc.ondatachannel = e => {
+            const ch = e.channel;
+            ch.onmessage = m => {
+              try {
+                onHostData(JSON.parse(m.data));
+              } catch {}
+            };
+          };
+          await sdpPc.setRemoteDescription(desc);
+          const answer = await sdpPc.createAnswer();
+          await sdpPc.setLocalDescription(answer);
+          sdpPc.onicecandidate = e => {
+            if (!e.candidate) document.getElementById('sdp-in').value = JSON.stringify(sdpPc.localDescription);
+          };
+        } else if (desc.type === 'answer' && sdpPc) {
+          await sdpPc.setRemoteDescription(desc);
+          toast('SDP applied — connected!', 'success');
+        }
+      } catch (e) {
+        toast('Invalid SDP JSON.', 'error');
+      }
+    };
+
+    // ═══════════════════════════════════════════════
+    // 8. NAVIGATION
+    // ═══════════════════════════════════════════════
+    document.querySelectorAll('.nb').forEach(btn => {
+      btn.onclick = () => {
+        const s = btn.dataset.s;
+        currentScreen = s;
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        document.getElementById(`s-${s}`).classList.add('active');
+        document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (S.rtc.role === 'host') broadcast();
+        if (s === 'roulette') {
+          renderAssignments(false);
+          renderTimer();
+        }
+        if (s === 'draft' && S.rtc.role === 'spectator') {
+          // Re-render latest draft state when spectator navigates to draft tab
+          if (S.stats.packs > 0) renderStats();
+          if (S.pool.length > 0) {
+            const packSize = BOOSTER_INFO[S.draftBoosterType]?.cards || 14;
+            renderPack(S.pool.slice(-packSize));
+            renderPool();
+          }
+        }
+      };
+    });
+
+    // ═══════════════════════════════════════════════
+    // 9. INIT
+    // ═══════════════════════════════════════════════
+    window.addEventListener('DOMContentLoaded', () => {
+      renderPlayers();
+      renderTimer();
+      loadCommanders();
+      loadSets();
+      loadHistory();
+      // Show timer box when a preset is chosen on load (default 45m)
+      setTimerFromInput(45);
+      document.getElementById('rl-timer-mins').value = 45;
+    });
+
+    (() => {
+      const ENTRY = 'ScryDraft v2',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
