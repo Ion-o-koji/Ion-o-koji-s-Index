@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Editor v4</title>
+
+  <!-- js-beautify for formatting (needed for the Format button) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.9/beautify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.9/beautify-css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.9/beautify-html.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      color: #333;
+      min-height: 100vh;
+      padding: 10px;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(to right, #4a6fa5, #2c3e50);
+      color: white;
+      padding: 20px 15px;
+      border-radius: 12px 12px 0 0;
+      margin-bottom: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+      font-weight: 300;
+    }
+
+    .api-status {
+      background: #ffd700;
+      color: #000;
+      padding: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    /* Hide the API status banner (kept minimal) */
+    #apiStatus {
+      display: none !important;
+    }
+
+    .controls {
+      background-color: #f8f9fa;
+      padding: 15px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    button {
+      background: linear-gradient(to bottom, #5a7fbd, #4a6fa5);
+      color: white;
+      border: none;
+      padding: 10px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      width: 100%;
+      min-width: 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      transition: background 0.15s ease, transform 0.1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: linear-gradient(to bottom, #4a6fa5, #3a5a8a);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #a0a0a0;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    #minimizeBtn {
+      background: linear-gradient(to bottom, #8e6fbd, #6a4a9e);
+    }
+
+    #minimizeBtn:hover {
+      background: linear-gradient(to bottom, #7a5aa8, #563e82);
+    }
+
+    #formatBtn {
+      background: linear-gradient(to bottom, #4a90e2, #357ab8);
+    }
+
+    #formatBtn:hover {
+      background: linear-gradient(to bottom, #357ab8, #2a638f);
+    }
+
+    .search-bar {
+      background-color: #f1f3f5;
+      padding: 3px 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .search-bar #searchToggleBtn {
+      width: auto;
+      flex: 0 0 auto;
+      min-width: 0;
+      padding: 3px 6px;
+      font-size: 0.75rem;
+      background: transparent;
+      color: #555;
+      box-shadow: none;
+      transition: transform 0.15s ease;
+    }
+
+    .search-bar #searchToggleBtn:hover {
+      background: rgba(0, 0, 0, 0.06);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .search-bar #searchToggleBtn.open {
+      transform: rotate(90deg);
+    }
+
+    .search-bar input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      padding: 3px 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .search-bar input[type="text"]:focus {
+      border-color: #4a6fa5;
+    }
+
+    .search-bar button.nav-btn {
+      width: auto;
+      flex: 0 0 auto;
+      min-width: 0;
+      padding: 3px 7px;
+      font-size: 0.75rem;
+    }
+
+    .clear-btn {
+      width: auto;
+      flex: 0 0 auto;
+      min-width: 0;
+      padding: 2px 5px;
+      font-size: 0.7rem;
+      background: transparent;
+      color: #888;
+      box-shadow: none;
+      line-height: 1;
+    }
+
+    .clear-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+      color: #333;
+      transform: none;
+      box-shadow: none;
+    }
+
+    #searchCount {
+      font-size: 0.75rem;
+      color: #666;
+      flex: 0 0 auto;
+      display: inline-block;
+      min-width: 42px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .replace-row {
+      background-color: #f1f3f5;
+      padding: 0 6px 4px 26px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .replace-row input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      padding: 3px 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .replace-row input[type="text"]:focus {
+      border-color: #4a6fa5;
+    }
+
+    .replace-row button {
+      width: auto;
+      flex: 0 0 auto;
+      min-width: 0;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+    }
+
+    .file-info {
+      background-color: #e9ecef;
+      padding: 12px 15px;
+      font-size: 0.9rem;
+      color: #555;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .file-info span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-info #fileName {
+      flex: 0 1 auto;
+      min-width: 0;
+    }
+
+    .file-info #fileSize::before {
+      content: '|';
+      margin-right: 10px;
+      color: #999;
+    }
+
+    /* hide the "one chunk edited" / modified status text */
+    #modifiedStatus {
+      display: none !important;
+    }
+
+    .editor-container {
+      position: relative;
+      height: 60vh;
+      border: 1px solid #ddd;
+      background-color: #fefefe;
+      overflow: hidden;
+      contain: strict;
+    }
+
+    #editor,
+    #editorHighlight {
+      width: 100%;
+      height: 100%;
+      padding: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      line-height: 1.5;
+      white-space: pre;
+      tab-size: 4;
+    }
+
+    #editor {
+      position: relative;
+      z-index: 2;
+      border: none;
+      resize: none;
+      outline: none;
+      overflow-wrap: normal;
+      overflow-x: auto;
+      overflow-y: auto;
+      background-color: transparent;
+      color: #333;
+      contain: strict;
+      font-variant-ligatures: none;
+      text-rendering: optimizeSpeed;
+
+      /* Hide the visible horizontal scrollbar while keeping scrollability */
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Hide scrollbars for WebKit browsers */
+    #editor::-webkit-scrollbar {
+      display: none;
+      height: 0;
+    }
+
+    /* Sits directly beneath the textarea and mirrors its text so match
+         highlights line up exactly. Its own text is invisible (color:
+         transparent) — only the <mark> backgrounds are visible, letting the
+         real, editable text render normally on top. */
+    #editorHighlight {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      overflow: hidden;
+      background-color: #f8f9fa;
+      color: transparent;
+      pointer-events: none;
+      contain: strict;
+    }
+
+    #editorHighlight mark {
+      background-color: #ffe066;
+      color: transparent;
+      border-radius: 2px;
+    }
+
+    #editorHighlight mark.current-match {
+      background-color: #ff9800;
+    }
+
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-top: 1px solid #ddd;
+    }
+
+    .navigation button {
+      flex: 0 0 auto;
+      min-width: 150px;
+    }
+
+    .chunk-slider {
+      flex: 1;
+      margin: 0 15px;
+      min-width: 100px;
+    }
+
+    .progress-bar {
+      display: none !important;
+    }
+
+    .progress {
+      height: 100%;
+      background: linear-gradient(to right, #4CAF50, #8BC34A);
+      width: 0%;
+    }
+
+    .status-bar {
+      padding: 10px 15px;
+      background-color: #e9ecef;
+      font-size: 0.85rem;
+      color: #666;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    /* hide the chunk info text ("Chunk X/Y") */
+    #chunkInfo {
+      display: none !important;
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        padding: 10px;
+      }
+
+      button {
+        padding: 8px 4px;
+        font-size: 0.75rem;
+        gap: 4px;
+      }
+
+      .icon {
+        font-size: 1rem;
+      }
+
+      .navigation {
+        gap: 10px;
+      }
+
+      .status-bar {
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    .icon {
+      font-size: 1.2rem;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Mobile HTML Editor</h1>
+    </header>
+
+    <div class="api-status" id="apiStatus">
+      Checking File System Access API availability...
+    </div>
+
+    <div class="controls">
+      <button id="minimizeBtn" title="Compacts whitespace (trims and removes blank lines). May affect multi-line strings."><span class="icon">🗜️</span> Minimize</button>
+      <button id="formatBtn" title="Beautifies code using js-beautify"><span class="icon">🛠️</span> Format</button>
+
+      <button id="saveBtn" disabled><span class="icon">💾</span> Save Changes</button>
+      <button id="saveAsBtn" disabled><span class="icon">💾</span> Save As</button>
+
+      <button id="selectBtn"><span class="icon">🔆</span> Select All</button>
+      <button id="openBtn"><span class="icon">📁</span> Open File</button>
+    </div>
+
+    <div class="search-bar" id="searchBar">
+      <button id="searchToggleBtn" title="Toggle replace">▸</button>
+      <input type="text" id="searchInput" placeholder="Search for a word..." autocomplete="off" spellcheck="false">
+      <button id="searchPrevBtn" class="nav-btn" title="Previous match">◀</button>
+      <button id="searchNextBtn" class="nav-btn" title="Next match">▶</button>
+      <span id="searchCount">0/0</span>
+      <button id="clearBtn" class="clear-btn" title="Clear search and replace">✕</button>
+    </div>
+
+    <div class="replace-row" id="replaceRow" style="display:none;">
+      <input type="text" id="replaceInput" placeholder="Replace with..." autocomplete="off" spellcheck="false">
+      <button id="replaceAllBtn">Replace All</button>
+    </div>
+
+    <div class="file-info">
+      <span id="fileName">No file opened</span>
+      <span id="fileSize"></span>
+      <span id="modifiedStatus"></span>
+    </div>
+
+    <div id="saveStatus"></div>
+
+    <div class="editor-container">
+      <div id="editorHighlight" aria-hidden="true"></div>
+      <textarea id="editor" placeholder="Open a file to begin editing..." spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" wrap="off" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false"></textarea>
+    </div>
+
+    <input type="range" id="chunkSlider" class="chunk-slider" min="0" value="0" disabled style="display:none;">
+
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <div class="status-bar">
+      <span id="positionInfo">Line: 1, Column: 1</span>
+      <span id="chunkInfo">Chunk 0/0</span>
+      <span id="saveInfo">No changes</span>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // PERFORMANCE NOTES (why the old editor lagged on every keystroke,
+    // and why paste of a huge block felt just as fast as one char):
+    //
+    // 1) The browser's built-in SPELLCHECK / autocorrect / Grammarly-style
+    //    extensions re-scan large text areas on every keystroke. This is
+    //    usually the #1 cause of "one character = big lag" on huge files.
+    //    Fixed: spellcheck="false", autocomplete/autocorrect/autocapitalize
+    //    off, and Grammarly disabled via data attributes.
+    //
+    // 2) The old "input" handler recomputed line/column info by taking a
+    //    substring from 0 to the cursor and splitting it into an array on
+    //    every single keystroke. That work is O(distance to cursor), and it
+    //    ran synchronously on EVERY input event — whether you typed 1
+    //    character or pasted 100,000. That's exactly why typing felt as
+    //    slow as pasting: the cost was never about how much text changed,
+    //    it was a fixed, repeated full recompute every event.
+    //    Fixed: recompute is now (a) done with an indexOf loop instead of
+    //    split()/substring() (no giant array/string allocations), and
+    //    (b) coalesced with requestAnimationFrame so it runs at most once
+    //    per rendered frame, no matter how fast you type.
+    //
+    // 3) DOM writes (button disabled state, status text) happened every
+    //    keystroke even when nothing actually changed.
+    //    Fixed: DOM writes are now guarded — they only touch the DOM when
+    //    the value actually changed, and are batched into the same
+    //    per-frame update as above.
+    // ============================================================
+
+    // State variables
+    let currentFileHandle = null;
+    let currentFile = null;
+    let currentChunk = 0;
+    let totalChunks = 0;
+    let chunkSize = 4 * 1024 * 1024; // 4MB chunks for better performance
+    let fileSize = 0;
+    let modifiedChunks = new Map();
+    let originalChunks = new Map();
+    let isFileSystemAccessSupported = false;
+
+    // Cached UI state so we only touch the DOM when something changed
+    let lastRenderedLine = null;
+    let lastRenderedColumn = null;
+    let lastHasChanges = null;
+    let lastModifiedCount = null;
+    let frameScheduled = false;
+
+    // DOM elements
+    const editor = document.getElementById('editor');
+    const openBtn = document.getElementById('openBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const saveAsBtn = document.getElementById('saveAsBtn');
+    const minimizeBtn = document.getElementById('minimizeBtn');
+    const formatBtn = document.getElementById('formatBtn');
+    const selectBtn = document.getElementById('selectBtn');
+    const chunkSlider = document.getElementById('chunkSlider');
+    const fileName = document.getElementById('fileName');
+    const fileSizeSpan = document.getElementById('fileSize');
+    const modifiedStatus = document.getElementById('modifiedStatus');
+    const positionInfo = document.getElementById('positionInfo');
+    const chunkInfo = document.getElementById('chunkInfo');
+    const saveInfo = document.getElementById('saveInfo');
+    const progress = document.getElementById('progress');
+    const apiStatus = document.getElementById('apiStatus');
+    const saveStatus = document.getElementById('saveStatus');
+    const searchBar = document.getElementById('searchBar');
+    const searchToggleBtn = document.getElementById('searchToggleBtn');
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearBtn');
+    const searchPrevBtn = document.getElementById('searchPrevBtn');
+    const searchNextBtn = document.getElementById('searchNextBtn');
+    const searchCount = document.getElementById('searchCount');
+    const replaceRow = document.getElementById('replaceRow');
+    const replaceInput = document.getElementById('replaceInput');
+    const replaceAllBtn = document.getElementById('replaceAllBtn');
+    const editorHighlight = document.getElementById('editorHighlight');
+
+    // Search state — matches are recomputed only when the query or the
+    // editor's text actually changes, not on every navigation click.
+    let searchMatches = [];
+    let searchIndex = -1;
+    let lastSearchQuery = '';
+    let lastSearchText = null;
+
+    // Highlight-overlay state — kept separate from search state so the
+    // overlay's DOM is only rebuilt when the query/text combo it was last
+    // built from has actually changed (see rebuildHighlightOverlay).
+    let highlightMarks = [];
+    let lastHighlightQuery = null;
+    let lastHighlightText = null;
+    // Caps how many <mark> nodes we ever create in one pass. A search term
+    // that matches thousands of times (e.g. a single common letter in a
+    // multi-MB chunk) would otherwise build a huge DOM tree and make
+    // scrolling/typing janky — past this cap we still track and jump
+    // between matches normally, we just stop drawing every single one.
+    const MAX_HIGHLIGHT_MATCHES = 3000;
+
+    // Check File System Access API support
+    async function checkFileSystemAccess() {
+      try {
+        if ('showOpenFilePicker' in window) {
+          isFileSystemAccessSupported = true;
+          if (apiStatus) {
+            apiStatus.innerHTML = '✓ File System Access API is supported! You can save changes back to the original file.';
+            apiStatus.style.background = '#d4edda';
+            apiStatus.style.color = '#155724';
+            apiStatus.style.border = '1px solid #c3e6cb';
+          }
+          return true;
+        } else {
+          isFileSystemAccessSupported = false;
+          if (apiStatus) {
+            apiStatus.innerHTML = '⚠️ File System Access API not supported. You can only download modified files.';
+            apiStatus.style.background = '#fff3cd';
+            apiStatus.style.color = '#856404';
+            apiStatus.style.border = '1px solid #ffeaa7';
+          }
+          return false;
+        }
+      } catch (error) {
+        console.error('Error checking File System Access API:', error);
+        isFileSystemAccessSupported = false;
+        return false;
+      }
+    }
+
+    // Event listeners
+    openBtn.addEventListener('click', openFileWithPicker);
+    saveBtn.addEventListener('click', saveFile);
+    saveAsBtn.addEventListener('click', saveFileAs);
+    minimizeBtn.addEventListener('click', minimizeCurrentChunk);
+    formatBtn.addEventListener('click', formatCurrentChunk);
+    selectBtn.addEventListener('click', selectAllText);
+    chunkSlider.addEventListener('input', onChunkSliderChange);
+    searchInput.addEventListener('input', onSearchInputChange);
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (e.shiftKey) goToPrevMatch();
+        else goToNextMatch();
+      }
+    });
+    searchPrevBtn.addEventListener('click', goToPrevMatch);
+    searchNextBtn.addEventListener('click', goToNextMatch);
+    searchToggleBtn.addEventListener('click', toggleReplaceRow);
+    clearBtn.addEventListener('click', clearSearchAndReplace);
+    replaceAllBtn.addEventListener('click', replaceAllMatches);
+    replaceInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        replaceAllMatches();
+      }
+    });
+    editor.addEventListener('scroll', syncHighlightScroll);
+
+    // The ONLY work done synchronously on every keystroke is recording
+    // which chunk is dirty. Everything expensive (line/column math,
+    // button/text DOM updates) is coalesced into a single
+    // requestAnimationFrame callback, so typing speed never scales with
+    // file size.
+    editor.addEventListener('input', function() {
+      modifiedChunks.set(currentChunk, editor.value);
+      scheduleFrameUpdate();
+    });
+
+    editor.addEventListener('keyup', scheduleFrameUpdate);
+    editor.addEventListener('click', scheduleFrameUpdate);
+
+    function scheduleFrameUpdate() {
+      if (frameScheduled) return;
+      frameScheduled = true;
+      requestAnimationFrame(() => {
+        frameScheduled = false;
+        updatePositionInfo();
+        updateSaveButtons();
+        updateSaveInfo();
+        // Only touch search/highlight work if a query is active — typing
+        // in the editor with an empty search box costs nothing extra.
+        if (searchInput.value) {
+          recomputeSearchMatches();
+          updateSearchCount();
+          rebuildHighlightOverlay();
+        }
+      });
+    }
+
+    // Fast line/column computation: walks forward with indexOf instead of
+    // slicing a substring and splitting it into an array. Cost is
+    // proportional to cursor position, not total file size, and it now
+    // only ever runs once per animation frame (see scheduleFrameUpdate).
+    function computeLineColumn(content, cursorPos) {
+      let line = 1;
+      let lastNewline = -1;
+      let idx = content.indexOf('\n');
+      while (idx !== -1 && idx < cursorPos) {
+        line++;
+        lastNewline = idx;
+        idx = content.indexOf('\n', idx + 1);
+      }
+      const column = cursorPos - lastNewline;
+      return {
+        line,
+        column
+      };
+    }
+
+    function updatePositionInfo() {
+      const content = editor.value;
+      const cursorPos = editor.selectionStart;
+      const {
+        line,
+        column
+      } = computeLineColumn(content, cursorPos);
+      if (line !== lastRenderedLine || column !== lastRenderedColumn) {
+        lastRenderedLine = line;
+        lastRenderedColumn = column;
+        positionInfo.textContent = `Line: ${line}, Column: ${column}`;
+      }
+    }
+
+    // Search: finds all occurrences of the query in the current chunk's
+    // text using a single indexOf sweep (no regex compilation, no
+    // re-scanning already-passed text), then highlights the match. Matches
+    // are cached and only recomputed when the query or the underlying text
+    // actually changes, so navigating between matches (Enter / ◀ / ▶) does
+    // zero re-scanning work.
+    //
+    // Focus fix: highlighting a match must NEVER move focus to the editor.
+    // Textareas keep their selection highlight visible even while
+    // unfocused, so we can select the match text without calling
+    // editor.focus(). Previously jumpToMatch() called editor.focus(),
+    // which stole keyboard focus away from the search box after the very
+    // first typed character — so the 2nd character you typed landed in the
+    // editor and overwrote the highlighted match instead of continuing
+    // the search query.
+    function recomputeSearchMatches() {
+      const query = searchInput.value;
+      const text = editor.value;
+
+      if (!query) {
+        searchMatches = [];
+        searchIndex = -1;
+        lastSearchQuery = query;
+        lastSearchText = text;
+        return;
+      }
+
+      if (query === lastSearchQuery && text === lastSearchText) {
+        return; // nothing changed — reuse cached matches
+      }
+
+      const matches = [];
+      const needle = query.toLowerCase();
+      const haystack = text.toLowerCase();
+      const step = needle.length;
+      let idx = haystack.indexOf(needle);
+      while (idx !== -1) {
+        matches.push(idx);
+        idx = haystack.indexOf(needle, idx + step);
+      }
+
+      searchMatches = matches;
+      searchIndex = matches.length > 0 ? 0 : -1;
+      lastSearchQuery = query;
+      lastSearchText = text;
+    }
+
+    // Fixed "i/n" format at all times so the box never resizes.
+    function updateSearchCount() {
+      if (!searchInput.value || searchMatches.length === 0) {
+        searchCount.textContent = '0/0';
+      } else {
+        searchCount.textContent = `${searchIndex + 1}/${searchMatches.length}`;
+      }
+    }
+
+    function jumpToMatch(index) {
+      if (index < 0 || index >= searchMatches.length) return;
+      const start = searchMatches[index];
+      const end = start + searchInput.value.length;
+
+      // Select the match without focusing the editor (see note above).
+      editor.setSelectionRange(start, end);
+
+      // Scroll the match into view without a full re-render: estimate the
+      // target line via the same cheap indexOf walk used elsewhere, then
+      // scroll proportionally.
+      const {
+        line
+      } = computeLineColumn(editor.value, start);
+      const totalLines = editor.value.split('\n').length || 1;
+      const lineHeight = editor.scrollHeight / totalLines;
+      editor.scrollTop = Math.max(0, (line - 3) * lineHeight);
+      syncHighlightScroll();
+    }
+
+    // --- Highlight overlay: draws a <mark> over every match so all of
+    // them stay visibly highlighted, not just the current one. Built as a
+    // transparent-text layer sitting directly behind the real textarea
+    // (see #editorHighlight CSS) so the real, editable text still renders
+    // normally on top.
+    function escapeHtml(s) {
+      return s.replace(/[&<>]/g, c => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'));
+    }
+
+    function rebuildHighlightOverlay() {
+      const query = searchInput.value;
+      const text = editor.value;
+
+      if (!query || searchMatches.length === 0) {
+        if (highlightMarks.length || editorHighlight.textContent) {
+          editorHighlight.textContent = '';
+          highlightMarks = [];
+        }
+        lastHighlightQuery = query;
+        lastHighlightText = text;
+        return;
+      }
+
+      // Cache guard: rebuilding is O(chunk size) — skip it entirely when
+      // neither the query nor the text has changed since last build.
+      if (query === lastHighlightQuery && text === lastHighlightText) {
+        applyCurrentMatchHighlight();
+        return;
+      }
+
+      const needleLen = query.length;
+      const renderCount = Math.min(searchMatches.length, MAX_HIGHLIGHT_MATCHES);
+
+      let html = '';
+      let lastIndex = 0;
+      for (let i = 0; i < renderCount; i++) {
+        const start = searchMatches[i];
+        html += escapeHtml(text.slice(lastIndex, start));
+        html += '<mark>' + escapeHtml(text.slice(start, start + needleLen)) + '</mark>';
+        lastIndex = start + needleLen;
+      }
+      html += escapeHtml(text.slice(lastIndex));
+
+      editorHighlight.innerHTML = html;
+      highlightMarks = renderCount > 0 ? Array.prototype.slice.call(editorHighlight.getElementsByTagName('mark')) : [];
+
+      lastHighlightQuery = query;
+      lastHighlightText = text;
+
+      syncHighlightScroll();
+      applyCurrentMatchHighlight();
+    }
+
+    // Switching which match is "current" never needs a DOM rebuild — just
+    // move the current-match class between the two cached <mark> nodes.
+    function applyCurrentMatchHighlight() {
+      for (let i = 0; i < highlightMarks.length; i++) {
+        const isCurrent = i === searchIndex;
+        if (isCurrent !== highlightMarks[i].classList.contains('current-match')) {
+          highlightMarks[i].classList.toggle('current-match', isCurrent);
+        }
+      }
+    }
+
+    function syncHighlightScroll() {
+      editorHighlight.scrollTop = editor.scrollTop;
+      editorHighlight.scrollLeft = editor.scrollLeft;
+    }
+
+    function onSearchInputChange() {
+      recomputeSearchMatches();
+      updateSearchCount();
+      rebuildHighlightOverlay();
+      if (searchMatches.length > 0) jumpToMatch(searchIndex);
+    }
+
+    function goToNextMatch() {
+      recomputeSearchMatches();
+      if (searchMatches.length === 0) {
+        updateSearchCount();
+        rebuildHighlightOverlay();
+        return;
+      }
+      searchIndex = (searchIndex + 1) % searchMatches.length;
+      updateSearchCount();
+      rebuildHighlightOverlay();
+      jumpToMatch(searchIndex);
+    }
+
+    function goToPrevMatch() {
+      recomputeSearchMatches();
+      if (searchMatches.length === 0) {
+        updateSearchCount();
+        rebuildHighlightOverlay();
+        return;
+      }
+      searchIndex = (searchIndex - 1 + searchMatches.length) % searchMatches.length;
+      updateSearchCount();
+      rebuildHighlightOverlay();
+      jumpToMatch(searchIndex);
+    }
+
+    // The X button always stays put on the top (search) bar and always
+    // clears both fields, regardless of whether the replace row is open.
+    function toggleReplaceRow() {
+      const isOpen = replaceRow.style.display !== 'none';
+      replaceRow.style.display = isOpen ? 'none' : 'flex';
+      searchToggleBtn.textContent = isOpen ? '▸' : '▾';
+      searchToggleBtn.classList.toggle('open', !isOpen);
+    }
+
+    function clearSearchAndReplace() {
+      searchInput.value = '';
+      replaceInput.value = '';
+      recomputeSearchMatches();
+      updateSearchCount();
+      rebuildHighlightOverlay();
+      searchInput.focus();
+    }
+
+    // Replace all instances of the search query with the replace value in
+    // the current chunk. Uses the same case-insensitive matching as
+    // search, does one pass with split() (no repeated re-scanning), then
+    // routes the result through replaceEditorContent so undo still works
+    // and the chunk is correctly marked modified.
+    function replaceAllMatches() {
+      const query = searchInput.value;
+      if (!query) return;
+
+      const replacement = replaceInput.value;
+      const currentText = editor.value;
+      const needle = query.toLowerCase();
+      const haystack = currentText.toLowerCase();
+
+      if (haystack.indexOf(needle) === -1) {
+        showSaveStatus('No matches to replace', 'saved');
+        return;
+      }
+
+      let result = '';
+      let lastIndex = 0;
+      let idx = haystack.indexOf(needle);
+      let count = 0;
+      while (idx !== -1) {
+        result += currentText.slice(lastIndex, idx) + replacement;
+        lastIndex = idx + needle.length;
+        count++;
+        idx = haystack.indexOf(needle, lastIndex);
+      }
+      result += currentText.slice(lastIndex);
+
+      // replaceEditorContent() already recomputes matches, refreshes the
+      // count, and rebuilds the highlight overlay against the new text —
+      // doing it again here would re-scan the whole chunk a second time
+      // for no benefit.
+      replaceEditorContent(result);
+      showSaveStatus(`Replaced ${count} instance(s)`, 'saved');
+    }
+
+    // Formatter helper: detect language from filename
+    function detectLanguageFromName(name) {
+      if (!name) return 'text';
+      const ext = name.split('.').pop()?.toLowerCase() || '';
+      const map = {
+        js: 'javascript',
+        jsx: 'javascript',
+        ts: 'javascript',
+        tsx: 'javascript',
+        html: 'html',
+        htm: 'html',
+        xml: 'html',
+        css: 'css',
+        scss: 'css',
+        less: 'css',
+        json: 'json'
+      };
+      return map[ext] || 'text';
+    }
+
+    // Format code using js-beautify libs loaded in the head
+    function formatCode(code, language) {
+      try {
+        const commonOpts = {
+          indent_size: 2,
+          indent_char: ' ',
+          preserve_newlines: true,
+          max_preserve_newlines: 2,
+          wrap_line_length: 0,
+          end_with_newline: false,
+          indent_empty_lines: false
+        };
+
+        switch (language) {
+          case 'javascript':
+            if (window.js_beautify) {
+              return js_beautify(code, Object.assign({}, commonOpts, {
+                brace_style: 'collapse',
+                space_before_conditional: true,
+                keep_array_indentation: false
+              }));
+            }
+            break;
+          case 'html':
+            if (window.html_beautify) {
+              return html_beautify(code, Object.assign({}, commonOpts, {
+                indent_inner_html: true,
+                brace_style: 'collapse',
+                indent_scripts: 'normal'
+              }));
+            }
+            break;
+          case 'css':
+            if (window.css_beautify) {
+              return css_beautify(code, Object.assign({}, commonOpts, {
+                newline_between_rules: true
+              }));
+            }
+            break;
+          case 'json':
+            try {
+              const parsed = JSON.parse(code);
+              return JSON.stringify(parsed, null, 2);
+            } catch (e) {
+              return code; // invalid JSON — leave as-is
+            }
+          default:
+            if (window.js_beautify) {
+              return js_beautify(code, Object.assign({}, commonOpts, {
+                brace_style: 'collapse'
+              }));
+            }
+            return code;
+        }
+      } catch (err) {
+        console.warn('Formatting error:', err);
+        return code;
+      }
+      return code;
+    }
+
+    // "Minimize": compacts whitespace (trims each line, drops blank
+    // lines). This is intentionally conservative rather than a full
+    // JS/CSS minifier so it won't corrupt string literals or logic —
+    // it just shrinks the visual footprint of the code.
+    function minifyCode(code) {
+      return code
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('\n');
+    }
+
+    // Replace the editor's content while preserving native undo (Ctrl+Z)
+    // by routing the change through execCommand instead of directly
+    // assigning .value (which wipes the undo stack).
+    function replaceEditorContent(newText) {
+      editor.focus();
+      editor.select();
+      let applied = false;
+      try {
+        applied = document.execCommand && document.execCommand('insertText', false, newText);
+      } catch (e) {
+        applied = false;
+      }
+      if (!applied) {
+        editor.value = newText;
+      }
+      modifiedChunks.set(currentChunk, editor.value);
+      updateSaveButtons();
+      updateSaveInfo();
+      if (searchInput.value) {
+        recomputeSearchMatches();
+        updateSearchCount();
+        rebuildHighlightOverlay();
+      }
+    }
+
+    function formatCurrentChunk() {
+      const language = detectLanguageFromName(currentFile ? currentFile.name : fileName.textContent);
+      const currentText = editor.value;
+      const formatted = formatCode(currentText, language);
+      if (formatted !== currentText) {
+        replaceEditorContent(formatted);
+        showSaveStatus('Formatted current chunk', 'saved');
+      } else {
+        showSaveStatus('No changes after formatting', 'saved');
+      }
+    }
+
+    function minimizeCurrentChunk() {
+      const currentText = editor.value;
+      const minified = minifyCode(currentText);
+      if (minified !== currentText) {
+        replaceEditorContent(minified);
+        showSaveStatus('Minimized current chunk', 'saved');
+      } else {
+        showSaveStatus('No changes after minimizing', 'saved');
+      }
+    }
+
+    // Select-all / highlight action
+    function selectAllText() {
+      editor.focus();
+      editor.select();
+      showSaveStatus('All text selected', 'saved');
+    }
+
+    // File System Access API functions
+    async function openFileWithPicker() {
+      try {
+        if (!isFileSystemAccessSupported) {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.html,.htm,.txt,.js,.css,.xml,.json';
+          input.onchange = e => openFile(e.target.files[0]);
+          input.click();
+          return;
+        }
+
+        const [fileHandle] = await window.showOpenFilePicker({
+          types: [{
+            description: 'Text Files',
+            accept: {
+              'text/*': ['.html', '.htm', '.txt', '.js', '.css', '.xml', '.json']
+            }
+          }],
+          multiple: false
+        });
+
+        currentFileHandle = fileHandle;
+        const file = await fileHandle.getFile();
+        await openFile(file);
+
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Error opening file:', error);
+          alert('Error opening file: ' + error.message);
+        }
+      }
+    }
+
+    async function openFile(file) {
+      try {
+        currentFile = file;
+        fileSize = file.size;
+        fileName.textContent = file.name;
+        fileSizeSpan.textContent = formatFileSize(fileSize);
+        modifiedStatus.textContent = '';
+
+        // Reset state
+        modifiedChunks.clear();
+        originalChunks.clear();
+        lastRenderedLine = null;
+        lastRenderedColumn = null;
+        lastHasChanges = null;
+        lastModifiedCount = null;
+
+        currentChunk = 0;
+
+        // Calculate chunks
+        totalChunks = Math.ceil(fileSize / chunkSize);
+
+        // Update UI
+        chunkSlider.max = totalChunks - 1;
+        chunkSlider.value = 0;
+        chunkSlider.disabled = totalChunks <= 1;
+
+        // Load first chunk
+        await loadChunk(currentChunk);
+
+        updateNavigationButtons();
+        updateSaveButtons();
+        updateChunkInfo();
+        updateProgress();
+        updateSaveInfo();
+        updatePositionInfo();
+
+        showSaveStatus('File opened successfully', 'saved');
+
+      } catch (error) {
+        console.error('Error opening file:', error);
+        alert('Error opening file: ' + error.message);
+      }
+    }
+
+    async function loadChunk(chunkIndex) {
+      if (!currentFile) return;
+
+      try {
+        const start = chunkIndex * chunkSize;
+        const end = Math.min(start + chunkSize, fileSize);
+
+        if (!originalChunks.has(chunkIndex)) {
+          const chunk = currentFile.slice(start, end);
+          const text = await chunk.text();
+          originalChunks.set(chunkIndex, text);
+        }
+
+        editor.value = modifiedChunks.has(chunkIndex) ?
+          modifiedChunks.get(chunkIndex) :
+          originalChunks.get(chunkIndex);
+
+        lastRenderedLine = null;
+        lastRenderedColumn = null;
+        updatePositionInfo();
+
+        // Force the overlay/matches to recompute against this chunk's
+        // text instead of showing stale highlights from the previous
+        // chunk.
+        lastSearchText = null;
+        lastHighlightText = null;
+        if (searchInput.value) {
+          recomputeSearchMatches();
+          updateSearchCount();
+          rebuildHighlightOverlay();
+        } else {
+          editorHighlight.textContent = '';
+          highlightMarks = [];
+        }
+        syncHighlightScroll();
+      } catch (error) {
+        console.error('Error loading chunk:', error);
+        alert('Error loading file chunk');
+      }
+    }
+
+    async function saveFile() {
+      if (!currentFileHandle || modifiedChunks.size === 0) return;
+
+      try {
+        showSaveStatus('Saving changes...', 'saving');
+
+        const writable = await currentFileHandle.createWritable();
+
+        let position = 0;
+
+        for (let i = 0; i < totalChunks; i++) {
+          let chunkContent;
+
+          if (modifiedChunks.has(i)) {
+            chunkContent = modifiedChunks.get(i);
+          } else if (originalChunks.has(i)) {
+            chunkContent = originalChunks.get(i);
+          } else {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, fileSize);
+            const chunk = currentFile.slice(start, end);
+            chunkContent = await chunk.text();
+          }
+
+          await writable.write({
+            type: 'write',
+            position,
+            data: chunkContent
+          });
+          position += chunkContent.length;
+
+          // Record exactly what was just written to disk as the new
+          // "original" for this chunk. Without this, originalChunks still
+          // held the stale pre-save text, so once modifiedChunks was
+          // cleared below, reloading the chunk fell back to that stale
+          // text and made it look like Save Changes had swapped your
+          // edits back out for the old content.
+          originalChunks.set(i, chunkContent);
+        }
+
+        await writable.close();
+
+        currentFile = await currentFileHandle.getFile();
+        fileSize = currentFile.size;
+
+        modifiedChunks.clear();
+
+        updateSaveButtons();
+        updateSaveInfo();
+        showSaveStatus('Changes saved successfully!', 'saved');
+
+        await loadChunk(currentChunk);
+
+      } catch (error) {
+        console.error('Error saving file:', error);
+        showSaveStatus('Error saving file: ' + error.message, 'error');
+      }
+    }
+
+    async function saveFileAs() {
+      try {
+        if (!isFileSystemAccessSupported) {
+          await downloadModifiedFile();
+          return;
+        }
+
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: currentFile ? currentFile.name : 'untitled.txt',
+          types: [{
+            description: 'Text Files',
+            accept: {
+              'text/*': ['.html', '.htm', '.txt']
+            }
+          }]
+        });
+
+        showSaveStatus('Saving file...', 'saving');
+
+        const writable = await fileHandle.createWritable();
+
+        for (let i = 0; i < totalChunks; i++) {
+          let chunkContent = modifiedChunks.has(i) ?
+            modifiedChunks.get(i) :
+            (originalChunks.has(i) ? originalChunks.get(i) : await loadChunkContent(i));
+
+          await writable.write(chunkContent);
+        }
+
+        await writable.close();
+        showSaveStatus('File saved successfully!', 'saved');
+
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Error saving file as:', error);
+          showSaveStatus('Error saving file: ' + error.message, 'error');
+        }
+      }
+    }
+
+    async function loadChunkContent(chunkIndex) {
+      const start = chunkIndex * chunkSize;
+      const end = Math.min(start + chunkSize, fileSize);
+      const chunk = currentFile.slice(start, end);
+      return await chunk.text();
+    }
+
+    async function downloadModifiedFile() {
+      try {
+        showSaveStatus('Preparing download...', 'saving');
+
+        let fullContent = '';
+        for (let i = 0; i < totalChunks; i++) {
+          if (modifiedChunks.has(i)) {
+            fullContent += modifiedChunks.get(i);
+          } else if (originalChunks.has(i)) {
+            fullContent += originalChunks.get(i);
+          } else {
+            fullContent += await loadChunkContent(i);
+          }
+        }
+
+        const blob = new Blob([fullContent], {
+          type: 'text/plain'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentFile ? `modified_${currentFile.name}` : 'modified_file.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showSaveStatus('File downloaded successfully!', 'saved');
+
+      } catch (error) {
+        console.error('Error downloading file:', error);
+        showSaveStatus('Error downloading file: ' + error.message, 'error');
+      }
+    }
+
+    // UI update functions — all guarded so they only touch the DOM when
+    // something actually changed.
+    function updateSaveButtons() {
+      const hasChanges = modifiedChunks.size > 0;
+      const nextSaveDisabled = !hasChanges || !isFileSystemAccessSupported || !currentFileHandle;
+      const nextSaveAsDisabled = !currentFile;
+
+      if (saveBtn.disabled !== nextSaveDisabled) saveBtn.disabled = nextSaveDisabled;
+      if (saveAsBtn.disabled !== nextSaveAsDisabled) saveAsBtn.disabled = nextSaveAsDisabled;
+    }
+
+    function updateSaveInfo() {
+      const count = modifiedChunks.size;
+      if (count === lastModifiedCount) return;
+      lastModifiedCount = count;
+
+      if (count === 0) {
+        saveInfo.textContent = 'No changes';
+        saveInfo.style.color = '#666';
+        modifiedStatus.textContent = '';
+      } else {
+        saveInfo.textContent = `${count} chunk(s) modified`;
+        saveInfo.style.color = '#d35400';
+        modifiedStatus.textContent = `${count} chunk(s) modified`;
+      }
+    }
+
+    function showSaveStatus(message, type) {
+      saveStatus.textContent = message;
+      saveStatus.className = `save-status ${type}`;
+      setTimeout(() => {
+        saveStatus.textContent = '';
+        saveStatus.className = 'save-status';
+      }, 3000);
+    }
+
+    // Navigation functions
+    function onChunkSliderChange() {
+      const newChunk = parseInt(chunkSlider.value);
+      if (newChunk !== currentChunk) {
+        currentChunk = newChunk;
+        loadChunk(currentChunk);
+        updateNavigationButtons();
+        updateChunkInfo();
+        updateProgress();
+      }
+    }
+
+    function updateNavigationButtons() {
+      chunkSlider.disabled = totalChunks <= 1;
+    }
+
+    function updateChunkInfo() {
+      chunkInfo.textContent = `Chunk ${currentChunk + 1}/${totalChunks}`;
+    }
+
+    function updateProgress() {
+      const progressPercent = ((currentChunk + 1) / totalChunks) * 100;
+      if (progress) progress.style.width = `${progressPercent}%`;
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' bytes';
+      else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+      else if (bytes < 1073741824) return (bytes / 1048576).toFixed(2) + ' MB';
+      else return (bytes / 1073741824).toFixed(2) + ' GB';
+    }
+
+    // Initialize
+    async function init() {
+      await checkFileSystemAccess();
+      updateSaveButtons();
+
+      const sampleContent = '<!DOCTYPE html>\n<!-- By Ion-o-koji -->\n<html lang="en">\n\n  <head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Skeleton Code</title>\n    <style>\n      \n    </style>\n  </head>\n\n  <body>\n    \n    <script>\n      \n    <\/script>\n  </body>\n\n</html>';
+
+      const blob = new Blob([sampleContent], {
+        type: 'text/html'
+      });
+      const file = new File([blob], 'demo-file.html', {
+        type: 'text/html'
+      });
+      await openFile(file);
+    }
+
+    // Start the application
+    init();
+
+    (() => {
+      const ENTRY = 'HTML Editor v4',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
