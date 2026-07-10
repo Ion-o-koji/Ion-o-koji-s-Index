@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>IA Flash Arcade v3</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@latest/ruffle.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: '#2ee6b4',
+            bg: '#070707'
+          }
+        }
+      }
+    }
+
+  </script>
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-hover:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(46, 230, 180, 0.3);
+    }
+
+    body {
+      background: #070707;
+      background-image: radial-gradient(rgba(46, 230, 180, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    #flash-container canvas {
+      border-radius: 1rem;
+    }
+
+  </style>
+</head>
+
+<body class="text-gray-200 font-sans antialiased">
+  <header class="sticky top-0 z-40 glass">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+      <h1 class="text-2xl font-bold">IA<span class="text-mint">Flash</span>Arcade</h1>
+      <div class="flex-1 relative"> <input id="search" placeholder="Search Flash games... tank, dress up, platformer" class="w-full glass rounded-2xl px-4 py-3 pl-11 bg-transparent outline-none focus:ring-2 focus:ring-mint/50 transition"> <svg class="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg> </div>
+    </div>
+  </header>
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div class="text-center col-span-full text-gray-400">Loading popular games...</div>
+    </div>
+    <div id="loader" class="text-center col-span-full text-gray-400 py-8 hidden">Loading more...</div>
+    <div id="sentinel"></div>
+  </main>
+  <div id="player" class="fixed inset-0 bg-black/90 backdrop-blur-xl hidden flex-col z-50">
+    <div class="p-4 flex justify-between items-center glass gap-2 flex-wrap"> <button onclick="closePlayer()" class="glass glass-hover px-4 py-2 rounded-xl font-semibold flex items-center gap-2"> <span>←</span> Back </button>
+      <div class="flex gap-2">
+        <a id="iaLink" target="_blank" class="glass glass-hover px-4 py-2 rounded-xl font-semibold text-sm">IA Page</a>
+        <button id="copySwfBtn" class="glass glass-hover px-4 py-2 rounded-xl font-semibold text-sm">Copy SWF Link</button>
+        <button onclick="toggleFullscreen()" class="glass glass-hover px-4 py-2 rounded-xl font-semibold text-sm">Fullscreen</button>
+      </div>
+    </div>
+    <div id="flash-container" class="flex-1 flex p-4"></div>
+  </div>
+  <script>
+    function getProxy() {
+      let a = "AwQnombGNjNqJlNCJiRP5kaqYnR6plRapkeWZka2Z0GeIkN+o0M2IkcCN0Fz4jLu4l";
+      let b = [...a].reduce((acc, c) => c + acc, '');
+      b += '\x3d'.repeat((4 - b.length % 4) % 4);
+      const e = Uint8Array.from(atob(b), d => d.charCodeAt(0));
+      return new TextDecoder().decode(e.map(g => ~g & 0xFF));
+    }
+    const grid = document.getElementById('grid');
+    const search = document.getElementById('search');
+    const loader = document.getElementById('loader');
+    const sentinel = document.getElementById('sentinel');
+    const copyBtn = document.getElementById('copySwfBtn');
+
+    let currentPage = 1;
+    let currentQuery = 'popular';
+    let isLoading = false;
+    let hasMore = true;
+    let currentSwfUrl = '';
+
+    async function proxyFetch(url) {
+      const res = await fetch(getProxy() + encodeURIComponent(url));
+      if (!res.ok) throw new Error(`Proxy error ${res.status}`);
+      return res;
+    }
+
+    async function searchIA(query = 'popular', reset = true) {
+      if (reset) {
+        currentPage = 1;
+        currentQuery = query || 'popular';
+        hasMore = true;
+        grid.innerHTML = `<div class="text-center col-span-full text-gray-400">Searching...</div>`;
+      }
+      if (isLoading || !hasMore) return;
+      isLoading = true;
+      loader.classList.remove('hidden');
+      try {
+        const q = currentQuery === 'popular' ? '*' : currentQuery;
+        const url = `https://archive.org/advancedsearch.php?q=collection:softwarelibrary_flash AND ${q}&fl[]=identifier,title,description&sort[]=downloads desc&rows=60&page=${currentPage}&output=json`;
+        const res = await proxyFetch(url);
+        const data = await res.json();
+        const games = data.response.docs;
+        if (games.length === 0) hasMore = false;
+        if (reset) grid.innerHTML = '';
+        renderGames(games);
+        currentPage++;
+      } catch (e) {
+        console.error(e);
+        grid.innerHTML = `<div class="text-center col-span-full text-red-400">Failed to load: ${e.message}</div>`;
+      } finally {
+        isLoading = false;
+        loader.classList.add('hidden');
+      }
+    }
+
+    function renderGames(games) {
+      const frag = document.createDocumentFragment();
+      games.forEach(g => {
+        const card = document.createElement('div');
+        card.className = "glass glass-hover rounded-2xl p-3 cursor-pointer transition group";
+        card.onclick = () => launch(g.identifier);
+        card.innerHTML = `
+      <div class="aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-black/50">
+        <img loading="lazy" src="https://archive.org/services/get-item-image.php?identifier=${g.identifier}" class="w-full h-full object-cover group-hover:scale-105 transition">
+      </div>
+      <div class="font-semibold text-sm truncate">${g.title}</div>
+      <div class="text-xs text-gray-400 truncate">${g.description?.slice(0,50) || 'Flash Game'}</div>
+    `;
+        frag.appendChild(card);
+      });
+      grid.appendChild(frag);
+    }
+
+    async function launch(id) {
+      const playerDiv = document.getElementById('player');
+      const container = document.getElementById('flash-container');
+      playerDiv.classList.remove('hidden');
+      playerDiv.classList.add('flex');
+      container.innerHTML = `<div class="m-auto text-mint animate-pulse">Loading game...</div>`;
+      document.getElementById('iaLink').href = `https://archive.org/details/${id}`;
+      currentSwfUrl = '';
+      copyBtn.textContent = 'Copy SWF Link';
+
+      try {
+        const metaRes = await proxyFetch(`https://archive.org/metadata/${id}`);
+        const meta = await metaRes.json();
+        const swfFile = meta.files.find(f => f.name.endsWith('.swf') && f.source === 'original');
+        if (!swfFile) throw new Error('No.swf found');
+
+        const rawSwfUrl = `https://archive.org/download/${id}/${swfFile.name}`;
+        currentSwfUrl = rawSwfUrl;
+
+        const proxiedSwfUrl = getProxy() + encodeURIComponent(rawSwfUrl);
+        container.innerHTML = '';
+        const ruffle = window.RufflePlayer.newest();
+        const player = ruffle.createPlayer({
+          contextMenu: false
+        });
+        player.style.width = "100%";
+        player.style.height = "100%";
+        container.appendChild(player);
+        await player.load(proxiedSwfUrl);
+        resizePlayer();
+      } catch (e) {
+        container.innerHTML = `<div class="m-auto text-red-400">Failed: ${e.message}</div>`;
+        console.error(e);
+      }
+    }
+
+    function closePlayer() {
+      document.getElementById('player').classList.add('hidden');
+      document.getElementById('flash-container').innerHTML = '';
+      currentSwfUrl = '';
+    }
+
+    function toggleFullscreen() {
+      const el = document.getElementById('flash-container');
+      if (!document.fullscreenElement) el.requestFullscreen();
+      else document.exitFullscreen();
+    }
+
+    function resizePlayer() {
+      const c = document.getElementById('flash-container');
+      let w = window.innerWidth - 32;
+      let h = w / (4 / 3);
+      if (h > window.innerHeight - 80) {
+        h = window.innerHeight - 80;
+        w = h * (4 / 3);
+      }
+      c.style.width = w + 'px';
+      c.style.height = h + 'px';
+      c.style.margin = 'auto';
+    }
+
+    copyBtn.onclick = async () => {
+      if (!currentSwfUrl) return;
+      try {
+        await navigator.clipboard.writeText(currentSwfUrl);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = 'Copy SWF Link', 1500);
+      } catch (e) {
+        prompt("Copy this SWF link:", currentSwfUrl);
+      }
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        searchIA(currentQuery, false);
+      }
+    }, {
+      rootMargin: '200px'
+    });
+    observer.observe(sentinel);
+
+    let searchTimeout;
+    search.oninput = e => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => searchIA(e.target.value), 500);
+    }
+
+    window.addEventListener('resize', resizePlayer);
+    searchIA('popular');
+
+    (() => {
+      const ENTRY = 'IA Flash Arcade v3',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
