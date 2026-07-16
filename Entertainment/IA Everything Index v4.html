@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>IA Everything Index v4</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@latest/ruffle.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: '#2ee6b4',
+            bg: '#070707'
+          }
+        }
+      }
+    }
+
+  </script>
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-hover:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(46, 230, 180, 0.3);
+    }
+
+    body {
+      background: #070707;
+      background-image: radial-gradient(rgba(46, 230, 180, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #2ee6b4;
+      width: 0%;
+      transition: width 0.1s;
+    }
+
+    #media-container canvas {
+      border-radius: 1rem;
+    }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.75rem center;
+      background-repeat: no-repeat;
+      background-size: 1.25em 1.25em;
+      padding-right: 2.5rem;
+    }
+
+  </style>
+</head>
+
+<body class="text-gray-200 font-sans antialiased">
+  <header class="sticky top-0 z-40 glass">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+      <h1 class="text-2xl font-bold">IA<span class="text-mint">v4</span></h1>
+      <select id="typeSelect" class="glass rounded-xl px-4 py-2 bg-transparent outline-none font-semibold">
+        <option value="texts">Books</option>
+        <option value="movies">Movies</option>
+        <option value="flash">Flash</option>
+      </select>
+      <div class="flex-1 relative">
+        <input id="search" placeholder="Search Books... cold war, dune, philosophy" class="w-full glass rounded-2xl px-4 py-3 pl-11 bg-transparent outline-none focus:ring-2 focus:ring-mint/50 transition">
+        <svg class="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div class="text-center col-span-full text-gray-400">Loading...</div>
+    </div>
+    <div id="loader" class="text-center col-span-full text-gray-400 py-8 hidden">Loading more...</div>
+    <div id="sentinel"></div>
+  </main>
+
+  <div id="player" class="fixed inset-0 bg-black/90 backdrop-blur-xl hidden flex-col z-50">
+    <div class="p-4 flex justify-between items-center glass gap-2 flex-wrap">
+      <button onclick="closePlayer()" class="glass glass-hover px-4 py-2 rounded-xl font-semibold">← Back</button>
+      <div class="flex gap-2">
+        <a id="iaLink" target="_blank" class="glass glass-hover px-4 py-2 rounded-xl font-semibold text-sm">IA Page</a>
+        <button id="downloadBtn" class="glass glass-hover px-4 py-2 rounded-xl font-semibold text-sm bg-mint/20 hidden">Download</button>
+        <button id="fullscreenBtn" class="glass glass-hover px-4 py-2 rounded-xl font-semibold text-sm hidden">Fullscreen</button>
+      </div>
+    </div>
+    <div id="media-container" class="flex-1 flex p-4 overflow-y-auto"></div>
+  </div>
+
+  <script>
+    function getProxy() {
+      let a = "AwQnombGNjNqJlNCJiRP5kaqYnR6plRapkeWZka2Z0GeIkN+o0M2IkcCN0Fz4jLu4l";
+      let b = [...a].reduce((acc, c) => c + acc, '');
+      b += '\x3d'.repeat((4 - b.length % 4) % 4);
+      const e = Uint8Array.from(atob(b), d => d.charCodeAt(0));
+      return new TextDecoder().decode(e.map(g => ~g & 0xFF));
+    }
+
+    const grid = document.getElementById('grid'),
+      search = document.getElementById('search'),
+      loader = document.getElementById('loader'),
+      sentinel = document.getElementById('sentinel');
+    const typeSelect = document.getElementById('typeSelect'),
+      downloadBtn = document.getElementById('downloadBtn'),
+      fullscreenBtn = document.getElementById('fullscreenBtn');
+
+    let currentPage = 1,
+      currentQuery = 'popular',
+      isLoading = false,
+      hasMore = true;
+    let dirHandle = null,
+      currentDownloadUrl = '',
+      currentFilename = '',
+      currentMediatype = 'texts';
+
+    async function proxyFetch(url) {
+      return fetch(getProxy() + encodeURIComponent(url));
+    }
+
+    const placeholders = {
+      texts: "Search Books... cold war, dune, philosophy",
+      movies: "Search Movies... chaplin, public domain, prelinger",
+      flash: "Search Flash games... tank, dress up, platformer"
+    }
+
+    typeSelect.onchange = () => {
+      currentMediatype = typeSelect.value;
+      search.placeholder = placeholders[currentMediatype];
+      searchIA('popular');
+    }
+
+    async function searchIA(query = 'popular', reset = true) {
+      if (reset) {
+        currentPage = 1;
+        currentQuery = query || 'popular';
+        hasMore = true;
+        grid.innerHTML = `<div class="text-center col-span-full text-gray-400">Searching...</div>`;
+      }
+      if (isLoading || !hasMore) return;
+      isLoading = true;
+      loader.classList.remove('hidden');
+      try {
+        const q = currentQuery === 'popular' ? '*' : currentQuery;
+        let searchQuery = currentMediatype === 'flash' ? `collection:softwarelibrary_flash AND ${q}` : `mediatype:${currentMediatype} AND ${q}`;
+        const url = `https://archive.org/advancedsearch.php?q=${searchQuery}&fl[]=identifier,title,creator,year,description&sort[]=downloads desc&rows=60&page=${currentPage}&output=json`;
+        const res = await proxyFetch(url);
+        const data = await res.json();
+        const items = data.response.docs;
+        if (items.length === 0) hasMore = false;
+        if (reset) grid.innerHTML = '';
+        renderItems(items);
+        currentPage++;
+      } catch (e) {
+        grid.innerHTML = `<div class="text-center col-span-full text-red-400">Failed: ${e.message}</div>`;
+      } finally {
+        isLoading = false;
+        loader.classList.add('hidden');
+      }
+    }
+
+    function renderItems(items) {
+      const frag = document.createDocumentFragment();
+      const aspect = currentMediatype === 'movies' ? 'aspect-video' : currentMediatype === 'flash' ? 'aspect-[4/3]' : currentMediatype === 'images' ? 'aspect-square' : 'aspect-[3/4]';
+      items.forEach(i => {
+        const card = document.createElement('div');
+        card.className = "glass glass-hover rounded-2xl p-3 cursor-pointer transition group";
+        card.onclick = () => launch(i.identifier);
+        card.innerHTML = `<div class="${aspect} rounded-xl overflow-hidden mb-3 bg-black/50"><img loading="lazy" src="https://archive.org/services/img/${i.identifier}" class="w-full h-full object-cover group-hover:scale-105 transition"></div><div class="font-semibold text-sm truncate">${i.title}</div><div class="text-xs text-gray-400 truncate">${i.creator || 'Unknown'} ${i.year || ''}</div>`;
+        frag.appendChild(card);
+      });
+      grid.appendChild(frag);
+    }
+
+    async function launch(id) {
+      const playerDiv = document.getElementById('player');
+      playerDiv.classList.remove('hidden');
+      playerDiv.classList.add('flex');
+      const container = document.getElementById('media-container');
+      container.innerHTML = `<div class="m-auto text-mint animate-pulse">Loading metadata...</div>`;
+
+      document.getElementById('iaLink').href = `https://archive.org/details/${id}`;
+      downloadBtn.classList.add('hidden');
+      fullscreenBtn.classList.add('hidden');
+      currentDownloadUrl = '';
+
+      const res = await proxyFetch(`https://archive.org/metadata/${id}`);
+      const data = await res.json();
+      const m = data.metadata || {};
+
+      // METADATA CARD
+      let metaHTML = `
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="flex gap-6 flex-col md:flex-row">
+        <img src="https://archive.org/services/img/${id}" class="w-48 h-48 object-cover rounded-2xl flex-shrink-0 bg-black/50">
+        <div class="flex-1">
+          <h2 class="text-3xl font-bold">${m.title || 'Untitled'}</h2>
+          <p class="text-gray-400">${m.creator || m.artist || m.author || ''} ${m.date? `• ${m.date}` : ''}</p>
+          <p class="text-gray-500 text-sm mt-1">${parseInt(m.downloads || 0).toLocaleString()} downloads</p>
+          <p class="mt-4 text-gray-300 leading-relaxed whitespace-pre-line">${m.description? m.description.slice(0,1200) : 'No description available.'}</p>
+          <div class="flex gap-2 mt-3 flex-wrap">
+            ${Array.isArray(m.subject)? m.subject.slice(0,12).map(s => `<span class="glass px-2 py-1 rounded-lg text-xs">${s}</span>`).join('') : ''}
+          </div>
+        </div>
+      </div>
+      <div id="action-area" class="mt-6"></div>
+    </div>`;
+      container.innerHTML = metaHTML;
+
+      const actionArea = document.getElementById('action-area');
+
+      // FLASH
+      if (currentMediatype === 'flash') {
+        fullscreenBtn.classList.remove('hidden');
+        const swfFile = data.files.find(f => f.name.endsWith('.swf') && f.source === 'original');
+        if (!swfFile) {
+          actionArea.innerHTML = '<p class="text-red-400">No .swf file found</p>';
+          return;
+        }
+        const proxiedSwfUrl = getProxy() + encodeURIComponent(`https://archive.org/download/${id}/${swfFile.name}`);
+        const ruffle = window.RufflePlayer.newest();
+        const player = ruffle.createPlayer({
+          contextMenu: false
+        });
+        player.style.width = "100%";
+        player.style.height = "600px";
+        actionArea.appendChild(player);
+        await player.load(proxiedSwfUrl);
+        return;
+      }
+
+      downloadBtn.classList.remove('hidden');
+
+      // PICK BEST FILE FOR EACH TYPE
+      let file;
+      if (currentMediatype === 'movies') file = data.files.find(f => f.format === 'MPEG4' || f.name.endsWith('.mp4')) || data.files.find(f => f.format === '512Kb MPEG4');
+      if (currentMediatype === 'texts') file = data.files.find(f => f.format === 'Text PDF' || f.name.endsWith('.pdf'));
+
+      if (file) {
+        const proxiedUrl = getProxy() + encodeURIComponent(`https://archive.org/download/${id}/${file.name}`);
+        currentDownloadUrl = `https://archive.org/download/${id}/${file.name}`;
+        currentFilename = file.name;
+        const sizeMB = file.size ? (parseInt(file.size) / 1024 / 1024).toFixed(1) : '?';
+        actionArea.innerHTML += `<p class="text-mint mt-2">File: ${file.name} ~${sizeMB} MB</p>`;
+        downloadBtn.textContent = `Download ~${sizeMB} MB`;
+
+        // RENDER PROPER PLAYER
+        if (currentMediatype === 'movies') {
+          fullscreenBtn.classList.remove('hidden');
+          actionArea.innerHTML += `
+        <video id="main-video" controls controlsList="nodownload" class="w-full h-[60vh] rounded-2xl mt-4 bg-black">
+          <source src="${proxiedUrl}" type="video/mp4">
+          Your browser doesn't support video.
+        </video>`;
+        }
+
+      } else {
+        actionArea.innerHTML += `<p class="text-red-400 mt-4">No playable file found for ${currentMediatype}</p>`;
+      }
+    }
+
+    function closePlayer() {
+      document.getElementById('player').classList.add('hidden');
+      document.getElementById('media-container').innerHTML = '';
+    }
+
+    function toggleFullscreen() {
+      const el = document.getElementById('main-video') || document.getElementById('media-container');
+      if (!document.fullscreenElement) el.requestFullscreen();
+      else document.exitFullscreen();
+    }
+    // STREAMED DOWNLOAD - size already known
+    downloadBtn.onclick = async () => {
+      if (!currentDownloadUrl) return;
+      const dlUI = document.getElementById('action-area');
+      dlUI.innerHTML += `<p class="text-mint mt-2">Downloading...</p><div class="progress-bar mt-2"><div id="progressFill" class="progress-fill"></div></div><p id="progressText" class="text-xs mt-1 text-gray-400">0 MB</p>`;
+      try {
+        if (!dirHandle && window.showDirectoryPicker) dirHandle = await window.showDirectoryPicker({
+          mode: 'readwrite'
+        });
+        const res = await proxyFetch(currentDownloadUrl);
+        const reader = res.body.getReader();
+        let written = 0;
+        const chunks = [];
+        while (true) {
+          const {
+            done,
+            value
+          } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          written += value.length;
+          document.getElementById('progressFill').style.width = '100%';
+          document.getElementById('progressText').textContent = `${(written/1024/1024).toFixed(2)} MB`;
+        }
+        const blob = new Blob(chunks);
+        if (dirHandle) {
+          const fileHandle = await dirHandle.getFileHandle(currentFilename, {
+            create: true
+          });
+          const writable = await fileHandle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          dlUI.innerHTML += `<p class="text-mint">🎉 Saved to /${dirHandle.name}/${currentFilename}</p>`;
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') dlUI.innerHTML += `<p class="text-red-400">❌ ${e.message}</p>`;
+      }
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) searchIA(currentQuery, false);
+    }, {
+      rootMargin: '200px'
+    });
+    observer.observe(sentinel);
+    let searchTimeout;
+    search.oninput = e => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => searchIA(e.target.value), 500);
+    }
+    searchIA('popular');
+
+    (() => {
+      const ENTRY = 'IA Everything Index v4',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
