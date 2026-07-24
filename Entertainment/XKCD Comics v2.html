@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>XKCD Comics v2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pinch-zoom-js@2.3.4/lib/pinch-zoom.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: '#2ee6b4'
+          }
+        }
+      }
+    }
+
+  </script>
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(40px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a0c14 0%, #1a1f2e 50%, #0a0c14 100%);
+    }
+
+    .explanation-wrapper {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+      text-align: left;
+    }
+
+    .explanation-wrapper.open {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .rotate-180 {
+      transform: rotate(180deg);
+    }
+
+    .explain-content {
+      text-align: left;
+    }
+
+    .explain-content h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2ee6b4;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(46, 230, 180, 0.2);
+      padding-bottom: 0.25rem;
+    }
+
+    .explain-content p {
+      margin-bottom: 0.75rem;
+      line-height: 1.65;
+    }
+
+    .explain-content a {
+      color: #7af2d3;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .explain-content img {
+      max-width: 100%;
+      border-radius: 0.5rem;
+      margin: 0.5rem 0;
+    }
+
+    .table-card {
+      margin: 1rem 0;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    .preview-table {
+      width: 100%;
+      font-size: 0.8rem;
+      border-collapse: collapse;
+      min-width: 500px;
+    }
+
+    .preview-table th {
+      background: rgba(46, 230, 180, 0.12);
+      color: #2ee6b4;
+      font-weight: 700;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .preview-table td {
+      padding: 0.5rem;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: left;
+    }
+
+    .see-more-btn {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: #2ee6b4;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .table-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .table-modal.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #10141e;
+      border-radius: 1rem;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow: auto;
+      padding: 1rem;
+    }
+
+    .wiki-sheet {
+      position: fixed;
+      bottom: -100%;
+      left: 0;
+      right: 0;
+      background: #10141e;
+      border-radius: 1.5rem 1.5rem 0 0;
+      z-index: 400;
+      transition: bottom 0.35s;
+      height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wiki-sheet.open {
+      bottom: 0;
+    }
+
+    .wiki-header {
+      padding: 1rem 1rem 0 1rem;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .wiki-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #2ee6b4;
+      flex: 1;
+    }
+
+    .wiki-extract {
+      padding: 0 1rem 1rem 1rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #d1d5db;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .wiki-extract h2 {
+      color: #2ee6b4;
+      font-weight: 700;
+      margin-top: 1rem;
+    }
+
+    .wiki-extract img {
+      max-width: 100%;
+      border-radius: 0.5rem;
+    }
+
+    .wiki-extract a {
+      color: #7af2d3;
+      text-decoration: underline;
+    }
+
+    .wiki-btn {
+      margin: 1rem;
+      width: calc(100% - 2rem);
+      padding: 0.75rem;
+      background: #2ee6b4;
+      color: #000;
+      border-radius: 0.75rem;
+      font-weight: 700;
+      display: block;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      flex: 1 1 100px;
+      max-width: 140px;
+      padding: 0.75rem;
+      background: #2ee6b4;
+      color: #000;
+      border-radius: 0.75rem;
+      font-weight: 700;
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .explain-btn-link {
+      color: #2ee6b4;
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 399;
+      display: none;
+    }
+
+    .sheet-overlay.open {
+      display: block;
+    }
+
+    #back-btn {
+      display: none;
+      background: #2ee6b4;
+      color: #000;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.5rem;
+      font-weight: 700;
+    }
+
+    #back-btn.show {
+      display: inline-flex;
+    }
+
+    .modal-back-btn {
+      background: rgba(46, 230, 180, 0.15);
+      color: #2ee6b4;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.5rem;
+      font-weight: 700;
+      font-size: 0.875rem;
+      display: none;
+    }
+
+    .modal-back-btn.show {
+      display: inline-flex;
+    }
+
+  </style>
+</head>
+
+<body class="text-gray-200 font-sans min-h-screen flex justify-center p-3">
+  <div class="glass rounded-3xl p-5 w-full max-w-[680px] text-center relative">
+    <button id="back-btn" class="absolute left-4 top-4 text-sm">← Back</button>
+    <h1 class="text-xl font-bold text-mint">XKCD</h1>
+    <div id="num" class="text-gray-400 text-sm">Loading...</div>
+    <div id="title" class="font-semibold text-lg"></div>
+    <div class="img-wrap bg-white rounded-xl p-2 cursor-pointer" id="img-wrap"><img id="comic" style="display:none"></div>
+    <div id="alt" class="italic text-gray-400 text-sm"></div>
+    <button id="explain-btn" class="explain-btn-link"><i class="fa-solid fa-lightbulb"></i> Explain this <i id="explain-arrow" class="fa-solid fa-chevron-down text-xs"></i></button>
+    <div id="explanation-wrapper" class="explanation-wrapper"></div>
+    <div id="status" class="mt-1 text-gray-500 text-xs min-h-4"></div>
+    <div class="flex gap-2 justify-center mt-2"><button id="prev" class="btn">← Prev</button><button id="rand" class="btn">Random</button><button id="next" class="btn">Next →</button></div>
+  </div>
+  <div id="table-modal" class="table-modal">
+    <div class="modal-content"><button id="close-table-modal" class="text-mint font-bold">X</button>
+      <div id="modal-table-body"></div>
+    </div>
+  </div>
+  <div id="sheet-overlay" class="sheet-overlay"></div>
+  <div id="wiki-sheet" class="wiki-sheet">
+    <div id="wiki-sheet-content" class="flex flex-col h-full">
+      <div class="wiki-header">
+        <button id="modal-back-btn" class="modal-back-btn">← Back</button>
+        <div class="wiki-title" id="wiki-title-el"></div>
+      </div>
+      <div class="wiki-extract" id="wiki-extract-el"></div>
+      <a id="wiki-btn-el" target="_blank" class="wiki-btn">Open Full Article</a>
+    </div>
+  </div>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    function getProxy() {
+      let a = "AwQnombGNjNqJlNCJiRP5kaqYnR6plRapkeWZka2Z0GeIkN+o0M2IkcCN0Fz4jLu4l";
+      let b = [...a].reduce((acc, c) => c + acc, '');
+      b += '\x3d'.repeat((4 - b.length % 4) % 4);
+      const e = Uint8Array.from(atob(b), d => d.charCodeAt(0));
+      return new TextDecoder().decode(e.map(g => ~g & 0xFF));
+    }
+    const API = "https://xkcd.com";
+    const EXPLAIN_API = "https://www.explainxkcd.com/wiki/api.php";
+    const WIKI_SUMMARY_API = "https://en.wikipedia.org/api/rest_v1/page/summary/";
+    let currentNum = null,
+      latestNum = null,
+      comicHistory = [],
+      cameFromLink = false;
+    let modalHistory = [];
+    let pendingModalState = null;
+    let explanationCache = new Map();
+    let fullTables = [];
+    const $ = id => document.getElementById(id);
+
+    function cleanTitle(str) {
+      return decodeURIComponent(str).replace(/^(wiki\/)?index\.php\//, '').replace(/^wiki\//, '').split('_').join(' ').trim();
+    }
+    async function proxyFetch(url) {
+      $('status').innerHTML = 'Loading...';
+      const res = await fetch(getProxy() + encodeURIComponent(url));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      $('status').innerHTML = '';
+      return res;
+    }
+
+    function createTablePreview(table, index) {
+      const rows = Array.from(table.querySelectorAll('tr'));
+      const card = document.createElement('div');
+      card.className = 'table-card';
+      const scroll = document.createElement('div');
+      scroll.className = 'table-scroll';
+      const tableEl = document.createElement('table');
+      tableEl.className = 'preview-table';
+      tableEl.appendChild(rows[0].cloneNode(true));
+      rows.slice(1, 4).forEach(r => tableEl.appendChild(r.cloneNode(true)));
+      scroll.appendChild(tableEl);
+      card.appendChild(scroll);
+      if (rows.length > 4) {
+        const btn = document.createElement('div');
+        btn.className = 'see-more-btn';
+        btn.dataset.tableIndex = index;
+        btn.innerText = `See full table (${rows.length - 1} rows)`;
+        card.appendChild(btn);
+      }
+      return card;
+    }
+
+    function openTableModal(index) {
+      $('modal-table-body').innerHTML = '';
+      $('modal-table-body').appendChild(fullTables[index].cloneNode(true));
+      $('table-modal').classList.add('open');
+    }
+    $('close-table-modal').onclick = () => $('table-modal').classList.remove('open');
+
+    function renderModal(data) {
+      $('wiki-title-el').innerText = data.title;
+      $('wiki-extract-el').innerHTML = data.extract || 'No summary available.';
+      $('wiki-btn-el').href = data.url || '#';
+      $('wiki-btn-el').innerText = `Open Full ${data.isExplain? 'Explanation' : 'Article'}`;
+      $('modal-back-btn').classList.toggle('show', modalHistory.length > 0);
+    }
+
+    function openInfoSheet(data) {
+      renderModal(data);
+      $('wiki-sheet').classList.add('open');
+      $('sheet-overlay').classList.add('open');
+    }
+
+    function closeInfoSheet() {
+      $('wiki-sheet').classList.remove('open');
+      $('sheet-overlay').classList.remove('open');
+      modalHistory = [];
+      $('modal-back-btn').classList.remove('show');
+    }
+    $('sheet-overlay').onclick = closeInfoSheet;
+
+    $('modal-back-btn').onclick = () => {
+      if (modalHistory.length > 0) {
+        const prev = modalHistory.pop();
+        renderModal(prev);
+      }
+    }
+
+    $('explanation-wrapper').addEventListener('click', e => {
+      const btn = e.target.closest('.see-more-btn');
+      if (btn) return openTableModal(parseInt(btn.dataset.tableIndex));
+      const link = e.target.closest('a');
+      if (link) {
+        e.preventDefault();
+        handleLink(link.href, link.textContent);
+      }
+    });
+
+    $('wiki-extract-el').addEventListener('click', e => {
+      const link = e.target.closest('a');
+      if (link) {
+        e.preventDefault();
+        handleLink(link.href, link.textContent, true);
+      }
+    });
+
+    function handleLink(href, text, cameFromModal = false) {
+      const comicMatch = text.match(/^(\d+):\s/);
+      if (comicMatch) {
+        if (cameFromModal) {
+          pendingModalState = {
+            comic: currentNum,
+            modal: [...modalHistory],
+            currentModal: getCurrentModalState()
+          };
+          closeInfoSheet();
+        }
+        return loadComic(parseInt(comicMatch[1]), true);
+      }
+      const urlComicMatch = href.match(/(?:wiki|index\.php)\/(\d+):/);
+      if (urlComicMatch) {
+        if (cameFromModal) {
+          pendingModalState = {
+            comic: currentNum,
+            modal: [...modalHistory],
+            currentModal: getCurrentModalState()
+          };
+          closeInfoSheet();
+        }
+        return loadComic(parseInt(urlComicMatch[1]), true);
+      }
+      const urlComicNum = href.match(/\/wiki\/(\d+)$/);
+      if (urlComicNum) {
+        if (cameFromModal) {
+          pendingModalState = {
+            comic: currentNum,
+            modal: [...modalHistory],
+            currentModal: getCurrentModalState()
+          };
+          closeInfoSheet();
+        }
+        return loadComic(parseInt(urlComicNum[1]), true);
+      }
+      if (cameFromModal) modalHistory.push(getCurrentModalState());
+      const explainMatch = href.match(/explainxkcd\.com\/(.+)$/);
+      if (explainMatch) {
+        const title = cleanTitle(explainMatch[1]);
+        return fetchExplainArticle(title, href);
+      }
+      const wikiMatch = href.match(/wikipedia\.org\/wiki\/([^#]+)/);
+      if (wikiMatch) {
+        const title = cleanTitle(wikiMatch[1]);
+        return fetchWikiSummary(title);
+      }
+      window.open(href, '_blank');
+    }
+
+    function getCurrentModalState() {
+      return {
+        title: $('wiki-title-el').innerText,
+        extract: $('wiki-extract-el').innerHTML,
+        url: $('wiki-btn-el').href,
+        isExplain: $('wiki-btn-el').innerText.includes('Explanation')
+      }
+    }
+
+    async function fetchExplainArticle(pageTitle, fullUrl) {
+      openInfoSheet({
+        title: pageTitle,
+        extract: 'Loading...',
+        url: fullUrl,
+        isExplain: true
+      });
+      try {
+        const apiUrl = `${EXPLAIN_API}?action=parse&page=${encodeURIComponent(pageTitle)}&prop=text&section=0&format=json&redirects=1&origin=*`;
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.info);
+        const rawHtml = data.parse.text['*'];
+        const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
+        const ps = doc.querySelectorAll('p');
+        for (let i = 0; i < 3 && ps[i]; i++) {
+          if (ps[i].innerText.startsWith('For ')) ps[i].remove();
+        }
+        doc.querySelectorAll('span.mw-editsection, table.infobox, div.hatnote,.noprint,.toc').forEach(el => el.remove());
+        doc.querySelectorAll('a[href^="/"]').forEach(a => a.href = 'https://www.explainxkcd.com' + a.getAttribute('href'));
+        doc.querySelectorAll('img').forEach(img => {
+          if (img.src.startsWith('/')) img.src = 'https://www.explainxkcd.com' + img.src;
+        });
+        openInfoSheet({
+          title: data.parse.title,
+          extract: doc.body.innerHTML,
+          url: fullUrl,
+          isExplain: true
+        });
+      } catch (e) {
+        openInfoSheet({
+          title: pageTitle,
+          extract: `Couldn't load: ${e.message}`,
+          url: fullUrl,
+          isExplain: true
+        });
+      }
+    }
+
+    async function fetchWikiSummary(title) {
+      openInfoSheet({
+        title,
+        extract: 'Loading...',
+        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`,
+        isExplain: false
+      });
+      const res = await fetch(WIKI_SUMMARY_API + encodeURIComponent(title));
+      const data = await res.json();
+      openInfoSheet({
+        title: data.title,
+        extract: data.extract_html || data.extract,
+        url: data.content_urls?.desktop?.page,
+        isExplain: false
+      });
+    }
+
+    async function fetchExplanation(num) {
+      if (explanationCache.has(num)) return explanationCache.get(num);
+      fullTables = [];
+      try {
+        const apiUrl = `${EXPLAIN_API}?action=parse&page=${num}&prop=text&section=1&format=json&redirects=1&origin=*`;
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        if (data.error) return `<p class="text-red-400">No explanation found for #${num} yet.</p>`;
+        const rawHtml = data.parse?.text?.['*'];
+        if (!rawHtml) return `<p class="text-red-400">Explanation is empty for #${num}</p>`;
+        const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
+        const firstTable = doc.querySelector('table');
+        if (firstTable) firstTable.remove();
+        doc.querySelectorAll('span.mw-editsection, table.infobox, div.hatnote').forEach(el => el.remove());
+        doc.querySelectorAll('table.wikitable').forEach((table, i) => {
+          fullTables.push(table);
+          table.replaceWith(createTablePreview(table, i));
+        });
+        doc.querySelectorAll('a[href^="/"]').forEach(a => {
+          a.href = 'https://www.explainxkcd.com' + a.getAttribute('href');
+        });
+        const html = `<div class="explain-content">${doc.body.innerHTML}</div>`;
+        explanationCache.set(num, html);
+        return html;
+      } catch (e) {
+        return `<p class="text-red-400">Failed to load explanation: ${e.message}</p>`;
+      }
+    }
+
+    $('explain-btn').onclick = async () => {
+      $('explanation-wrapper').classList.toggle('open');
+      $('explain-arrow').classList.toggle('rotate-180');
+      if ($('explanation-wrapper').classList.contains('open') && !$('explanation-wrapper').innerHTML) {
+        $('explain-btn').disabled = true;
+        $('explanation-wrapper').innerHTML = '<p>Loading...</p>';
+        $('explanation-wrapper').innerHTML = await fetchExplanation(currentNum);
+        $('explain-btn').disabled = false;
+      }
+    }
+
+    function renderComic(data, fromLinkNav = false) {
+      if (currentNum && !fromLinkNav) comicHistory.push(currentNum);
+      currentNum = data.num;
+      latestNum = data.num > latestNum ? data.num : latestNum;
+      $('comic').src = data.img;
+      $('comic').style.display = 'block';
+      $('title').textContent = data.title;
+      $('num').textContent = `Comic #${data.num}`;
+      $('alt').textContent = data.alt;
+      $('prev').disabled = currentNum <= 1;
+      $('next').disabled = currentNum >= latestNum;
+      $('explanation-wrapper').innerHTML = '';
+      cameFromLink = fromLinkNav;
+      $('back-btn').classList.toggle('show', cameFromLink && comicHistory.length > 0);
+    }
+
+    async function loadComic(num, fromLink = false) {
+      if (fromLink && currentNum) comicHistory.push(currentNum);
+      const res = await proxyFetch(num ? `${API}/${num}/info.0.json` : `${API}/info.0.json`);
+      const data = await res.json();
+      if (!latestNum && !num) latestNum = data.num;
+      renderComic(data, fromLink);
+      if (pendingModalState && pendingModalState.comic === num) {
+        modalHistory = pendingModalState.modal;
+        openInfoSheet(pendingModalState.currentModal);
+        pendingModalState = null;
+      }
+    }
+
+    $('back-btn').onclick = () => {
+      if (comicHistory.length > 0) {
+        const prevNum = comicHistory.pop();
+        cameFromLink = false;
+        loadComic(prevNum);
+        $('back-btn').classList.toggle('show', cameFromLink && comicHistory.length > 0);
+      }
+    }
+
+    $('prev').onclick = () => {
+      cameFromLink = false;
+      loadComic(currentNum - 1);
+    }
+    $('next').onclick = () => {
+      cameFromLink = false;
+      loadComic(currentNum + 1);
+    }
+    $('rand').onclick = () => {
+      comicHistory = [];
+      cameFromLink = false;
+      $('back-btn').classList.remove('show');
+      loadComic(Math.floor(Math.random() * latestNum) + 1);
+    }
+
+    loadComic();
+
+    (() => {
+      const ENTRY = 'XKCD Comics v2',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
