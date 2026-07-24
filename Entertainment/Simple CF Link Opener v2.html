@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple CF Link Opener v2</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #0f172a;
+      --bg-nav: #1e293b;
+      --bg-input: #0f172a;
+      --border: #334155;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    body,
+    html {
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Header Bar */
+    header {
+      background-color: var(--bg-nav);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .home-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .home-btn:hover {
+      background: var(--border);
+    }
+
+    .url-input-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+    }
+
+    .url-input-wrap input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .btn-action {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-action:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Flags Toolbar */
+    .options-bar {
+      background-color: #0d1322;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 16px;
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      align-items: center;
+    }
+
+    .options-bar label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    /* Main View Area */
+    main {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #05070a;
+    }
+
+    /* Landing Screen */
+    #landing-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      z-index: 10;
+    }
+
+    #landing-screen h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    #landing-screen p {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      max-width: 450px;
+      font-size: 14px;
+    }
+
+    .search-box {
+      display: flex;
+      width: 100%;
+      max-width: 550px;
+      gap: 8px;
+      background: var(--bg-nav);
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 15px;
+    }
+
+    /* View Frame */
+    #content-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+      display: none;
+    }
+
+    /* Status & Message Overlay */
+    #status-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: var(--bg-dark);
+      color: var(--text);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 5;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--bg-nav);
+      border-top: 1px solid var(--border);
+      padding: 4px 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      height: 28px;
+      align-items: center;
+    }
+
+    .badge {
+      background: var(--border);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #fff;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="app-container">
+    <!-- Header Controls -->
+    <header>
+      <button class="home-btn" onclick="showHome()">🏠 Home</button>
+      <div class="url-input-wrap">
+        <input type="text" id="header-url-input" placeholder="Enter website URL..." onkeydown="if(event.key==='Enter') triggerLoad('header')">
+      </div>
+      <button class="btn-action" onclick="triggerLoad('header')">Open</button>
+    </header>
+
+    <!-- Proxy Flags Bar -->
+    <div class="options-bar">
+      <span>Flags:</span>
+      <label><input type="checkbox" id="flag-nocache"> &nocache=1</label>
+      <label><input type="checkbox" id="flag-follow"> &follow=0</label>
+      <label><input type="checkbox" id="flag-debug"> &debug=1</label>
+    </div>
+
+    <!-- Main Viewport -->
+    <main>
+      <!-- Landing View -->
+      <div id="landing-screen">
+        <h1>Proxy Web Explorer</h1>
+        <p>Enter any URL below to fetch and render it through your worker proxy bypass.</p>
+        <div class="search-box">
+          <input type="text" id="home-url-input" placeholder="https://example.com" onkeydown="if(event.key==='Enter') triggerLoad('home')">
+          <button class="btn-action" onclick="triggerLoad('home')">Load Page</button>
+        </div>
+      </div>
+
+      <!-- Status Overlay -->
+      <div id="status-overlay">
+        <h3 id="status-title">Loading...</h3>
+        <p id="status-msg" style="color: var(--text-muted);"></p>
+      </div>
+
+      <!-- Webpage Render Frame -->
+      <iframe id="content-frame"></iframe>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <span id="footer-status">Ready</span>
+      <span id="cache-badge" class="badge">CACHE: --</span>
+    </footer>
+  </div>
+
+  <script>
+    const PROXY_WORKER = 'https://cors-proxy-txt.keotakakoji.workers.dev/';
+
+    function showHome() {
+      document.getElementById('landing-screen').style.display = 'flex';
+      document.getElementById('content-frame').style.display = 'none';
+      document.getElementById('status-overlay').style.display = 'none';
+      document.getElementById('header-url-input').value = '';
+      document.getElementById('home-url-input').value = '';
+      document.getElementById('footer-status').textContent = 'Ready';
+      document.getElementById('cache-badge').textContent = 'CACHE: --';
+    }
+
+    function triggerLoad(source) {
+      const inputEl = source === 'home' ?
+        document.getElementById('home-url-input') :
+        document.getElementById('header-url-input');
+
+      let url = inputEl.value.trim();
+      if (!url) return;
+
+      // Auto-prefix protocol if missing
+      if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+      }
+
+      // Sync inputs
+      document.getElementById('header-url-input').value = url;
+      document.getElementById('home-url-input').value = url;
+
+      fetchAndRender(url);
+    }
+
+    async function fetchAndRender(targetUrl) {
+      const landingScreen = document.getElementById('landing-screen');
+      const contentFrame = document.getElementById('content-frame');
+      const statusOverlay = document.getElementById('status-overlay');
+      const statusTitle = document.getElementById('status-title');
+      const statusMsg = document.getElementById('status-msg');
+      const footerStatus = document.getElementById('footer-status');
+      const cacheBadge = document.getElementById('cache-badge');
+
+      // Hide Landing, Show Loading
+      landingScreen.style.display = 'none';
+      contentFrame.style.display = 'none';
+      statusOverlay.style.display = 'flex';
+      statusTitle.textContent = 'Loading Page...';
+      statusMsg.textContent = targetUrl;
+      footerStatus.textContent = `Fetching ${targetUrl}...`;
+
+      // Build Proxy Request URL
+      let proxyReqUrl = `${PROXY_WORKER}?${targetUrl}`;
+      if (document.getElementById('flag-nocache').checked) proxyReqUrl += '&nocache=1';
+      if (document.getElementById('flag-follow').checked) proxyReqUrl += '&follow=0';
+
+      const isDebug = document.getElementById('flag-debug').checked;
+      if (isDebug) proxyReqUrl += '&debug=1';
+
+      try {
+        const response = await fetch(proxyReqUrl);
+        const cacheHeader = response.headers.get('x-proxy-cache') || 'N/A';
+        cacheBadge.textContent = `CACHE: ${cacheHeader}`;
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+        }
+
+        const rawText = await response.text();
+
+        // If Debug Mode, render raw response text
+        if (isDebug) {
+          statusTitle.textContent = 'Debug Output';
+          statusMsg.innerHTML = `<pre style="text-align:left; background:#1e293b; padding:15px; border-radius:8px; overflow:auto; max-width:80vw; max-height:60vh;">${escapeHtml(rawText)}</pre>`;
+          footerStatus.textContent = 'Debug Mode Complete';
+          return;
+        }
+
+        // Inject <base> tag so relative paths (CSS, Images, JS) load correctly
+        const baseTag = `<base href="${targetUrl}">`;
+        let preparedHtml = rawText;
+        if (preparedHtml.includes('<head>')) {
+          preparedHtml = preparedHtml.replace('<head>', `<head>${baseTag}`);
+        } else {
+          preparedHtml = baseTag + preparedHtml;
+        }
+
+        // Render content via srcdoc
+        statusOverlay.style.display = 'none';
+        contentFrame.style.display = 'block';
+        contentFrame.srcdoc = preparedHtml;
+
+        footerStatus.textContent = `Loaded: ${targetUrl}`;
+      } catch (err) {
+        statusOverlay.style.display = 'flex';
+        statusTitle.textContent = 'Failed to Load Page';
+        statusMsg.textContent = err.message;
+        footerStatus.textContent = 'Error loading request';
+        cacheBadge.textContent = 'CACHE: ERROR';
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+    (() => {
+      const ENTRY = 'Simple CF Link Opener v2',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
