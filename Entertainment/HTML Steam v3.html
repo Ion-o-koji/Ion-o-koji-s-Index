@@ -2066,6 +2066,8 @@
   </nav>
 
   <script>
+    localStorage.setItem('corsProxy', 'cors-proxy-txt.keotakakoji.workers.dev');
+
     /* ── PROXY (no bundled default — user must configure their own) ── */
     function proxyConfigured() {
       return !!(localStorage.getItem('corsProxy') || '').trim()
