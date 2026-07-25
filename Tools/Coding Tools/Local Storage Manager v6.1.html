@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Storage Manager v6.1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+
+    .status-toast {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .tab-active {
+      border-bottom: 3px solid #3b82f6;
+      color: #3b82f6;
+    }
+
+    .tab-inactive {
+      color: #6b7280;
+    }
+
+    .item-key {
+      font-weight: 600;
+      color: #e0e0e0;
+      word-break: break-all;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+    }
+
+    .item-value {
+      color: #a0a0a0;
+      word-break: break-all;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: scale(1.05);
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .btn-warning {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background: #d97706;
+    }
+
+    .btn-pin {
+      background: #7c3aed;
+      color: white;
+    }
+
+    .btn-pin:hover {
+      background: #6d28d9;
+      transform: scale(1.05);
+    }
+
+    .btn-pin.pinned {
+      background: #f59e0b;
+    }
+
+    .btn-pin.pinned:hover {
+      background: #d97706;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #2a2a2a;
+      border-radius: 12px 12px 0 0;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      animation: slideUp 0.3s ease-out;
+      color: #e0e0e0;
+    }
+
+    .modal-content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+      background: #404040;
+      border-radius: 4px;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #404040;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    textarea.input-field {
+      font-family: 'Monaco', 'Courier New', monospace;
+      resize: none;
+    }
+
+    select.input-field {
+      cursor: pointer;
+    }
+
+    .label {
+      display: block;
+      font-weight: 600;
+      font-size: 13px;
+      color: #b0b0b0;
+      margin-bottom: 6px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6b7280;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .size-info {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .json-display {
+      background: #1a1a1a;
+      border: 1px solid #404040;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      color: #a0a0a0;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .json-display::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .json-display::-webkit-scrollbar-track {
+      background: #2a2a2a;
+    }
+
+    .json-display::-webkit-scrollbar-thumb {
+      background: #404040;
+      border-radius: 4px;
+    }
+
+    .collapsible-header {
+      background: #262626;
+      padding: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      transition: background 0.2s;
+    }
+
+    .collapsible-header:hover {
+      background: #303030;
+    }
+
+    .collapsible-content {
+      display: none;
+      padding-left: 12px;
+    }
+
+    .collapsible-content.active {
+      display: block;
+    }
+
+    .store-item {
+      background: #252525;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      border-left: 3px solid #3b82f6;
+    }
+
+    .record-header {
+      background: #1a1a1a;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      transition: background 0.2s;
+    }
+
+    .record-header:hover {
+      background: #242424;
+    }
+
+    .record-header-left {
+      flex: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .record-toggle-arrow {
+      margin-left: 8px;
+    }
+
+    .record-header-buttons {
+      display: flex;
+      gap: 6px;
+      margin-left: 8px;
+    }
+
+    .record-content {
+      display: none;
+      background: #1a1a1a;
+      padding: 12px;
+      border-radius: 4px;
+      margin: 8px 0;
+      border: 1px solid #303030;
+    }
+
+    .record-content.active {
+      display: block;
+    }
+
+    .record-buttons-group {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .record-button {
+      padding: 6px 12px;
+      font-size: 11px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      flex: 1;
+      min-width: 70px;
+    }
+
+    .record-button.edit {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .record-button.edit:hover {
+      background: #2563eb;
+    }
+
+    .record-button.delete {
+      background: #ef4444;
+      color: white;
+    }
+
+    .record-button.delete:hover {
+      background: #dc2626;
+    }
+
+    .header-btn {
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .header-btn.peak {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .header-btn.peak:hover {
+      background: #d97706;
+    }
+
+    .header-btn.delete {
+      background: #ef4444;
+      color: white;
+    }
+
+    .header-btn.delete:hover {
+      background: #dc2626;
+    }
+
+    .pinned-row {
+      border-left: 3px solid #f59e0b !important;
+    }
+
+    .pin-badge {
+      display: inline-block;
+      background: #f59e0b;
+      color: #1a1a1a;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .cache-entry {
+      background: #252525;
+      border-left: 3px solid #8b5cf6;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+    }
+
+    .cache-url {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      color: #c4b5fd;
+      word-break: break-all;
+    }
+
+    /* ── Compact control bar buttons ─────────────────────────────── */
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 11px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* ── Per-item stacked micro buttons ───────────────────────────── */
+    .btn-xs {
+      padding: 3px 7px;
+      font-size: 11px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .item-btns-col {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 86px;
+    }
+
+    .item-btns-row {
+      display: flex;
+      gap: 3px;
+    }
+
+    .item-btns-row .btn-xs {
+      flex: 1;
+    }
+
+    /* ── Lock button states ───────────────────────────────────────── */
+    .btn-lock {
+      background: #374151;
+      color: #d1d5db;
+    }
+
+    .btn-lock:hover {
+      background: #4b5563;
+    }
+
+    .btn-lock.locked {
+      background: #7f1d1d;
+      color: #fca5a5;
+    }
+
+    .btn-lock.locked:hover {
+      background: #991b1b;
+    }
+
+    .locked-row {
+      border-left: 3px solid #ef4444 !important;
+    }
+
+    .lock-badge {
+      display: inline-block;
+      background: #dc2626;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <div class="bg-[#2a2a2a] border-b border-gray-700">
+    <div class="max-w-6xl mx-auto px-4 py-4">
+      <h1 class="text-2xl font-bold text-white">Storage Manager</h1>
+      <p class="text-sm text-gray-500 mt-1">View and manage browser storage</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="bg-[#2a2a2a] border-b border-gray-700 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 flex gap-8 overflow-x-auto">
+      <button onclick="switchTab('local')" id="localTab" class="tab-inactive py-3 font-medium transition-colors border-b-4 border-transparent whitespace-nowrap">Local Storage</button>
+      <button onclick="switchTab('indexeddb')" id="indexeddbTab" class="tab-inactive py-3 font-medium transition-colors border-b-4 border-transparent whitespace-nowrap">IndexedDB</button>
+      <button onclick="switchTab('cache')" id="cacheTab" class="tab-inactive py-3 font-medium transition-colors border-b-4 border-transparent whitespace-nowrap">Cache Storage</button>
+      <button onclick="switchTab('session')" id="sessionTab" class="tab-inactive py-3 font-medium transition-colors border-b-4 border-transparent whitespace-nowrap">Session Storage</button>
+      <button onclick="switchTab('cookies')" id="cookiesTab" class="tab-inactive py-3 font-medium transition-colors border-b-4 border-transparent whitespace-nowrap">Cookies</button>
+    </div>
+  </div>
+
+  <!-- Controls Bar -->
+  <div class="bg-[#2a2a2a] border-b border-gray-700">
+    <div class="max-w-6xl mx-auto px-4 py-3" style="display:flex;flex-direction:column;gap:7px;">
+      <!-- Row 1: Search (2/3) + Sort (1/3) -->
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="searchInput" placeholder="Search keys & values…" class="input-field" style="flex:2;min-width:0;" oninput="filterItems()">
+        <select id="sortSelect" class="input-field" style="flex:1;min-width:0;" onchange="filterItems()">
+          <option value="recent">Most recently added</option>
+          <option value="oldest">Oldest added</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+          <option value="size-desc">Largest first</option>
+          <option value="size-asc">Smallest first</option>
+        </select>
+      </div>
+      <!-- Row 2: Action buttons — single line, scroll before wrap -->
+      <div style="display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:1px;">
+        <button onclick="refreshItems()" class="btn-sm btn-primary">↺ Refresh</button>
+        <button id="addBtn" onclick="openAddModal()" class="btn-sm btn-success">+ Add</button>
+        <button id="exportBtn" onclick="exportFile()" class="btn-sm btn-primary">Export</button>
+        <button id="importBtn" onclick="triggerImport()" class="btn-sm btn-primary">Import</button>
+        <button id="clearAllBtn" onclick="clearAll()" class="btn-sm btn-danger">Clear All</button>
+      </div>
+      <label id="hideLockedControl" style="display:none;align-items:center;gap:7px;font-size:12px;color:#b0b0b0;cursor:pointer;width:max-content;">
+        <input type="checkbox" id="hideLockedToggle" onchange="filterItems()" style="accent-color:#ef4444;">
+        Hide locked items
+      </label>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <div class="bg-[#2a2a2a] rounded-lg shadow-sm">
+      <div id="storageItems" class="divide-y divide-gray-700">
+        <!-- Items populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Toast -->
+  <div id="statusMessage" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <!-- Add Modal -->
+  <div id="addModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4">Add Item</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="label">Key</label>
+          <input type="text" id="newKey" class="input-field" placeholder="key_name">
+        </div>
+        <div>
+          <label class="label">Value</label>
+          <textarea id="newValue" class="input-field" rows="6" placeholder="value"></textarea>
+          <div class="size-info">Size: <span id="newValueSize">0 B</span></div>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-6">
+        <button onclick="addItem()" class="btn-small btn-success flex-1">Add</button>
+        <button onclick="closeAddModal()" class="btn-small flex-1" style="background:#404040;color:#e0e0e0;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4">Edit Item</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="label">Key</label>
+          <input type="text" id="editKey" class="input-field" readonly style="background:#1a1a1a;">
+        </div>
+        <div>
+          <label class="label">Value</label>
+          <textarea id="editValue" class="input-field" rows="8" placeholder="value"></textarea>
+          <div class="size-info">Size: <span id="editValueSize">0 B</span></div>
+        </div>
+        <button onclick="toggleJsonFormat()" class="text-sm text-blue-400 font-medium">Format JSON</button>
+      </div>
+      <div class="flex gap-2 mt-6">
+        <button onclick="saveEdit()" class="btn-small btn-primary flex-1">Save</button>
+        <button onclick="closeEditModal()" class="btn-small flex-1" style="background:#404040;color:#e0e0e0;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IndexedDB Modal -->
+  <div id="idbModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4" id="idbModalTitle">IndexedDB</h2>
+      <div id="idbModalContent" class="space-y-3 max-h-[70vh] overflow-y-auto"></div>
+      <div class="flex gap-2 mt-6">
+        <button id="downloadIDBBtn" onclick="downloadIndexedDBData()" class="btn-small btn-primary flex-1" style="display:none;">Download</button>
+        <button onclick="closeIDBModal()" class="btn-small flex-1" style="background:#404040;color:#e0e0e0;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit IDB Record Modal -->
+  <div id="editIDBModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4">Edit Record</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="label">Database</label>
+          <input type="text" id="editIDBDatabase" class="input-field" readonly style="background:#1a1a1a;">
+        </div>
+        <div>
+          <label class="label">Store</label>
+          <input type="text" id="editIDBStore" class="input-field" readonly style="background:#1a1a1a;">
+        </div>
+        <div>
+          <label class="label">Record (JSON)</label>
+          <textarea id="editIDBValue" class="input-field" rows="10" placeholder="record data"></textarea>
+          <div class="size-info">Size: <span id="editIDBValueSize">0 B</span></div>
+        </div>
+        <button onclick="formatIDBJson()" class="text-sm text-blue-400 font-medium">Format JSON</button>
+      </div>
+      <div class="flex gap-2 mt-6">
+        <button onclick="saveIDBEdit()" class="btn-small btn-primary flex-1">Save</button>
+        <button onclick="closeEditIDBModal()" class="btn-small flex-1" style="background:#404040;color:#e0e0e0;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Peak IDB Record Modal -->
+  <div id="peakModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4">Record Preview (First 10 Lines)</h2>
+      <div id="peakContent" class="json-display" style="max-height:400px;min-height:200px;"></div>
+      <div class="flex gap-2 mt-6">
+        <button onclick="closePeakModal()" class="btn-small flex-1" style="background:#404040;color:#e0e0e0;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="importDataFromFile()">
+
+  <script>
+    // ─── State ───────────────────────────────────────────────────────────────
+    const PINS_KEY = '__storage_manager_pins_v1__';
+    const LOCKS_KEY = '__storage_manager_locks_v1__';
+    const ADDED_AT_KEY = '__storage_manager_added_at_v1__';
+    const META_KEYS = new Set([PINS_KEY, LOCKS_KEY, ADDED_AT_KEY]);
+
+    let currentEditKey = null;
+    let currentStorageType = 'local';
+    let allItems = []; // raw items for current tab
+    let searchQuery = '';
+    let preparedIDBData = null;
+    let currentIDBEdit = null; // { dbName, storeName, recordIndex, keyPath }
+    let exportInProgress = false;
+    let idbDownloadInProgress = false;
+    let cookieReadMessage = '';
+
+    const storageNames = {
+      local: 'Local Storage',
+      session: 'Session Storage',
+      indexeddb: 'IndexedDB',
+      cookies: 'Cookies',
+      cache: 'Cache Storage'
+    };
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024,
+        sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function getByteSize(value) {
+      if (value == null) return 0;
+      return new Blob([String(value)]).size;
+    }
+
+    function getFirst10Lines(text) {
+      return text.split('\n').slice(0, 10).join('\n');
+    }
+
+    function formatAddedAt(timestamp) {
+      if (!Number.isFinite(Number(timestamp))) return '';
+      try {
+        return new Date(Number(timestamp)).toLocaleString();
+      } catch {
+        return '';
+      }
+    }
+
+    function escapeHtml(text) {
+      if (text == null) return '';
+      return String(text).replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      } [m]));
+    }
+
+    // ─── Pins ─────────────────────────────────────────────────────────────────
+
+    function getPins() {
+      try {
+        const pins = JSON.parse(localStorage.getItem(PINS_KEY) || '[]');
+        return Array.isArray(pins) ? pins : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function savePins(pins) {
+      try {
+        localStorage.setItem(PINS_KEY, JSON.stringify([...new Set(pins)]));
+      } catch (error) {
+        showStatus('Could not save pin state: ' + error.message, 'error');
+      }
+    }
+
+    function isPinned(key) {
+      return getPins().includes(key);
+    }
+
+    function removePin(key) {
+      savePins(getPins().filter(p => p !== key));
+    }
+
+    // ─── Locks ────────────────────────────────────────────────────────────────
+    // Locked items are excluded from Clear All and cannot be deleted individually.
+    // Unlike pins, they do NOT float to the top.
+
+    function getLocks() {
+      try {
+        const locks = JSON.parse(localStorage.getItem(LOCKS_KEY) || '[]');
+        return Array.isArray(locks) ? locks : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveLocks(locks) {
+      try {
+        localStorage.setItem(LOCKS_KEY, JSON.stringify([...new Set(locks)]));
+      } catch (error) {
+        showStatus('Could not save lock state: ' + error.message, 'error');
+      }
+    }
+
+    function isLocked(key) {
+      return getLocks().includes(key);
+    }
+
+    function toggleLock(origIdx) {
+      const item = allItems[origIdx];
+      if (!item) return;
+      const locks = getLocks();
+      const idx = locks.indexOf(item.key);
+      if (idx === -1) {
+        locks.push(item.key);
+        showStatus(`🔒 Locked "${item.key}"`, 'success');
+      } else {
+        locks.splice(idx, 1);
+        showStatus(`Unlocked "${item.key}"`, 'info');
+      }
+      saveLocks(locks);
+      filterItems();
+    }
+
+    function removeLock(key) {
+      saveLocks(getLocks().filter(l => l !== key));
+    }
+
+    // ─── Added-at timestamps ───────────────────────────────────────────────────
+    // Browser storage does not expose a reliable creation date. Keep one
+    // lightweight map per key/value storage so "Most recently added" remains
+    // correct after refreshes and browser restarts.
+
+    function getAddedAt(storage) {
+      try {
+        const parsed = JSON.parse(storage.getItem(ADDED_AT_KEY) || '{}');
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveAddedAt(storage, addedAt) {
+      try {
+        storage.setItem(ADDED_AT_KEY, JSON.stringify(addedAt));
+      } catch (error) {
+        // Timestamp metadata is helpful but must never prevent the actual
+        // storage values from being displayed when quota is exhausted.
+        console.warn('Could not save added-at metadata:', error);
+      }
+    }
+
+    function rememberAddedKey(storage, key, timestamp = Date.now()) {
+      const addedAt = getAddedAt(storage);
+      if (!Number.isFinite(Number(addedAt[key]))) {
+        addedAt[key] = timestamp;
+        saveAddedAt(storage, addedAt);
+      }
+    }
+
+    function forgetAddedKey(storage, key) {
+      const addedAt = getAddedAt(storage);
+      if (Object.prototype.hasOwnProperty.call(addedAt, key)) {
+        delete addedAt[key];
+        saveAddedAt(storage, addedAt);
+      }
+    }
+
+    function ensureAddedAt(storage, keys) {
+      const addedAt = getAddedAt(storage);
+      let changed = false;
+      const fallbackBase = Date.now();
+      keys.forEach((key, index) => {
+        if (!Number.isFinite(Number(addedAt[key]))) {
+          // Existing items have no historical timestamp. Preserve their
+          // browser order as a deterministic one-time fallback.
+          addedAt[key] = fallbackBase - (keys.length - index);
+          changed = true;
+        }
+      });
+      Object.keys(addedAt).forEach(key => {
+        if (!keys.includes(key)) {
+          delete addedAt[key];
+          changed = true;
+        }
+      });
+      if (changed) saveAddedAt(storage, addedAt);
+      return addedAt;
+    }
+
+    function displayStorageUnavailable(title, details) {
+      document.getElementById('storageItems').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">⚠️</div>
+          <p class="font-medium">${escapeHtml(title)}</p>
+          <p class="text-xs" style="max-width:420px;margin:0 auto;line-height:1.6;">
+            ${escapeHtml(details)}
+          </p>
+        </div>`;
+    }
+
+    // ─── Tab switching ────────────────────────────────────────────────────────
+
+    function switchTab(type) {
+      currentStorageType = type;
+      searchQuery = '';
+      document.getElementById('searchInput').value = '';
+
+      const allTabs = ['local', 'indexeddb', 'cache', 'session', 'cookies'];
+      allTabs.forEach(t => {
+        const tab = document.getElementById(t + 'Tab');
+        tab.classList.toggle('tab-active', t === type);
+        tab.classList.toggle('tab-inactive', t !== type);
+      });
+
+      const addBtn = document.getElementById('addBtn');
+      const importBtn = document.getElementById('importBtn');
+      const clearAllBtn = document.getElementById('clearAllBtn');
+      const sortSelect = document.getElementById('sortSelect');
+      const exportBtn = document.getElementById('exportBtn');
+
+      // Only local/session have add, import, export, sort, clear-all as full-featured
+      const isKV = type === 'local' || type === 'session';
+
+      addBtn.style.display = isKV ? 'block' : 'none';
+      importBtn.style.display = isKV ? 'block' : 'none';
+      exportBtn.style.display = isKV ? 'block' : 'none';
+      sortSelect.style.display = isKV ? 'block' : 'none';
+      sortSelect.value = 'recent'; // reset to default on every tab switch
+      const hideLockedControl = document.getElementById('hideLockedControl');
+      const hideLockedToggle = document.getElementById('hideLockedToggle');
+      hideLockedControl.style.display = isLocalStorageType(type) ? 'flex' : 'none';
+      if (!isLocalStorageType(type)) hideLockedToggle.checked = false;
+      clearAllBtn.style.display = (type !== 'cookies') ? 'block' : 'none';
+      clearAllBtn.textContent = type === 'indexeddb' ? 'Delete All DBs' :
+        type === 'cache' ? 'Clear All Caches' :
+        'Clear All';
+
+      refreshItems();
+    }
+
+    function getStorage() {
+      return currentStorageType === 'local' ? localStorage : sessionStorage;
+    }
+
+    function isLocalStorageType(type = currentStorageType) {
+      return type === 'local' || type === 'session';
+    }
+
+    function getStorageSafely() {
+      try {
+        const storage = getStorage();
+        // Accessing length confirms that the browser has granted this page
+        // access. Some privacy modes throw only when storage is touched.
+        void storage.length;
+        return storage;
+      } catch (error) {
+        throw new Error(
+          `${storageNames[currentStorageType]} is unavailable for this page. ` +
+          `Open the file from an http://localhost or https:// address instead of file://, ` +
+          `or allow site storage in the browser. (${error.message || 'access denied'})`
+        );
+      }
+    }
+
+    // ─── Refresh ──────────────────────────────────────────────────────────────
+
+    async function refreshItems() {
+      const container = document.getElementById('storageItems');
+      container.innerHTML = '<div class="empty-state"><p class="font-medium">Loading…</p></div>';
+
+      if (currentStorageType === 'local' || currentStorageType === 'session') {
+        try {
+          const storage = getStorageSafely();
+          allItems = [];
+          const keys = [];
+          for (let i = 0; i < storage.length; i++) {
+            const key = storage.key(i);
+            if (key && !META_KEYS.has(key)) keys.push(key);
+          }
+          const addedAt = ensureAddedAt(storage, keys);
+          keys.forEach((key, index) => {
+            allItems.push({
+              key,
+              value: storage.getItem(key),
+              insertionIdx: index,
+              addedAt: Number(addedAt[key])
+            });
+          });
+        } catch (error) {
+          allItems = [];
+          displayStorageUnavailable('Storage is not visible', error.message);
+          return;
+        }
+
+      } else if (currentStorageType === 'indexeddb') {
+        try {
+          const dbs = await indexedDB.databases();
+          allItems = dbs.map(db => ({
+            key: db.name,
+            version: db.version
+          }));
+        } catch (e) {
+          allItems = [];
+          displayStorageUnavailable('IndexedDB is not visible', e.message || 'The browser denied IndexedDB access.');
+          return;
+        }
+
+      } else if (currentStorageType === 'cache') {
+        allItems = await loadCacheStorageItems();
+
+      } else if (currentStorageType === 'cookies') {
+        allItems = [];
+        cookieReadMessage = '';
+        try {
+          const cookieString = document.cookie;
+          if (cookieString) cookieString.split(';').forEach(cookie => {
+            const trimmed = cookie.trim();
+            if (!trimmed) return;
+            const eqIdx = trimmed.indexOf('=');
+            if (eqIdx === -1) {
+              allItems.push({
+                key: trimmed,
+                value: ''
+              });
+              return;
+            }
+            try {
+              allItems.push({
+                key: decodeURIComponent(trimmed.slice(0, eqIdx)),
+                value: decodeURIComponent(trimmed.slice(eqIdx + 1))
+              });
+            } catch {
+              allItems.push({
+                key: trimmed.slice(0, eqIdx),
+                value: trimmed.slice(eqIdx + 1)
+              });
+            }
+          });
+          if (!cookieString) {
+            cookieReadMessage = 'No JavaScript-visible cookies were found for this page. HttpOnly cookies cannot be read by browser JavaScript.';
+          }
+        } catch (error) {
+          cookieReadMessage = `Cookies are blocked or unavailable: ${error.message || 'access denied'}`;
+        }
+      }
+
+      filterItems();
+    }
+
+    // ─── Cache Storage ───────────────────────────────────────────────────────
+
+    async function loadCacheStorageItems() {
+      if (!('caches' in window)) return null; // signal unavailability
+      try {
+        const names = await caches.keys();
+        const result = [];
+        for (const name of names) {
+          const cache = await caches.open(name);
+          const requests = await cache.keys();
+          const entries = [];
+          for (const req of requests) {
+            const resp = await cache.match(req);
+            let size = 0;
+            let contentType = '';
+            let status = 0;
+            if (resp) {
+              status = resp.status;
+              contentType = resp.headers.get('content-type') || '';
+              // Try to estimate size from content-length header
+              const cl = resp.headers.get('content-length');
+              if (cl) size = parseInt(cl, 10) || 0;
+            }
+            entries.push({
+              url: req.url,
+              status,
+              contentType,
+              size
+            });
+          }
+          result.push({
+            cacheName: name,
+            entries
+          });
+        }
+        return result; // array of { cacheName, entries[] }
+      } catch (e) {
+        console.error('Cache Storage error:', e);
+        return null;
+      }
+    }
+
+    async function deleteCacheEntry(cacheNameIdx, entryIdx) {
+      const cacheItem = allItems[cacheNameIdx];
+      const entry = cacheItem.entries[entryIdx];
+      if (!confirm(`Delete cached entry?\n${entry.url}`)) return;
+      try {
+        const cache = await caches.open(cacheItem.cacheName);
+        await cache.delete(entry.url);
+        showStatus('Entry deleted', 'success');
+        await refreshItems();
+      } catch (e) {
+        showStatus('Error: ' + e.message, 'error');
+      }
+    }
+
+    async function deleteCacheStorage(cacheNameIdx) {
+      const name = allItems[cacheNameIdx].cacheName;
+      if (!confirm(`Delete entire cache "${name}"?`)) return;
+      try {
+        await caches.delete(name);
+        showStatus(`Deleted cache "${name}"`, 'success');
+        await refreshItems();
+      } catch (e) {
+        showStatus('Error: ' + e.message, 'error');
+      }
+    }
+
+    // ─── Filter & Sort ────────────────────────────────────────────────────────
+
+    function filterItems() {
+      searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      const sortVal = document.getElementById('sortSelect').value;
+
+      const isLocal = currentStorageType === 'local';
+
+      let filtered;
+
+      if (currentStorageType === 'cache') {
+        // Cache items are grouped; search by URL or cache name
+        if (allItems === null) {
+          displayCacheUnavailable();
+          return;
+        }
+        // Preserve original indices to avoid index drift after filtering
+        filtered = allItems
+          .map((ci, ciOrigIdx) => ({
+            ...ci,
+            origIdx: ciOrigIdx,
+            entries: ci.entries
+              .map((e, eIdx) => ({
+                ...e,
+                origIdx: eIdx
+              }))
+              .filter(e =>
+                !searchQuery ||
+                ci.cacheName.toLowerCase().includes(searchQuery) ||
+                e.url.toLowerCase().includes(searchQuery)
+              )
+          }))
+          .filter(ci => !searchQuery || ci.entries.length > 0 || ci.cacheName.toLowerCase().includes(searchQuery));
+        displayCacheItems(filtered);
+        return;
+      }
+
+      if (currentStorageType === 'indexeddb') {
+        filtered = allItems.filter(item =>
+          !searchQuery || item.key.toLowerCase().includes(searchQuery)
+        );
+        displayItems(filtered);
+        return;
+      }
+
+      // local / session / cookies
+      filtered = allItems.filter(item =>
+        !searchQuery ||
+        item.key.toLowerCase().includes(searchQuery) ||
+        (item.value != null && item.value.toLowerCase().includes(searchQuery))
+      );
+
+      const hideLocked = currentStorageType === 'local' &&
+        document.getElementById('hideLockedToggle')?.checked;
+      if (hideLocked) {
+        filtered = filtered.filter(item => !isLocked(item.key));
+      }
+
+      if (isLocal) {
+        // Local Storage: separate pinned / unpinned — pins only apply here
+        const pins = getPins();
+        const pinned = filtered.filter(i => pins.includes(i.key));
+        const regular = filtered.filter(i => !pins.includes(i.key));
+        filtered = [...sortItems(pinned, sortVal), ...sortItems(regular, sortVal)];
+      } else {
+        // Session storage / cookies: just sort, no pin partitioning
+        filtered = sortItems(filtered, sortVal);
+      }
+
+      displayItems(filtered);
+    }
+
+    function sortItems(items, sortVal) {
+      if (sortVal === 'az') return [...items].sort((a, b) => a.key.localeCompare(b.key));
+      if (sortVal === 'za') return [...items].sort((a, b) => b.key.localeCompare(a.key));
+      if (sortVal === 'recent') {
+        return [...items].sort((a, b) =>
+          (Number(b.addedAt) || 0) - (Number(a.addedAt) || 0) ||
+          (a.insertionIdx ?? 0) - (b.insertionIdx ?? 0)
+        );
+      }
+      if (sortVal === 'oldest' || sortVal === 'insertion') {
+        return [...items].sort((a, b) =>
+          (Number(a.addedAt) || 0) - (Number(b.addedAt) || 0) ||
+          (a.insertionIdx ?? 0) - (b.insertionIdx ?? 0)
+        );
+      }
+      // Size sorts: compute sizes once, sort using the precomputed map
+      const sizeMap = new Map(items.map(i => [i, getByteSize(i.value)]));
+      if (sortVal === 'size-desc') return [...items].sort((a, b) => sizeMap.get(b) - sizeMap.get(a));
+      if (sortVal === 'size-asc') return [...items].sort((a, b) => sizeMap.get(a) - sizeMap.get(b));
+      return [...items];
+    }
+
+    // ─── Display: KV / IDB list ───────────────────────────────────────────────
+
+    function displayItems(items) {
+      const container = document.getElementById('storageItems');
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <p class="font-medium">No items found</p>
+            <p class="text-xs">${currentStorageType === 'cookies' && cookieReadMessage
+              ? escapeHtml(cookieReadMessage)
+              : 'Try a different search or add a new item'}</p>
+          </div>`;
+        return;
+      }
+
+      // Build HTML using index references — no key interpolation in onclick
+      const isKV = currentStorageType === 'local' || currentStorageType === 'session';
+      const isLocal = currentStorageType === 'local';
+      const isIDB = currentStorageType === 'indexeddb';
+      const isCookie = currentStorageType === 'cookies';
+
+      container.innerHTML = items.map((item) => {
+        // Find original index in allItems for safe onclick references
+        const origIdx = allItems.indexOf(item);
+
+        const valuePreview = item.value ? item.value.substring(0, 120) : '';
+        const isTruncated = item.value && item.value.length > 120;
+        const itemSize = isKV ? formatBytes(getByteSize(item.value)) : '';
+        const addedAtLabel = isKV && item.addedAt ?
+          `<div class="size-info">Added: ${escapeHtml(formatAddedAt(item.addedAt))}</div>` :
+          '';
+
+        const pinned = isLocal && isPinned(item.key);
+        const locked = isLocal && isLocked(item.key);
+        // Pinned border takes visual priority over locked border
+        const rowCls = pinned ? 'pinned-row' : (locked ? 'locked-row' : '');
+        const pinLabel = pinned ? '<span class="pin-badge">📌 Pinned</span>' : '';
+        const lockLabel = locked ? '<span class="lock-badge">🔒</span>' : '';
+
+        let buttons = '';
+        if (isCookie) {
+          buttons = '<span style="font-size:11px;color:#6b7280;">Read-only</span>';
+        } else if (isIDB) {
+          buttons = `
+            <div class="item-btns-col">
+              <div class="item-btns-row">
+                <button onclick="viewIndexedDB(${origIdx})"   class="btn-xs btn-primary">View</button>
+                <button onclick="deleteIndexedDB(${origIdx})" class="btn-xs btn-danger">Del</button>
+              </div>
+            </div>`;
+        } else if (isLocal) {
+          const pinBtnLabel = pinned ? '📌 Unpin' : '📌 Pin';
+          const pinBtnCls = pinned ? 'btn-xs btn-pin pinned' : 'btn-xs btn-pin';
+          const lockBtnLabel = locked ? '🔒 Unlock' : '🔓 Lock';
+          const lockBtnCls = locked ? 'btn-xs btn-lock locked' : 'btn-xs btn-lock';
+          const delDisabled = locked ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : '';
+          buttons = `
+            <div class="item-btns-col">
+              <div class="item-btns-row">
+                <button onclick="editItem(${origIdx})"   class="btn-xs btn-primary">Edit</button>
+                <button onclick="deleteItem(${origIdx})" class="btn-xs btn-danger" ${delDisabled}>Del</button>
+              </div>
+              <button onclick="togglePin(${origIdx})"  class="btn-xs ${pinBtnCls}"  style="width:100%;">${pinBtnLabel}</button>
+              <button onclick="toggleLock(${origIdx})" class="btn-xs ${lockBtnCls}" style="width:100%;">${lockBtnLabel}</button>
+            </div>`;
+        } else {
+          // session storage
+          buttons = `
+            <div class="item-btns-col">
+              <div class="item-btns-row">
+                <button onclick="editItem(${origIdx})"   class="btn-xs btn-primary">Edit</button>
+                <button onclick="deleteItem(${origIdx})" class="btn-xs btn-danger">Del</button>
+              </div>
+            </div>`;
+        }
+
+        return `
+          <div class="p-4 hover:bg-[#303030] transition-colors ${rowCls}">
+            <div class="flex justify-between items-start gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="item-key">${escapeHtml(item.key)}${pinLabel}${lockLabel}</div>
+                ${isIDB
+                  ? `<div class="item-value">v${item.version}</div>`
+                  : `<div class="item-value">${escapeHtml(valuePreview)}${isTruncated ? '…' : ''}</div>
+                     <div class="size-info">${itemSize}</div>
+                     ${addedAtLabel}`
+                }
+              </div>
+              <div class="flex-shrink-0">${buttons}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ─── Display: Cache Storage ───────────────────────────────────────────────
+
+    function displayCacheUnavailable() {
+      document.getElementById('storageItems').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🚫</div>
+          <p class="font-medium">Cache Storage not available</p>
+          <p class="text-xs" style="max-width:340px;margin:0 auto;line-height:1.6;">
+            The Cache API requires a <strong>secure context</strong> — HTTPS or localhost.<br>
+            <code style="background:#1a1a1a;padding:1px 4px;border-radius:3px;">file://</code> and
+            <code style="background:#1a1a1a;padding:1px 4px;border-radius:3px;">content://</code>
+            URLs opened directly in the browser cannot use it.<br><br>
+            To enable: serve the file via a local server, e.g.<br>
+            <code style="background:#1a1a1a;padding:2px 6px;border-radius:3px;">python -m http.server 8080</code><br>
+            then open <code style="background:#1a1a1a;padding:1px 4px;border-radius:3px;">http://localhost:8080/storage-manager.html</code>
+          </p>
+        </div>`;
+    }
+
+    function displayCacheItems(caches) {
+      const container = document.getElementById('storageItems');
+
+      if (caches.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">💾</div>
+            <p class="font-medium">No caches found</p>
+            <p class="text-xs">Service workers or the Cache API haven't stored anything yet.</p>
+          </div>`;
+        return;
+      }
+
+      // ci.origIdx and entry.origIdx are set by filterItems() to always reference allItems correctly
+      container.innerHTML = caches.map((ci) => {
+        const origCacheIdx = ci.origIdx;
+
+        const entriesHtml = ci.entries.length === 0 ?
+          '<div style="color:#6b7280;padding:8px 0;font-size:13px;">No entries</div>' :
+          ci.entries.map((entry) => {
+            const origEntryIdx = entry.origIdx;
+            const badge = entry.status ?
+              `<span style="background:${entry.status >= 400 ? '#ef4444' : '#10b981'};color:white;font-size:10px;padding:1px 5px;border-radius:3px;margin-left:4px;">${entry.status}</span>` :
+              '';
+            const ct = entry.contentType ? `<span style="font-size:11px;color:#6b7280;"> · ${escapeHtml(entry.contentType.split(';')[0])}</span>` : '';
+            const sz = entry.size ? `<span style="font-size:11px;color:#6b7280;"> · ${formatBytes(entry.size)}</span>` : '';
+            return `
+                <div class="cache-entry">
+                  <div class="flex justify-between items-start gap-2">
+                    <div class="flex-1 min-w-0">
+                      <div class="cache-url">${escapeHtml(entry.url)}${badge}</div>
+                      <div>${ct}${sz}</div>
+                    </div>
+                    <button onclick="deleteCacheEntry(${origCacheIdx}, ${origEntryIdx})" class="btn-small btn-danger flex-shrink-0">Delete</button>
+                  </div>
+                </div>`;
+          }).join('');
+
+        const total = allItems[origCacheIdx]?.entries?.length ?? 0;
+        const shown = ci.entries.length;
+        const countLabel = shown < total ?
+          `${shown} of ${total} entr${total === 1 ? 'y' : 'ies'} shown` :
+          `${total} entr${total === 1 ? 'y' : 'ies'}`;
+        return `
+          <div class="p-4">
+            <div class="flex justify-between items-center mb-3">
+              <div>
+                <span class="item-key" style="color:#c4b5fd;">💾 ${escapeHtml(ci.cacheName)}</span>
+                <span class="size-info ml-2">${countLabel}</span>
+              </div>
+              <button onclick="deleteCacheStorage(${origCacheIdx})" class="btn-small btn-danger">Delete Cache</button>
+            </div>
+            ${entriesHtml}
+          </div>`;
+      }).join('<hr class="border-gray-700">');
+    }
+
+    // ─── Add / Edit KV ────────────────────────────────────────────────────────
+
+    function openAddModal() {
+      document.getElementById('newKey').value = '';
+      document.getElementById('newValue').value = '';
+      document.getElementById('newValueSize').textContent = '0 B';
+      document.getElementById('addModal').classList.add('active');
+      document.getElementById('newKey').focus();
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('active');
+    }
+
+    function addItem() {
+      const key = document.getElementById('newKey').value.trim();
+      const value = document.getElementById('newValue').value; // do NOT trim — empty string is valid
+
+      if (!key) {
+        showStatus('Key is required', 'error');
+        return;
+      }
+      if (META_KEYS.has(key)) {
+        showStatus('That key is reserved by Storage Manager', 'error');
+        return;
+      }
+
+      try {
+        const storage = getStorageSafely();
+        const existed = storage.getItem(key) !== null;
+        storage.setItem(key, value);
+        if (!existed) rememberAddedKey(storage, key);
+        closeAddModal();
+        refreshItems();
+        showStatus(`Added "${key}"`, 'success');
+      } catch (error) {
+        showStatus('Error: ' + error.message, 'error');
+      }
+    }
+
+    function editItem(origIdx) {
+      const item = allItems[origIdx];
+      if (!item) return;
+      currentEditKey = item.key;
+      try {
+        const value = getStorageSafely().getItem(item.key) ?? '';
+        document.getElementById('editKey').value = item.key;
+        document.getElementById('editValue').value = value;
+        document.getElementById('editValueSize').textContent = formatBytes(getByteSize(value));
+        document.getElementById('editModal').classList.add('active');
+      } catch (error) {
+        showStatus('Error: ' + error.message, 'error');
+      }
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+      currentEditKey = null;
+    }
+
+    function saveEdit() {
+      if (!currentEditKey) return;
+      const newValue = document.getElementById('editValue').value;
+      try {
+        getStorageSafely().setItem(currentEditKey, newValue);
+        closeEditModal();
+        refreshItems();
+        showStatus(`Updated "${currentEditKey}"`, 'success');
+      } catch (error) {
+        showStatus('Error: ' + error.message, 'error');
+      }
+    }
+
+    function toggleJsonFormat() {
+      const textarea = document.getElementById('editValue');
+      try {
+        const parsed = JSON.parse(textarea.value);
+        textarea.value = JSON.stringify(parsed, null, 2);
+        document.getElementById('editValueSize').textContent = formatBytes(getByteSize(textarea.value));
+        showStatus('Formatted!', 'success');
+      } catch (e) {
+        showStatus('Invalid JSON', 'error');
+      }
+    }
+
+    function deleteItem(origIdx) {
+      const item = allItems[origIdx];
+      if (!item) return;
+      if (isLocked(item.key)) {
+        showStatus(`"${item.key}" is locked — unlock it first`, 'error');
+        return;
+      }
+      if (!confirm(`Delete "${item.key}"?`)) return;
+      try {
+        const storage = getStorageSafely();
+        storage.removeItem(item.key);
+        forgetAddedKey(storage, item.key);
+        if (currentStorageType === 'local') {
+          removePin(item.key);
+          removeLock(item.key);
+        }
+        refreshItems();
+        showStatus(`Deleted "${item.key}"`, 'success');
+      } catch (error) {
+        showStatus('Error: ' + error.message, 'error');
+      }
+    }
+
+    function togglePin(origIdx) {
+      const item = allItems[origIdx];
+      if (!item) return;
+      const pins = getPins();
+      const idx = pins.indexOf(item.key);
+      if (idx === -1) {
+        pins.push(item.key);
+        showStatus(`📌 Pinned "${item.key}"`, 'success');
+      } else {
+        pins.splice(idx, 1);
+        showStatus(`Unpinned "${item.key}"`, 'info');
+      }
+      savePins(pins);
+      filterItems();
+    }
+
+    // ─── Clear All ────────────────────────────────────────────────────────────
+
+    async function clearAll() {
+      if (currentStorageType === 'local' || currentStorageType === 'session') {
+        const isLocal = currentStorageType === 'local';
+
+        if (isLocal) {
+          const pins = getPins();
+          const locks = getLocks();
+          // Anything pinned OR locked is protected
+          const protected_ = new Set([...pins, ...locks]);
+          // Count only keys that actually exist in storage
+          const storage = getStorageSafely();
+          const existingProtected = [...protected_].filter(k => storage.getItem(k) !== null);
+
+          if (existingProtected.length > 0) {
+            const parts = [];
+            const pinCount = pins.filter(k => storage.getItem(k) !== null).length;
+            const lockCount = locks.filter(k => storage.getItem(k) !== null && !pins.includes(k)).length;
+            if (pinCount) parts.push(`${pinCount} pinned`);
+            if (lockCount) parts.push(`${lockCount} locked`);
+            const msg = `Clear all Local Storage?\n\n${parts.join(' and ')} item(s) will be KEPT.\nTo delete them, unpin/unlock first.`;
+            if (!confirm(msg)) return;
+            // Snapshot all keys, delete non-protected non-meta
+            const keys = [];
+            for (let i = 0; i < storage.length; i++) keys.push(storage.key(i));
+            keys.forEach(k => {
+              if (META_KEYS.has(k)) return;
+              if (!protected_.has(k)) storage.removeItem(k);
+            });
+            ensureAddedAt(storage, Array.from({
+                length: storage.length
+              }, (_, i) => storage.key(i))
+              .filter(k => k && !META_KEYS.has(k)));
+          } else {
+            if (!confirm('Clear all Local Storage?')) return;
+            const pinsBackup = localStorage.getItem(PINS_KEY);
+            const locksBackup = localStorage.getItem(LOCKS_KEY);
+            const addedAtBackup = localStorage.getItem(ADDED_AT_KEY);
+            localStorage.clear();
+            if (pinsBackup) localStorage.setItem(PINS_KEY, pinsBackup);
+            if (locksBackup) localStorage.setItem(LOCKS_KEY, locksBackup);
+            if (addedAtBackup) localStorage.setItem(ADDED_AT_KEY, addedAtBackup);
+          }
+        } else {
+          if (!confirm('Clear all Session Storage?')) return;
+          getStorageSafely().clear();
+        }
+        refreshItems();
+        showStatus('Cleared', 'success');
+
+      } else if (currentStorageType === 'indexeddb') {
+        if (!confirm('Delete ALL IndexedDB databases? This cannot be undone.')) return;
+        const dbs = await indexedDB.databases();
+        await Promise.all(dbs.map(db => new Promise((res, rej) => {
+          const req = indexedDB.deleteDatabase(db.name);
+          req.onsuccess = res;
+          req.onerror = () => rej(req.error);
+        })));
+        refreshItems();
+        showStatus('All databases deleted', 'success');
+
+      } else if (currentStorageType === 'cache') {
+        if (!confirm('Delete ALL caches?')) return;
+        try {
+          const names = await caches.keys();
+          await Promise.all(names.map(n => caches.delete(n)));
+          refreshItems();
+          showStatus('All caches cleared', 'success');
+        } catch (e) {
+          showStatus('Error: ' + e.message, 'error');
+        }
+      }
+    }
+
+    // ─── IndexedDB viewer ────────────────────────────────────────────────────
+
+    function getIDBKeyPathValue(record, keyPath) {
+      if (!keyPath) return undefined;
+      if (Array.isArray(keyPath)) {
+        return keyPath.map(k => record[k]);
+      }
+      return record[keyPath];
+    }
+
+    function getIndexedDBRecords(dbName, storeName) {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName);
+        request.onsuccess = (e) => {
+          const db = e.target.result;
+          const transaction = db.transaction(storeName, 'readonly');
+          const store = transaction.objectStore(storeName);
+          const getAllReq = store.getAll();
+          const getAllKeys = store.getAllKeys();
+
+          let records = null,
+            keys = null;
+
+          getAllReq.onsuccess = () => {
+            records = getAllReq.result;
+            if (keys !== null) done();
+          };
+          getAllKeys.onsuccess = () => {
+            keys = getAllKeys.result;
+            if (records !== null) done();
+          };
+
+          function done() {
+            db.close();
+            resolve({
+              records,
+              keys,
+              keyPath: store.keyPath
+            });
+          }
+
+          getAllReq.onerror = () => {
+            db.close();
+            reject(getAllReq.error);
+          };
+          getAllKeys.onerror = () => {
+            db.close();
+            reject(getAllKeys.error);
+          };
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function viewIndexedDB(origIdx) {
+      const item = allItems[origIdx];
+      const dbName = item.key;
+      showStatus('Loading IndexedDB…', 'info');
+
+      try {
+        const request = indexedDB.open(dbName);
+
+        request.onerror = () => showStatus('Error opening database', 'error');
+
+        request.onsuccess = async (e) => {
+          const db = e.target.result;
+          const storeNames = Array.from(db.objectStoreNames);
+          db.close();
+
+          preparedIDBData = {
+            database: dbName,
+            version: db.version,
+            exportDate: new Date().toISOString(),
+            stores: {}
+          };
+
+          let html = `
+            <div class="store-item">
+              <div><strong>Database:</strong> ${escapeHtml(dbName)}</div>
+              <div><strong>Version:</strong> ${db.version}</div>
+              <div><strong>Object Stores:</strong> ${storeNames.length}</div>
+            </div>`;
+
+          const storeOrder = []; // ordered list so storeIdx → storeName
+
+          for (const storeName of storeNames) {
+            const storeIdx = storeOrder.length;
+            storeOrder.push(storeName);
+
+            try {
+              const {
+                records,
+                keys,
+                keyPath
+              } = await getIndexedDBRecords(dbName, storeName);
+              preparedIDBData.stores[storeName] = {
+                records,
+                keys,
+                keyPath
+              };
+
+              html += `
+                <div class="collapsible-section" style="margin-top:12px;">
+                  <div class="collapsible-header" onclick="toggleCollapsible(event)">
+                    <span>📁 ${escapeHtml(storeName)} (${records.length} records)</span>
+                    <span class="toggle-arrow">▼</span>
+                  </div>
+                  <div class="collapsible-content">`;
+
+              if (records.length > 0) {
+                records.forEach((record, idx) => {
+                  const recordJson = JSON.stringify(record, null, 2);
+                  const recordSize = formatBytes(getByteSize(recordJson));
+                  // Use data-* attributes only — no JS string interpolation of user-controlled values
+                  html += `
+                    <div class="record-header">
+                      <div class="record-header-left" onclick="toggleRecord(event, this)">
+                        <span>Record ${idx + 1} (${recordSize})</span>
+                        <span class="record-toggle-arrow">▼</span>
+                      </div>
+                      <div class="record-header-buttons">
+                        <button data-idb-action="peak"   data-store-idx="${storeIdx}" data-rec-idx="${idx}" class="header-btn peak"   title="Preview first 10 lines">⚡</button>
+                        <button data-idb-action="delete" data-store-idx="${storeIdx}" data-rec-idx="${idx}" class="header-btn delete" title="Delete">🗑️</button>
+                      </div>
+                    </div>
+                    <div class="record-content">
+                      <div class="json-display">${escapeHtml(recordJson)}</div>
+                      <div class="record-buttons-group">
+                        <button data-idb-action="edit"   data-store-idx="${storeIdx}" data-rec-idx="${idx}" class="record-button edit">✏️ Edit</button>
+                        <button data-idb-action="delete" data-store-idx="${storeIdx}" data-rec-idx="${idx}" class="record-button delete">🗑️ Delete</button>
+                      </div>
+                    </div>`;
+                });
+              } else {
+                html += '<div style="color:#6b7280;padding:12px;">No records</div>';
+              }
+
+              html += `</div></div>`;
+            } catch (err) {
+              html += `<div style="color:#ef4444;padding:8px;">Error loading "${escapeHtml(storeName)}": ${escapeHtml(err.message)}</div>`;
+            }
+          }
+
+          preparedIDBData.storeOrder = storeOrder;
+
+          document.getElementById('idbModalTitle').textContent = dbName;
+          document.getElementById('idbModalContent').innerHTML = html;
+          document.getElementById('downloadIDBBtn').style.display = 'block';
+          document.getElementById('idbModal').classList.add('active');
+          bindIDBHandlers(dbName, storeOrder);
+          showStatus('IndexedDB loaded!', 'success');
+        };
+      } catch (error) {
+        showStatus('Error: ' + error.message, 'error');
+      }
+    }
+
+    function toggleCollapsible(event) {
+      event.stopPropagation();
+      const header = event.currentTarget;
+      const content = header.nextElementSibling;
+      content.classList.toggle('active');
+      header.querySelector('.toggle-arrow').textContent = content.classList.contains('active') ? '▲' : '▼';
+    }
+
+    function toggleRecord(event, headerLeftElement) {
+      event.stopPropagation();
+      const recordHeader = headerLeftElement.parentElement;
+      const content = recordHeader.nextElementSibling;
+      content.classList.toggle('active');
+      const arrow = headerLeftElement.querySelector('.record-toggle-arrow');
+      arrow.textContent = content.classList.contains('active') ? '▲' : '▼';
+    }
+
+    function closeIDBModal() {
+      document.getElementById('idbModal').classList.remove('active');
+      document.getElementById('downloadIDBBtn').style.display = 'none';
+      preparedIDBData = null;
+    }
+
+    // Event delegation for IDB record buttons — avoids JS string injection via db/store names
+    function bindIDBHandlers(dbName, storeOrder) {
+      const content = document.getElementById('idbModalContent');
+      // Remove any prior listener (replace node with clone)
+      const fresh = content.cloneNode(true);
+      content.parentNode.replaceChild(fresh, content);
+
+      fresh.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-idb-action]');
+        if (!btn) return;
+        const action = btn.dataset.idbAction;
+        const storeIdx = parseInt(btn.dataset.storeIdx, 10);
+        const recIdx = parseInt(btn.dataset.recIdx, 10);
+        const storeName = storeOrder[storeIdx];
+        if (!storeName) return;
+
+        if (action === 'peak') peakIDBRecord(storeName, recIdx);
+        if (action === 'edit') editIDBRecord(dbName, storeName, recIdx);
+        if (action === 'delete') deleteIDBRecord(dbName, storeName, recIdx);
+      });
+    }
+
+    function peakIDBRecord(storeName, recordIndex) {
+      if (!preparedIDBData) return;
+      const record = preparedIDBData.stores[storeName]?.records?.[recordIndex];
+      if (!record) {
+        showStatus('Record not found', 'error');
+        return;
+      }
+      document.getElementById('peakContent').textContent = getFirst10Lines(JSON.stringify(record, null, 2));
+      document.getElementById('peakModal').classList.add('active');
+    }
+
+    function closePeakModal() {
+      document.getElementById('peakModal').classList.remove('active');
+    }
+
+    function editIDBRecord(dbName, storeName, recordIndex) {
+      if (!preparedIDBData) return;
+      const storeData = preparedIDBData.stores[storeName];
+      const record = storeData?.records?.[recordIndex];
+      if (!record) {
+        showStatus('Record not found', 'error');
+        return;
+      }
+      const recordJson = JSON.stringify(record, null, 2);
+
+      currentIDBEdit = {
+        dbName,
+        storeName,
+        recordIndex,
+        keyPath: storeData.keyPath,
+        recordKey: storeData.keys?.[recordIndex]
+      };
+
+      document.getElementById('editIDBDatabase').value = dbName;
+      document.getElementById('editIDBStore').value = storeName;
+      document.getElementById('editIDBValue').value = recordJson;
+      document.getElementById('editIDBValueSize').textContent = formatBytes(getByteSize(recordJson));
+      document.getElementById('editIDBModal').classList.add('active');
+    }
+
+    function closeEditIDBModal() {
+      document.getElementById('editIDBModal').classList.remove('active');
+      currentIDBEdit = null;
+    }
+
+    function formatIDBJson() {
+      const textarea = document.getElementById('editIDBValue');
+      try {
+        textarea.value = JSON.stringify(JSON.parse(textarea.value), null, 2);
+        document.getElementById('editIDBValueSize').textContent = formatBytes(getByteSize(textarea.value));
+        showStatus('Formatted!', 'success');
+      } catch (e) {
+        showStatus('Invalid JSON', 'error');
+      }
+    }
+
+    function saveIDBEdit() {
+      if (!currentIDBEdit) return;
+      const {
+        dbName,
+        storeName,
+        recordIndex,
+        keyPath,
+        recordKey
+      } = currentIDBEdit;
+      const newValue = document.getElementById('editIDBValue').value;
+
+      let newRecord;
+      try {
+        newRecord = JSON.parse(newValue);
+      } catch (e) {
+        showStatus('Invalid JSON: ' + e.message, 'error');
+        return;
+      }
+
+      const request = indexedDB.open(dbName);
+      request.onerror = () => showStatus('Error opening database', 'error');
+
+      request.onsuccess = (e) => {
+        const db = e.target.result;
+        const transaction = db.transaction(storeName, 'readwrite');
+        const store = transaction.objectStore(storeName);
+
+        // Use the captured primary key (from getAllKeys) — most reliable approach
+        let putReq;
+        if (keyPath === null || keyPath === undefined) {
+          // Out-of-line key — use the captured key
+          putReq = (recordKey !== undefined) ? store.put(newRecord, recordKey) : store.put(newRecord);
+        } else {
+          // In-line key (keyPath is part of record)
+          putReq = store.put(newRecord);
+        }
+
+        transaction.oncomplete = () => {
+          if (preparedIDBData?.stores?.[storeName]) {
+            preparedIDBData.stores[storeName].records[recordIndex] = newRecord;
+          }
+          closeEditIDBModal();
+          showStatus('Record updated', 'success');
+          db.close();
+        };
+        transaction.onerror = () => {
+          showStatus('Error updating record: ' + transaction.error?.message, 'error');
+          db.close();
+        };
+      };
+    }
+
+    function deleteIDBRecord(dbName, storeName, recordIndex) {
+      if (!confirm('Delete this record?')) return;
+      if (!preparedIDBData) return;
+      const storeData = preparedIDBData.stores[storeName];
+      const recordKey = storeData?.keys?.[recordIndex];
+      const keyPath = storeData?.keyPath;
+
+      const request = indexedDB.open(dbName);
+      request.onerror = () => showStatus('Error opening database', 'error');
+
+      request.onsuccess = (e) => {
+        const db = e.target.result;
+        const transaction = db.transaction(storeName, 'readwrite');
+        const store = transaction.objectStore(storeName);
+
+        let deleteReq;
+        if (recordKey !== undefined) {
+          deleteReq = store.delete(recordKey);
+        } else if (keyPath) {
+          const record = storeData.records[recordIndex];
+          const key = getIDBKeyPathValue(record, keyPath);
+          if (key !== undefined) {
+            deleteReq = store.delete(key);
+          } else {
+            showStatus('Cannot determine record key to delete', 'error');
+            db.close();
+            return;
+          }
+        } else {
+          showStatus('Cannot determine record key to delete', 'error');
+          db.close();
+          return;
+        }
+
+        transaction.oncomplete = () => {
+          storeData.records.splice(recordIndex, 1);
+          storeData.keys?.splice(recordIndex, 1);
+          // Reload the modal in-place (modal is already open) using the stored db name
+          const dbOrigIdx = allItems.findIndex(i => i.key === dbName);
+          if (dbOrigIdx !== -1) viewIndexedDB(dbOrigIdx);
+          showStatus('Record deleted', 'success');
+          db.close();
+        };
+
+        transaction.onerror = () => {
+          showStatus('Error deleting record: ' + transaction.error?.message, 'error');
+          db.close();
+        };
+      };
+    }
+
+    function deleteIndexedDB(origIdx) {
+      const item = allItems[origIdx];
+      const dbName = item.key;
+      if (!confirm(`Delete database "${dbName}" and all its data?`)) return;
+
+      const request = indexedDB.deleteDatabase(dbName);
+      request.onsuccess = () => {
+        refreshItems();
+        closeIDBModal();
+        showStatus(`Deleted "${dbName}"`, 'success');
+      };
+      request.onerror = () => showStatus('Error deleting database', 'error');
+    }
+
+    // ─── Export / Import ─────────────────────────────────────────────────────
+
+    async function exportFile() {
+      if (exportInProgress) return;
+      if (currentStorageType !== 'local' && currentStorageType !== 'session') {
+        showStatus('Export only supports Local/Session Storage', 'error');
+        return;
+      }
+      exportInProgress = true;
+
+      const btn = document.getElementById('exportBtn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '⏳ Exporting…';
+      btn.disabled = true;
+
+      try {
+        const storage = getStorageSafely();
+        const chunks = ['{'];
+        const keys = [];
+        for (let i = 0; i < storage.length; i++) keys.push(storage.key(i));
+
+        let emitted = 0;
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          if (!key || META_KEYS.has(key)) continue;
+          if (emitted > 0) chunks.push(',');
+          chunks.push(JSON.stringify(key) + ':' + JSON.stringify(storage.getItem(key)));
+          emitted++;
+          if (emitted % 10 === 0) await new Promise(r => setTimeout(r, 1));
+        }
+        chunks.push('}');
+
+        const blob = new Blob(chunks, {
+          type: 'application/json'
+        });
+        await downloadFileOptimized(blob, `${storageNames[currentStorageType].replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.json`);
+
+        btn.innerHTML = '✓ Done';
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.disabled = false;
+          exportInProgress = false;
+        }, 2000);
+      } catch (error) {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        exportInProgress = false;
+        showStatus('Export error: ' + error.message, 'error');
+      }
+    }
+
+    async function downloadIndexedDBData() {
+      if (idbDownloadInProgress || !preparedIDBData) return;
+      idbDownloadInProgress = true;
+
+      const btn = document.getElementById('downloadIDBBtn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '⏳ Exporting…';
+      btn.disabled = true;
+
+      try {
+        // Serialize only the records (not the keys metadata) for a clean export
+        const exportObj = {
+          database: preparedIDBData.database,
+          version: preparedIDBData.version,
+          exportDate: preparedIDBData.exportDate,
+          stores: Object.fromEntries(
+            Object.entries(preparedIDBData.stores).map(([k, v]) => [k, v.records])
+          )
+        };
+        const blob = new Blob([JSON.stringify(exportObj, null, 0)], {
+          type: 'application/json'
+        });
+        await downloadFileOptimized(blob, `${preparedIDBData.database}_${new Date().toISOString().split('T')[0]}.json`);
+
+        btn.innerHTML = '✓ Done';
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.disabled = false;
+          idbDownloadInProgress = false;
+        }, 2000);
+      } catch (error) {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        idbDownloadInProgress = false;
+        showStatus('Download error: ' + error.message, 'error');
+      }
+    }
+
+    async function downloadFileOptimized(blob, fileName) {
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{
+              description: 'JSON File',
+              accept: {
+                'application/json': ['.json']
+              }
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          return;
+        } catch {}
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      await new Promise(r => setTimeout(r, 50));
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+    }
+
+    function triggerImport() {
+      document.getElementById('fileInput').click();
+    }
+
+    function importDataFromFile() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          const storage = getStorageSafely();
+          let count = 0;
+          for (const [key, value] of Object.entries(data)) {
+            if (META_KEYS.has(key)) continue; // don't import manager metadata
+            const existed = storage.getItem(key) !== null;
+            storage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+            if (!existed) rememberAddedKey(storage, key);
+            count++;
+          }
+          refreshItems();
+          showStatus(`Imported ${count} items`, 'success');
+        } catch (error) {
+          showStatus('Import error: ' + error.message, 'error');
+        }
+      };
+      reader.readAsText(file);
+      fileInput.value = '';
+    }
+
+    // ─── Status Toast ─────────────────────────────────────────────────────────
+
+    function showStatus(message, type = 'info') {
+      const container = document.getElementById('statusMessage');
+      const el = document.createElement('div');
+
+      const bgColor = {
+        success: '#10b981',
+        error: '#ef4444',
+        info: '#3b82f6'
+      } [type] || '#3b82f6';
+      el.style.cssText = `background:${bgColor};color:white;padding:12px 16px;border-radius:6px;font-weight:600;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);`;
+      el.classList.add('status-toast');
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+
+    document.addEventListener('DOMContentLoaded', () => {
+      switchTab('local');
+
+      document.getElementById('newValue').addEventListener('input', function() {
+        document.getElementById('newValueSize').textContent = formatBytes(getByteSize(this.value));
+      });
+      document.getElementById('editValue').addEventListener('input', function() {
+        document.getElementById('editValueSize').textContent = formatBytes(getByteSize(this.value));
+      });
+      document.getElementById('editIDBValue').addEventListener('input', function() {
+        document.getElementById('editIDBValueSize').textContent = formatBytes(getByteSize(this.value));
+      });
+
+      // Close modals when clicking outside
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.remove('active');
+          }
+        });
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+        }
+      });
+    });
+
+    (() => {
+      const ENTRY = 'Local Storage Manager v6.1',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
