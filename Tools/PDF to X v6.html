@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>PDF to X v6</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1f2937;
+      --border: #2d3748;
+      --accent: #00d4ff;
+      --accent2: #00ffff;
+      --accent-dim: #00384d;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --danger: #ff4d6d;
+      --purple: #a855f7;
+      --green: #3ddc97;
+      --orange: #f59e0b;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --thumb-size: 150px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 14px 60px;
+      overflow-x: hidden;
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 0.88rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-left: 6px;
+      vertical-align: middle;
+      -webkit-text-fill-color: var(--accent);
+    }
+
+    /* ── Drop Zone ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--surface);
+      position: relative;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragging {
+      border-color: var(--accent);
+      background: rgba(0, 212, 255, 0.04);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .drop-icon {
+      font-size: 2.4rem;
+      margin-bottom: 8px;
+    }
+
+    .drop-zone h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .drop-zone p {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .drop-zone .fname {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: var(--accent);
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    /* ── Info Panel ── */
+    .info-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      gap: 14px 20px;
+    }
+
+    .info-panel.visible {
+      display: flex;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 80px;
+    }
+
+    .info-item .lbl {
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .info-item .val {
+      font-size: 0.88rem;
+      color: var(--accent);
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    /* ── Tabs ── */
+    .tabs-wrap {
+      display: none;
+      margin-top: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .tabs-wrap.visible {
+      display: block;
+    }
+
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .tab-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      padding: 10px 14px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-pane {
+      display: none;
+      padding: 16px;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* ── Controls inside tabs ── */
+    /* FIX: ctrl-row wraps properly; items use auto sizing so nothing collapses */
+    .ctrl-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+      margin-bottom: 10px;
+    }
+
+    .ctrl-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .cg {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .cg label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .cg input[type="text"],
+    .cg input[type="number"],
+    .cg select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .cg input[type="color"] {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      height: 36px;
+      padding: 2px 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .cg input:focus,
+    .cg select:focus {
+      border-color: var(--accent);
+    }
+
+    .cg select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237d8590' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+
+    /* Range */
+    .rng-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rng-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .rng-val {
+      font-size: 0.8rem;
+      color: var(--accent);
+      font-weight: 700;
+      min-width: 38px;
+      text-align: right;
+    }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+    }
+
+    .toggle-row span {
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .tog-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .tog-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle input:checked+.tog-slider {
+      background: var(--accent);
+    }
+
+    .toggle input:checked+.tog-slider::before {
+      transform: translateX(16px);
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .btn {
+      padding: 8px 13px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:not(:disabled):hover,
+    .btn-ghost:not(:disabled):active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-accent {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #0d1117;
+    }
+
+    .btn-purple {
+      background: linear-gradient(90deg, #7c3aed, var(--purple));
+      color: #fff;
+    }
+
+    .btn-green {
+      background: linear-gradient(90deg, #059669, var(--green));
+      color: #fff;
+    }
+
+    .btn-orange {
+      background: linear-gradient(90deg, #d97706, var(--orange));
+      color: #fff;
+    }
+
+    .btn-blue {
+      background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+      color: #fff;
+    }
+
+    /* Divider / Section label */
+    .div {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 0;
+    }
+
+    .section-lbl {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Preset chips */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .chip.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* Rotation buttons active */
+    .rot-btn.active {
+      border-color: var(--accent) !important;
+      color: var(--accent) !important;
+      background: var(--accent-dim) !important;
+    }
+
+    /* ── Grid Header ── */
+    .grid-header {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 20px;
+      margin-bottom: 12px;
+    }
+
+    .grid-header.visible {
+      display: flex;
+    }
+
+    .gh-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .sel-info {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .sel-info strong {
+      color: var(--accent);
+    }
+
+    .est-size {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Export buttons — wrap into two neat rows on mobile */
+    .export-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .export-grid .btn {
+      font-size: 0.78rem;
+      padding: 7px 11px;
+    }
+
+    /* Thumb size + jump row */
+    .gh-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 16px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .gh-controls label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .sz-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 140px;
+      max-width: 220px;
+    }
+
+    .sz-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+    }
+
+    .sz-val {
+      font-size: 0.78rem;
+      color: var(--accent);
+      font-weight: 700;
+      min-width: 30px;
+    }
+
+    .jump-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .jump-row input[type="number"] {
+      width: 64px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 7px 8px;
+      font-size: 0.85rem;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .jump-row input:focus {
+      border-color: var(--accent);
+    }
+
+    /* ── Page Grid ── */
+    .page-grid {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(var(--thumb-size), 1fr));
+      gap: 10px;
+    }
+
+    .page-grid.visible {
+      display: grid;
+    }
+
+    .page-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      user-select: none;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .page-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.22);
+    }
+
+    .thumb-wrap {
+      width: 100%;
+      aspect-ratio: 0.707;
+      background: #0a0e14;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* FIX: object-fit is not supported on <canvas>; use width/height to scale instead */
+    .thumb-wrap canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .thumb-loading {
+      color: var(--muted);
+      font-size: 0.7rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Preview button — always visible, top-right of card */
+    .preview-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #fff;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .preview-btn:active {
+      background: rgba(0, 212, 255, 0.5);
+    }
+
+    .page-label {
+      padding: 5px 9px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .page-card.selected .page-label {
+      color: var(--accent);
+    }
+
+    .page-check {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .page-card.selected .page-check {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0d1117;
+      font-weight: 900;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── Progress ── */
+    .prog-wrap {
+      display: none;
+      margin-top: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+
+    .prog-wrap.visible {
+      display: block;
+    }
+
+    .prog-lbl {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 9px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .prog-bg {
+      background: var(--bg);
+      border-radius: 999px;
+      height: 7px;
+      overflow: hidden;
+    }
+
+    .prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 999px;
+      transition: width 0.2s ease;
+      width: 0%;
+    }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.93);
+      z-index: 9000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow: hidden;
+    }
+
+    .lightbox.visible {
+      display: flex;
+    }
+
+    .lb-bar {
+      width: 100%;
+      background: rgba(13, 17, 23, 0.97);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 14px;
+      flex-shrink: 0;
+      z-index: 9001;
+    }
+
+    .lb-info {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .lb-info strong {
+      color: var(--accent);
+    }
+
+    .lb-actions {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .lb-actions .btn {
+      font-size: 0.75rem;
+      padding: 6px 10px;
+    }
+
+    .lb-body {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      padding: 12px;
+      position: relative;
+    }
+
+    /* FIX: object-fit is not supported on <canvas>; the canvas is already sized
+       correctly by JS (constrained to viewport). Just prevent overflow. */
+    .lb-body canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    .lb-nav-row {
+      display: flex;
+      gap: 12px;
+      padding: 10px 14px;
+      flex-shrink: 0;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .lb-nav {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 8px 22px;
+      border-radius: var(--radius-sm);
+      transition: border-color 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lb-nav:active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed;
+      bottom: 18px;
+      right: 14px;
+      left: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 7px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.83rem;
+      animation: slideIn 0.22s ease;
+      max-width: 320px;
+      pointer-events: auto;
+    }
+
+    .toast.success {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0d1117;
+    }
+
+    .toast.error {
+      background: linear-gradient(135deg, var(--danger), #c92b47);
+      color: #fff;
+    }
+
+    .toast.info {
+      background: linear-gradient(135deg, #7c3aed, var(--purple));
+      color: #fff;
+    }
+
+    .toast.warn {
+      background: linear-gradient(135deg, #d97706, var(--orange));
+      color: #fff;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* ── Shortcuts — hidden on touch/mobile devices ── */
+    .shortcuts {
+      margin-top: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+
+    .shortcuts h3 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .sc-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 20px;
+    }
+
+    .sc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    kbd {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.7rem;
+      font-family: monospace;
+      color: var(--text);
+    }
+
+    /* FIX: Hide keyboard shortcuts on coarse-pointer (touch) devices — they don't have a keyboard */
+    @media (pointer: coarse) {
+      .shortcuts {
+        display: none !important;
+      }
+    }
+
+    /* ── Inline number input (used in Select tab) ── */
+    .inline-num {
+      width: 60px;
+      padding: 7px 8px;
+      font-size: 0.83rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .inline-num:focus {
+      border-color: var(--accent);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      body {
+        padding: 14px 10px 60px;
+      }
+
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      .page-grid {
+        --thumb-size: 110px;
+        gap: 8px;
+      }
+
+      .export-grid .btn {
+        font-size: 0.74rem;
+        padding: 7px 9px;
+      }
+
+      .tab-btn {
+        padding: 9px 11px;
+        font-size: 0.75rem;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <header>
+      <h1>PDF to X <span class="badge">v6</span></h1>
+      <p>Tap pages to select · export any format · 100% offline</p>
+    </header>
+
+    <!-- Drop zone -->
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept="application/pdf">
+      <div class="drop-icon">📄</div>
+      <h2>Tap to choose a PDF</h2>
+      <p>Nothing is uploaded — all processing happens on your device</p>
+      <div class="fname" id="fname"></div>
+    </div>
+
+    <!-- Info panel -->
+    <div class="info-panel" id="infoPanel">
+      <div class="info-item">
+        <div class="lbl">Pages</div>
+        <div class="val" id="infoPg">—</div>
+      </div>
+      <div class="info-item">
+        <div class="lbl">Title</div>
+        <div class="val" id="infoTitle">—</div>
+      </div>
+      <div class="info-item">
+        <div class="lbl">Author</div>
+        <div class="val" id="infoAuthor">—</div>
+      </div>
+      <div class="info-item">
+        <div class="lbl">File Size</div>
+        <div class="val" id="infoSize">—</div>
+      </div>
+      <div class="info-item">
+        <div class="lbl">Page Size</div>
+        <div class="val" id="infoPageSz">—</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-wrap" id="tabsWrap">
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="sel">🗂 Select</button>
+        <button class="tab-btn" data-tab="img">🖼 Image</button>
+        <button class="tab-btn" data-tab="fx">✨ Effects</button>
+        <button class="tab-btn" data-tab="wm">💧 Watermark</button>
+      </div>
+
+      <!-- SELECT TAB -->
+      <div class="tab-pane active" id="tab-sel">
+        <div class="ctrl-row">
+          <!-- FIX: was flex:0;min-width:0 — collapsed buttons to 0px width causing overlap.
+             Changed to flex: 0 0 auto so the container sizes to its content. -->
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Quick Select</label>
+            <div class="btn-row">
+              <button class="btn btn-ghost" id="btnAll">All</button>
+              <button class="btn btn-ghost" id="btnNone">None</button>
+              <button class="btn btn-ghost" id="btnInvert">Invert</button>
+              <button class="btn btn-ghost" id="btnEven">Even</button>
+              <button class="btn btn-ghost" id="btnOdd">Odd</button>
+            </div>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <!-- FIX: same flex:0;min-width:0 → flex: 0 0 auto -->
+          <div class="cg" style="flex: 0 0 auto">
+            <label>First / Last N pages</label>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <input type="number" id="nInput" value="10" min="1" class="inline-num">
+              <button class="btn btn-ghost" id="btnFirst">First N</button>
+              <button class="btn btn-ghost" id="btnLast">Last N</button>
+            </div>
+          </div>
+          <!-- FIX: same flex:0;min-width:0 → flex: 0 0 auto -->
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Every Nth page</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="number" id="nthInput" value="2" min="2" class="inline-num">
+              <button class="btn btn-ghost" id="btnNth">Apply</button>
+            </div>
+          </div>
+        </div>
+        <div class="div"></div>
+        <div class="ctrl-row">
+          <div class="cg">
+            <label>Page Range — adds to current selection</label>
+            <input type="text" id="rangeInput" placeholder="e.g. 1-5, 12, 24, 50-54">
+          </div>
+          <!-- FIX: was flex:0;min-width:0;justify-content:flex-end → flex: 0 0 auto -->
+          <div class="cg" style="flex: 0 0 auto; justify-content: flex-end">
+            <label>&nbsp;</label>
+            <button class="btn btn-ghost" id="btnApplyRange">Apply</button>
+          </div>
+        </div>
+        <p style="font-size:0.72rem;color:var(--muted);margin-top:4px">
+          💡 <strong style="color:var(--text)">Tap</strong> any page thumbnail below to toggle it. Tap multiple to build a selection.
+        </p>
+      </div>
+
+      <!-- IMAGE TAB -->
+      <div class="tab-pane" id="tab-img">
+        <div class="section-lbl">Format &amp; Scale</div>
+        <div class="ctrl-row">
+          <div class="cg">
+            <label>Format</label>
+            <select id="fmtSel">
+              <option value="jpeg">JPG</option>
+              <option value="png">PNG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </div>
+          <div class="cg">
+            <!-- FIX: quality label now updated to "N/A" when PNG is selected (PNG ignores quality) -->
+            <label>Quality <span id="qualLbl" style="color:var(--accent)">95%</span></label>
+            <div class="rng-row">
+              <input type="range" id="qualRng" min="10" max="100" value="95" step="5">
+            </div>
+          </div>
+          <div class="cg">
+            <label>Scale <span id="scaleLbl" style="color:var(--accent)">2×</span></label>
+            <div class="rng-row">
+              <input type="range" id="scaleRng" min="0.5" max="6" value="2" step="0.5">
+            </div>
+          </div>
+          <div class="cg">
+            <label>Filename Prefix</label>
+            <input type="text" id="prefixInput" value="page" placeholder="page">
+          </div>
+        </div>
+        <div class="chips">
+          <span class="chip" data-scale="1">Screen 1×</span>
+          <span class="chip active" data-scale="2">Normal 2×</span>
+          <span class="chip" data-scale="3">Print 3×</span>
+          <span class="chip" data-scale="4">Hi-Res 4×</span>
+          <span class="chip" data-scale="6">Ultra 6×</span>
+        </div>
+        <div class="div"></div>
+        <div class="section-lbl">Color</div>
+        <div class="ctrl-row">
+          <!-- FIX: all four toggles used flex:0;min-width:0 → flex: 0 0 auto -->
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Grayscale (B&amp;W)</label>
+            <div class="toggle-row">
+              <label class="toggle"><input type="checkbox" id="grayChk"><span class="tog-slider"></span></label>
+              <span>On</span>
+            </div>
+          </div>
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Transparent BG (PNG)</label>
+            <div class="toggle-row">
+              <label class="toggle"><input type="checkbox" id="transpChk"><span class="tog-slider"></span></label>
+              <span>On</span>
+            </div>
+          </div>
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Sepia Tone</label>
+            <div class="toggle-row">
+              <label class="toggle"><input type="checkbox" id="sepiaChk"><span class="tog-slider"></span></label>
+              <span>On</span>
+            </div>
+          </div>
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Invert Colors</label>
+            <div class="toggle-row">
+              <label class="toggle"><input type="checkbox" id="invertColChk"><span class="tog-slider"></span></label>
+              <span>On</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EFFECTS TAB -->
+      <div class="tab-pane" id="tab-fx">
+        <div class="section-lbl">Rotation</div>
+        <div class="ctrl-row">
+          <!-- FIX: was flex:0;min-width:0 → flex: 0 0 auto -->
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Rotate All Pages</label>
+            <div class="btn-row">
+              <button class="btn btn-ghost rot-btn active" data-rot="0">0°</button>
+              <button class="btn btn-ghost rot-btn" data-rot="90">90°</button>
+              <button class="btn btn-ghost rot-btn" data-rot="180">180°</button>
+              <button class="btn btn-ghost rot-btn" data-rot="270">270°</button>
+            </div>
+          </div>
+        </div>
+        <div class="div"></div>
+        <div class="section-lbl">Stitch / Tile / Split</div>
+        <div class="ctrl-row">
+          <div class="cg" style="flex:0;min-width:130px">
+            <label>Stitch Direction</label>
+            <select id="stitchDir">
+              <option value="v">Vertical ↕</option>
+              <option value="h">Horizontal ↔</option>
+            </select>
+          </div>
+          <div class="cg" style="flex:0;min-width:100px">
+            <label>Tile Columns</label>
+            <input type="number" id="tileCols" value="3" min="1" max="20">
+          </div>
+          <div class="cg" style="flex:0;min-width:100px">
+            <label>Tile Gap (px)</label>
+            <input type="number" id="tileGap" value="10" min="0" max="200">
+          </div>
+          <div class="cg" style="flex:0;min-width:80px">
+            <label>Tile BG</label>
+            <input type="color" id="tileBg" value="#1a1a1a">
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <div class="cg" style="flex:0;min-width:160px">
+            <label>Split Each Page</label>
+            <select id="splitMode">
+              <option value="none">No split</option>
+              <option value="h">Left / Right halves</option>
+              <option value="v">Top / Bottom halves</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- WATERMARK TAB -->
+      <div class="tab-pane" id="tab-wm">
+        <div class="section-lbl">Text Watermark</div>
+        <div class="ctrl-row">
+          <!-- FIX: was flex:0;min-width:0 → flex: 0 0 auto -->
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Enable</label>
+            <div class="toggle-row">
+              <label class="toggle"><input type="checkbox" id="wmChk"><span class="tog-slider"></span></label>
+              <span>On</span>
+            </div>
+          </div>
+          <div class="cg">
+            <label>Text</label>
+            <input type="text" id="wmText" value="CONFIDENTIAL" placeholder="e.g. DRAFT">
+          </div>
+          <div class="cg" style="flex:0;min-width:70px">
+            <label>Color</label>
+            <input type="color" id="wmColor" value="#ff0000">
+          </div>
+          <div class="cg" style="min-width:110px">
+            <label>Opacity <span id="wmOpLbl" style="color:var(--accent)">30%</span></label>
+            <div class="rng-row"><input type="range" id="wmOp" min="5" max="100" value="30" step="5"></div>
+          </div>
+          <div class="cg" style="min-width:110px">
+            <label>Angle <span id="wmAngLbl" style="color:var(--accent)">-35°</span></label>
+            <div class="rng-row"><input type="range" id="wmAng" min="-90" max="90" value="-35" step="5"></div>
+          </div>
+          <div class="cg" style="min-width:110px">
+            <label>Size <span id="wmSzLbl" style="color:var(--accent)">7%</span></label>
+            <div class="rng-row"><input type="range" id="wmSz" min="2" max="25" value="7" step="1"></div>
+          </div>
+        </div>
+        <div class="div"></div>
+        <div class="section-lbl">Page Number Stamp</div>
+        <div class="ctrl-row">
+          <!-- FIX: was flex:0;min-width:0 → flex: 0 0 auto -->
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Enable</label>
+            <div class="toggle-row">
+              <label class="toggle"><input type="checkbox" id="pgNumChk"><span class="tog-slider"></span></label>
+              <span>On</span>
+            </div>
+          </div>
+          <div class="cg" style="min-width:120px">
+            <label>Position</label>
+            <select id="pgNumPos">
+              <option value="bl">Bottom Left</option>
+              <option value="br">Bottom Right</option>
+              <option value="tl">Top Left</option>
+              <option value="tr">Top Right</option>
+            </select>
+          </div>
+          <div class="cg" style="flex:0;min-width:70px"><label>BG Color</label><input type="color" id="pgNumBg" value="#000000"></div>
+          <div class="cg" style="flex:0;min-width:70px"><label>Text Color</label><input type="color" id="pgNumFg" value="#ffffff"></div>
+          <div class="cg" style="min-width:110px">
+            <label>Label (use {n})</label>
+            <input type="text" id="pgNumFmt" value="Page {n}" placeholder="Page {n}">
+          </div>
+        </div>
+        <div class="div"></div>
+        <div class="section-lbl">Footer Bar</div>
+        <div class="ctrl-row">
+          <!-- FIX: was flex:0;min-width:0 → flex: 0 0 auto -->
+          <div class="cg" style="flex: 0 0 auto">
+            <label>Enable</label>
+            <div class="toggle-row">
+              <label class="toggle"><input type="checkbox" id="footerChk"><span class="tog-slider"></span></label>
+              <span>On</span>
+            </div>
+          </div>
+          <div class="cg">
+            <label>Footer Text</label>
+            <input type="text" id="footerText" value="Confidential — Do not distribute" placeholder="Footer text">
+          </div>
+          <div class="cg" style="flex:0;min-width:70px"><label>BG Color</label><input type="color" id="footerBg" value="#0d1117"></div>
+          <div class="cg" style="flex:0;min-width:70px"><label>Text Color</label><input type="color" id="footerFg" value="#ffffff"></div>
+          <div class="cg" style="min-width:110px">
+            <label>Height <span id="footerHLbl" style="color:var(--accent)">5%</span></label>
+            <div class="rng-row"><input type="range" id="footerH" min="2" max="15" value="5" step="1"></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /tabs-wrap -->
+
+    <!-- Grid header -->
+    <div class="grid-header" id="gridHeader">
+      <div class="gh-top">
+        <div>
+          <div class="sel-info" id="selInfo">Tap page thumbnails below to select them</div>
+          <div class="est-size" id="estSize"></div>
+        </div>
+        <div class="export-grid">
+          <button class="btn btn-ghost" id="btnClipboard" disabled>📋 Copy</button>
+          <button class="btn btn-ghost" id="btnSaveSingle" disabled>💾 Save Page</button>
+          <button class="btn btn-accent" id="btnSaveSep" disabled>📁 Save All</button>
+          <button class="btn btn-purple" id="btnZip" disabled>🗜 ZIP</button>
+          <button class="btn btn-green" id="btnPdf" disabled>📄 PDF</button>
+          <button class="btn btn-blue" id="btnStitch" disabled>↕ Stitch</button>
+          <button class="btn btn-orange" id="btnTile" disabled>⊞ Tile</button>
+        </div>
+      </div>
+      <div class="gh-controls">
+        <label>Thumb size</label>
+        <div class="sz-row">
+          <input type="range" id="thumbSz" min="80" max="280" value="150" step="10">
+          <span class="sz-val" id="thumbSzLbl">150</span>
+        </div>
+        <div class="jump-row">
+          <label>Go to page</label>
+          <input type="number" id="jumpInput" min="1" placeholder="—">
+          <button class="btn btn-ghost" id="btnJump">Go</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page grid -->
+    <div class="page-grid" id="pageGrid"></div>
+
+    <!-- Progress -->
+    <div class="prog-wrap" id="progWrap">
+      <div class="prog-lbl"><span id="progText">Processing…</span><span id="progPct">0%</span></div>
+      <div class="prog-bg">
+        <div class="prog-fill" id="progFill"></div>
+      </div>
+    </div>
+
+    <!-- Shortcuts — visible only on non-touch (pointer: fine) devices via CSS media query -->
+    <div class="shortcuts" id="scPanel" style="display:none">
+      <h3>⌨ Keyboard Shortcuts</h3>
+      <div class="sc-grid">
+        <div class="sc"><kbd>Ctrl</kbd>+<kbd>A</kbd> Select all</div>
+        <div class="sc"><kbd>Esc</kbd> Deselect all</div>
+        <div class="sc"><kbd>Shift</kbd>+Click Range add</div>
+        <div class="sc"><kbd>Enter</kbd> Apply range</div>
+        <div class="sc"><kbd>←</kbd><kbd>→</kbd> Lightbox nav</div>
+      </div>
+    </div>
+  </div><!-- /app -->
+
+  <!-- Lightbox — full-screen, stacked layout works on mobile -->
+  <div class="lightbox" id="lightbox">
+    <div class="lb-bar">
+      <div class="lb-info">Page <strong id="lbPageNum">1</strong> <span id="lbTotal"></span></div>
+      <div class="lb-actions">
+        <button class="btn btn-ghost" id="lbCopy">📋 Copy</button>
+        <button class="btn btn-accent" id="lbSave">💾 Save</button>
+        <button class="btn btn-ghost" id="lbClose">✕ Close</button>
+      </div>
+    </div>
+    <div class="lb-body">
+      <canvas id="lbCanvas"></canvas>
+    </div>
+    <div class="lb-nav-row">
+      <button class="lb-nav" id="lbPrev">‹ Prev</button>
+      <button class="lb-nav" id="lbNext">Next ›</button>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastWrap"></div>
+
+  <script>
+    // ═══════════════════════════════════════
+    // PDF.js WORKER SETUP — restricted-browser safe
+    // If the browser allows Web Workers, use the CDN worker script for performance.
+    // If Workers are blocked (strict CSP, sandboxed iframe, etc.) we fall back to
+    // "fake worker" mode: PDF.js runs entirely in the main thread. It's slower but
+    // works in every environment, including locked-down school/corporate browsers.
+    // ═══════════════════════════════════════
+    (function() {
+      var workerUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+      if (typeof Worker === 'undefined') {
+        // Workers not available at all — use fake worker (empty string triggers it)
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+      } else {
+        // Workers exist; try to use the real script.
+        // If the browser's CSP blocks it, PDF.js catches the error internally
+        // and automatically falls back to fake worker — no extra code needed.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+      }
+    })();
+
+    // ═══════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════
+    let pdfDoc = null;
+    let totalPages = 0;
+    let fileSize = 0;
+    let selectedPages = new Set(); // 1-indexed
+    let lastClicked = null;
+    let exporting = false;
+    let rotation = 0;
+    let lbPageList = []; // pages available in lightbox (sorted selection or all)
+    let lbIdx = 0;
+
+    // ═══════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════
+    const $ = id => document.getElementById(id);
+
+    function toast(msg, type = 'success', ms = 3400) {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      $('toastWrap').appendChild(el);
+      setTimeout(() => el.remove(), ms);
+    }
+
+    function fmtBytes(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+      return (b / 1048576).toFixed(2) + ' MB';
+    }
+
+    function showProg(txt) {
+      $('progWrap').classList.add('visible');
+      $('progText').textContent = txt;
+      setProg(0);
+    }
+
+    function setProg(p) {
+      $('progFill').style.width = p + '%';
+      $('progPct').textContent = Math.round(p) + '%';
+    }
+
+    function hideProg() {
+      $('progWrap').classList.remove('visible');
+    }
+
+    function setExporting(on) {
+      exporting = on;
+      const n = selectedPages.size;
+      $('btnClipboard').disabled = on || n !== 1;
+      $('btnSaveSingle').disabled = on || n !== 1;
+      $('btnSaveSep').disabled = on || n === 0;
+      $('btnZip').disabled = on || n === 0;
+      $('btnPdf').disabled = on || n === 0;
+      $('btnStitch').disabled = on || n < 2;
+      $('btnTile').disabled = on || n < 2;
+    }
+
+    // ═══════════════════════════════════════
+    // TABS
+    // ═══════════════════════════════════════
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        $('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ═══════════════════════════════════════
+    // FILE LOAD
+    // ═══════════════════════════════════════
+    $('dropZone').addEventListener('dragover', e => {
+      e.preventDefault();
+      $('dropZone').classList.add('dragging');
+    });
+    $('dropZone').addEventListener('dragleave', () => $('dropZone').classList.remove('dragging'));
+    $('dropZone').addEventListener('drop', e => {
+      e.preventDefault();
+      $('dropZone').classList.remove('dragging');
+      const f = e.dataTransfer.files[0];
+      if (f && f.type === 'application/pdf') loadPDF(f);
+      else toast('Please choose a PDF file', 'error');
+    });
+    $('fileInput').addEventListener('change', e => {
+      if (e.target.files[0]) loadPDF(e.target.files[0]);
+    });
+
+    async function loadPDF(file) {
+      fileSize = file.size;
+      $('fname').textContent = '📂 ' + file.name;
+      const base = file.name.replace(/\.pdf$/i, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      $('prefixInput').value = base || 'page';
+
+      try {
+        const buf = await file.arrayBuffer();
+        pdfDoc = await pdfjsLib.getDocument(new Uint8Array(buf)).promise;
+      } catch (e) {
+        toast('Failed to load PDF: ' + e.message, 'error');
+        return;
+      }
+
+      totalPages = pdfDoc.numPages;
+      selectedPages.clear();
+      lastClicked = null;
+
+      // Metadata
+      try {
+        const meta = await pdfDoc.getMetadata();
+        $('infoTitle').textContent = (meta.info && meta.info.Title) || '—';
+        $('infoAuthor').textContent = (meta.info && meta.info.Author) || '—';
+      } catch (_) {
+        $('infoTitle').textContent = '—';
+        $('infoAuthor').textContent = '—';
+      }
+      $('infoPg').textContent = totalPages;
+      $('infoSize').textContent = fmtBytes(fileSize);
+
+      try {
+        const pg1 = await pdfDoc.getPage(1);
+        const vp = pg1.getViewport({
+          scale: 1
+        });
+        $('infoPageSz').textContent = Math.round(vp.width) + ' × ' + Math.round(vp.height) + ' pt';
+      } catch (_) {
+        $('infoPageSz').textContent = '—';
+      }
+
+      $('jumpInput').max = totalPages;
+      $('infoPanel').classList.add('visible');
+      $('tabsWrap').classList.add('visible');
+      $('gridHeader').classList.add('visible');
+      $('pageGrid').classList.add('visible');
+
+      // FIX: Only show keyboard shortcuts on devices that have a fine pointer (mouse/trackpad).
+      // Touch users have no physical keyboard, so the panel is irrelevant and clutters the UI.
+      if (window.matchMedia('(pointer: fine)').matches) {
+        $('scPanel').style.display = 'block';
+      }
+
+      buildGrid();
+      updateUI();
+      toast('Loaded ' + totalPages + ' page' + (totalPages !== 1 ? 's' : ''), 'success');
+      renderThumbs();
+    }
+
+    // ═══════════════════════════════════════
+    // GRID BUILD
+    // ═══════════════════════════════════════
+    function buildGrid() {
+      const grid = $('pageGrid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        const card = document.createElement('div');
+        card.className = 'page-card';
+        card.dataset.page = i;
+        card.innerHTML =
+          `<div class="thumb-wrap">
+         <div class="thumb-loading"><div class="spinner"></div></div>
+         <button class="preview-btn" data-page="${i}" title="Preview page ${i}">👁</button>
+       </div>
+       <div class="page-label"><span>Page ${i}</span><div class="page-check">✓</div></div>`;
+
+        // TAP = toggle selection
+        card.addEventListener('click', e => {
+          // If the preview button was tapped, let its handler fire
+          if (e.target.closest('.preview-btn')) return;
+          onCardClick(e, i);
+        });
+        grid.appendChild(card);
+      }
+
+      // Preview button delegation
+      grid.addEventListener('click', e => {
+        const btn = e.target.closest('.preview-btn');
+        if (btn) {
+          e.stopPropagation();
+          openLightbox(parseInt(btn.dataset.page));
+        }
+      });
+    }
+
+    async function renderThumbs() {
+      const SCALE = 0.3,
+        BATCH = 4;
+      for (let i = 1; i <= totalPages; i += BATCH) {
+        const tasks = [];
+        for (let j = i; j < i + BATCH && j <= totalPages; j++) tasks.push(renderThumb(j, SCALE));
+        await Promise.all(tasks);
+      }
+    }
+
+    async function renderThumb(n, scale) {
+      try {
+        const page = await pdfDoc.getPage(n);
+        const vp = page.getViewport({
+          scale
+        });
+        const c = document.createElement('canvas');
+        c.width = vp.width;
+        c.height = vp.height;
+        await page.render({
+          canvasContext: c.getContext('2d'),
+          viewport: vp
+        }).promise;
+        const card = $('pageGrid').querySelector(`[data-page="${n}"]`);
+        if (!card) return;
+        const wrap = card.querySelector('.thumb-wrap');
+        // Keep the preview button, replace loading indicator only
+        const loading = wrap.querySelector('.thumb-loading');
+        if (loading) loading.remove();
+        wrap.insertBefore(c, wrap.querySelector('.preview-btn'));
+      } catch (_) {}
+    }
+
+    // ═══════════════════════════════════════
+    // CARD CLICK — toggle (works on mobile)
+    // ═══════════════════════════════════════
+    function onCardClick(e, n) {
+      if (e.shiftKey && lastClicked !== null) {
+        // Shift-click: range ADD (don't deselect anything)
+        const lo = Math.min(lastClicked, n),
+          hi = Math.max(lastClicked, n);
+        for (let p = lo; p <= hi; p++) selectedPages.add(p);
+      } else {
+        // Normal tap/click: TOGGLE (add if not selected, remove if selected)
+        // This is the correct mobile behavior — no clearing of other selections
+        if (selectedPages.has(n)) selectedPages.delete(n);
+        else selectedPages.add(n);
+      }
+      lastClicked = n;
+      updateUI();
+    }
+
+    // ═══════════════════════════════════════
+    // UI SYNC
+    // ═══════════════════════════════════════
+    function updateUI() {
+      $('pageGrid').querySelectorAll('.page-card').forEach(card => {
+        card.classList.toggle('selected', selectedPages.has(+card.dataset.page));
+      });
+      const n = selectedPages.size;
+      $('selInfo').innerHTML = n === 0 ?
+        'Tap thumbnails to select pages' :
+        `<strong>${n}</strong> of ${totalPages} page${totalPages !== 1 ? 's' : ''} selected`;
+      $('estSize').textContent = n > 0 ? '≈ ' + estimateSize(n) + ' estimated output' : '';
+      setExporting(exporting);
+    }
+
+    function estimateSize(n) {
+      const fmt = getFormat();
+      const scale = getScale();
+      const qual = getQuality();
+      const px = 595 * scale * 842 * scale;
+      let bytes;
+      if (fmt === 'png') bytes = px * 3 * 0.5;
+      else if (fmt === 'jpeg') bytes = px * 3 * qual * 0.15;
+      else bytes = px * 3 * qual * 0.10;
+      return fmtBytes(bytes * n);
+    }
+
+    // ═══════════════════════════════════════
+    // SELECTION CONTROLS
+    // ═══════════════════════════════════════
+    $('btnAll').onclick = () => {
+      for (let i = 1; i <= totalPages; i++) selectedPages.add(i);
+      updateUI();
+    };
+    $('btnNone').onclick = () => {
+      selectedPages.clear();
+      updateUI();
+    };
+    $('btnInvert').onclick = () => {
+      for (let i = 1; i <= totalPages; i++) {
+        if (selectedPages.has(i)) selectedPages.delete(i);
+        else selectedPages.add(i);
+      }
+      updateUI();
+    };
+    $('btnEven').onclick = () => {
+      selectedPages.clear();
+      for (let i = 2; i <= totalPages; i += 2) selectedPages.add(i);
+      updateUI();
+    };
+    $('btnOdd').onclick = () => {
+      selectedPages.clear();
+      for (let i = 1; i <= totalPages; i += 2) selectedPages.add(i);
+      updateUI();
+    };
+    $('btnFirst').onclick = () => {
+      const n = Math.max(1, parseInt($('nInput').value) || 10);
+      selectedPages.clear();
+      for (let i = 1; i <= Math.min(n, totalPages); i++) selectedPages.add(i);
+      updateUI();
+    };
+    $('btnLast').onclick = () => {
+      const n = Math.max(1, parseInt($('nInput').value) || 10);
+      selectedPages.clear();
+      for (let i = Math.max(1, totalPages - n + 1); i <= totalPages; i++) selectedPages.add(i);
+      updateUI();
+    };
+    $('btnNth').onclick = () => {
+      const n = Math.max(2, parseInt($('nthInput').value) || 2);
+      selectedPages.clear();
+      for (let i = n; i <= totalPages; i += n) selectedPages.add(i);
+      updateUI();
+    };
+
+    function applyRange() {
+      const raw = $('rangeInput').value.trim();
+      if (!raw) return;
+      const parsed = parseRange(raw);
+      if (parsed === null) {
+        toast('Invalid range — use e.g. 1-5, 12, 24', 'error');
+        return;
+      }
+      let added = 0;
+      // FIX: also guard p >= 1 explicitly; parseRange can emit 0 or negatives
+      // if the input is e.g. "0" or "-1" — those are not valid page numbers.
+      parsed.forEach(p => {
+        if (p >= 1 && p <= totalPages && !selectedPages.has(p)) {
+          selectedPages.add(p);
+          added++;
+        }
+      });
+      updateUI();
+      toast(`Added ${added} page(s) to selection`, 'info');
+    }
+
+    // FIX: parseRange now also guards against zero/negative lo or hi values
+    function parseRange(str) {
+      const result = [];
+      for (const part of str.split(',')) {
+        const t = part.trim();
+        if (!t) continue;
+        const di = t.indexOf('-');
+        if (di > 0) {
+          const lo = parseInt(t.slice(0, di)),
+            hi = parseInt(t.slice(di + 1));
+          if (isNaN(lo) || isNaN(hi) || lo < 1 || hi < 1 || lo > hi) return null;
+          for (let i = lo; i <= hi; i++) result.push(i);
+        } else {
+          const n = parseInt(t);
+          if (isNaN(n) || n < 1) return null;
+          result.push(n);
+        }
+      }
+      return result;
+    }
+
+    $('btnApplyRange').addEventListener('click', applyRange);
+    $('rangeInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') applyRange();
+    });
+
+    // ═══════════════════════════════════════
+    // THUMBNAIL SIZE + JUMP
+    // ═══════════════════════════════════════
+    $('thumbSz').addEventListener('input', () => {
+      const v = $('thumbSz').value;
+      $('thumbSzLbl').textContent = v;
+      document.documentElement.style.setProperty('--thumb-size', v + 'px');
+    });
+
+    $('btnJump').addEventListener('click', jumpToPage);
+    $('jumpInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') jumpToPage();
+    });
+
+    function jumpToPage() {
+      const n = parseInt($('jumpInput').value);
+      if (!n || n < 1 || n > totalPages) {
+        toast('Page number out of range', 'error');
+        return;
+      }
+      const card = $('pageGrid').querySelector(`[data-page="${n}"]`);
+      if (card) card.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // SLIDER / FORMAT LABELS
+    // ═══════════════════════════════════════
+    $('qualRng').addEventListener('input', () => {
+      // Only update label if quality control is active (not PNG)
+      if (!$('qualRng').disabled) {
+        $('qualLbl').textContent = $('qualRng').value + '%';
+      }
+      updateUI();
+    });
+
+    $('scaleRng').addEventListener('input', () => {
+      const v = $('scaleRng').value;
+      $('scaleLbl').textContent = v + '×';
+      document.querySelectorAll('.chip[data-scale]').forEach(c => c.classList.toggle('active', c.dataset.scale === v));
+      updateUI();
+    });
+
+    $('fmtSel').addEventListener('change', () => {
+      const isPng = $('fmtSel').value === 'png';
+      $('qualRng').disabled = isPng;
+      $('qualRng').style.opacity = isPng ? '0.35' : '1';
+      // FIX: update quality label to reflect that PNG ignores quality setting
+      $('qualLbl').textContent = isPng ? 'N/A' : $('qualRng').value + '%';
+      updateUI();
+    });
+
+    $('wmOp').addEventListener('input', () => {
+      $('wmOpLbl').textContent = $('wmOp').value + '%';
+    });
+    $('wmAng').addEventListener('input', () => {
+      $('wmAngLbl').textContent = $('wmAng').value + '°';
+    });
+    $('wmSz').addEventListener('input', () => {
+      $('wmSzLbl').textContent = $('wmSz').value + '%';
+    });
+    $('footerH').addEventListener('input', () => {
+      $('footerHLbl').textContent = $('footerH').value + '%';
+    });
+
+    document.querySelectorAll('.chip[data-scale]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        $('scaleRng').value = chip.dataset.scale;
+        $('scaleLbl').textContent = chip.dataset.scale + '×';
+        document.querySelectorAll('.chip[data-scale]').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        updateUI();
+      });
+    });
+
+    document.querySelectorAll('.rot-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.rot-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        rotation = parseInt(btn.dataset.rot);
+      });
+    });
+
+    // ═══════════════════════════════════════
+    // IMAGE PROCESSING PIPELINE
+    // ═══════════════════════════════════════
+    function getFormat() {
+      return $('fmtSel').value;
+    }
+
+    function getScale() {
+      return parseFloat($('scaleRng').value);
+    }
+
+    function getQuality() {
+      return parseInt($('qualRng').value) / 100;
+    }
+
+    function fileExt() {
+      const f = getFormat();
+      return f === 'jpeg' ? 'jpg' : f === 'png' ? 'png' : 'webp';
+    }
+
+    function mimeStr() {
+      const f = getFormat();
+      return f === 'jpeg' ? 'image/jpeg' : f === 'png' ? 'image/png' : 'image/webp';
+    }
+
+    function buildName(n) {
+      const prefix = ($('prefixInput').value.trim() || 'page').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const pad = String(totalPages).length;
+      return `${prefix}_${String(n).padStart(pad, '0')}.${fileExt()}`;
+    }
+
+    async function renderPageRaw(n) {
+      const page = await pdfDoc.getPage(n);
+      const viewport = page.getViewport({
+        scale: getScale(),
+        rotation
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+
+      const isPng = getFormat() === 'png';
+      const transp = $('transpChk').checked && isPng;
+      if (!transp) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      await page.render({
+        canvasContext: ctx,
+        viewport
+      }).promise;
+      return canvas;
+    }
+
+    // FIX: pixel data values must be integers (0-255). Use Math.round() to avoid
+    // floating-point drift when writing back luminance values to the pixel array.
+    function applyColorFx(canvas) {
+      const gray = $('grayChk').checked;
+      const sepia = $('sepiaChk').checked;
+      const invert = $('invertColChk').checked;
+      if (!gray && !sepia && !invert) return;
+
+      const ctx = canvas.getContext('2d');
+      const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = id.data;
+      for (let i = 0; i < d.length; i += 4) {
+        let r = d[i],
+          g = d[i + 1],
+          b = d[i + 2];
+        if (gray || sepia) {
+          const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+          if (sepia) {
+            r = Math.min(255, Math.round(lum + 40));
+            g = Math.min(255, Math.round(lum + 5));
+            b = Math.max(0, Math.round(lum - 30));
+          } else {
+            r = g = b = Math.round(lum);
+          }
+        }
+        if (invert) {
+          r = 255 - r;
+          g = 255 - g;
+          b = 255 - b;
+        }
+        d[i] = r;
+        d[i + 1] = g;
+        d[i + 2] = b;
+      }
+      ctx.putImageData(id, 0, 0);
+    }
+
+    function applyWatermark(canvas) {
+      if (!$('wmChk').checked) return;
+      const text = $('wmText').value.trim();
+      if (!text) return;
+      const ctx = canvas.getContext('2d');
+      const op = parseInt($('wmOp').value) / 100;
+      const ang = parseInt($('wmAng').value) * Math.PI / 180;
+      const sz = parseInt($('wmSz').value) / 100 * Math.max(canvas.width, canvas.height);
+      ctx.save();
+      ctx.globalAlpha = op;
+      ctx.font = `bold ${sz}px Arial`;
+      ctx.fillStyle = $('wmColor').value;
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(ang);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const step = ctx.measureText(text).width + sz * 1.5;
+      const rng = Math.max(canvas.width, canvas.height);
+      for (let x = -rng; x <= rng; x += step)
+        for (let y = -rng; y <= rng; y += sz * 2.5)
+          ctx.fillText(text, x, y);
+      ctx.restore();
+    }
+
+    function applyStamp(canvas, pageNum) {
+      if (!$('pgNumChk').checked) return;
+      const pos = $('pgNumPos').value;
+      const lbl = $('pgNumFmt').value.replace('{n}', pageNum);
+      const bg = $('pgNumBg').value;
+      const fg = $('pgNumFg').value;
+      const ctx = canvas.getContext('2d');
+      const h = Math.max(canvas.height * 0.035, 22);
+      const fs = h * 0.62;
+      ctx.save();
+      ctx.font = `bold ${fs}px Arial`;
+      const tw = ctx.measureText(lbl).width + h;
+      const x = pos.endsWith('r') ? canvas.width - tw : 0;
+      const y = pos.startsWith('t') ? 0 : canvas.height - h;
+      ctx.fillStyle = bg;
+      ctx.fillRect(x, y, tw, h);
+      ctx.fillStyle = fg;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(lbl, x + tw / 2, y + h / 2);
+      ctx.restore();
+    }
+
+    function applyFooter(canvas) {
+      if (!$('footerChk').checked) return;
+      const text = $('footerText').value.trim();
+      const bg = $('footerBg').value;
+      const fg = $('footerFg').value;
+      const hPct = parseInt($('footerH').value) / 100;
+      const ctx = canvas.getContext('2d');
+      const h = canvas.height * hPct;
+      const fs = Math.max(h * 0.52, 10);
+      ctx.save();
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, canvas.height - h, canvas.width, h);
+      ctx.fillStyle = fg;
+      ctx.font = `${fs}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, canvas.width / 2, canvas.height - h / 2);
+      ctx.restore();
+    }
+
+    async function processPage(n) {
+      const canvas = await renderPageRaw(n);
+      applyColorFx(canvas);
+      applyWatermark(canvas);
+      applyStamp(canvas, n);
+      applyFooter(canvas);
+      return canvas;
+    }
+
+    // Quality check uses the actual mime string, not getFormat().
+    // Null guard: toBlob() can return null if the canvas is tainted or too large.
+    function canvasToBlob(canvas, mime, qual) {
+      mime = mime || mimeStr();
+      qual = (qual != null) ? qual : getQuality();
+      // PNG doesn't support quality; check the actual mime string
+      const q = (mime === 'image/png') ? undefined : qual;
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas toBlob returned null — canvas may be too large or tainted'));
+        }, mime, q);
+      });
+    }
+
+    function splitCanvas(canvas, mode) {
+      const c1 = document.createElement('canvas');
+      const c2 = document.createElement('canvas');
+      if (mode === 'h') {
+        const half = Math.floor(canvas.width / 2);
+        c1.width = half;
+        c1.height = canvas.height;
+        c2.width = canvas.width - half;
+        c2.height = canvas.height;
+        c1.getContext('2d').drawImage(canvas, 0, 0, half, canvas.height, 0, 0, half, canvas.height);
+        c2.getContext('2d').drawImage(canvas, half, 0, canvas.width - half, canvas.height, 0, 0, canvas.width - half, canvas.height);
+      } else {
+        const half = Math.floor(canvas.height / 2);
+        c1.width = canvas.width;
+        c1.height = half;
+        c2.width = canvas.width;
+        c2.height = canvas.height - half;
+        c1.getContext('2d').drawImage(canvas, 0, 0, canvas.width, half, 0, 0, canvas.width, half);
+        c2.getContext('2d').drawImage(canvas, 0, half, canvas.width, canvas.height - half, 0, 0, canvas.width, canvas.height - half);
+      }
+      return [c1, c2];
+    }
+
+    // ═══════════════════════════════════════
+    // FILE SAVE UTILITIES
+    // ═══════════════════════════════════════
+    // Key pattern for File System Access API:
+    //   1. Call showSaveFilePicker / showDirectoryPicker FIRST in the click handler,
+    //      while the user gesture is still live.  Browsers time-out the gesture the
+    //      moment you await anything unrelated, so the picker must be the very first
+    //      await in each handler.
+    //   2. After the picker resolves you hold a FileSystemFileHandle or
+    //      FileSystemDirectoryHandle.  You can now do unlimited async rendering work
+    //      and then write to the handle — no gesture required at that point.
+    //   3. anchor-click download is kept as a fallback for environments where the
+    //      File System Access API is not available (Firefox, iOS Safari, etc.).
+
+    // Write a blob into a pre-obtained FileSystemFileHandle.
+    async function writeBlobToHandle(handle, blob) {
+      const w = await handle.createWritable();
+      await w.write(blob);
+      await w.close();
+    }
+
+    // Anchor-click fallback — used when FSAPI is unavailable or for clipboard
+    // fallback paths where showing a second picker would be confusing.
+    function downloadBlob(blob, name) {
+      return new Promise((resolve, reject) => {
+        try {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => {
+            URL.revokeObjectURL(url);
+            resolve();
+          }, 200);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    // Small delay between sequential anchor downloads so the popup-blocker
+    // doesn't suppress them.
+    function sleep(ms) {
+      return new Promise(r => setTimeout(r, ms));
+    }
+
+    // ═══════════════════════════════════════
+    // EXPORT: SINGLE PAGE
+    // ═══════════════════════════════════════
+    $('btnSaveSingle').onclick = async () => {
+      const [n] = [...selectedPages];
+      const fname = buildName(n);
+      // Step 1 — open picker while user gesture is still live.
+      let fileHandle = null;
+      try {
+        if ('showSaveFilePicker' in window) {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: fname,
+            types: [{
+              description: getFormat().toUpperCase() + ' Image',
+              accept: {
+                [mimeStr()]: ['.' + fileExt()]
+              }
+            }]
+          });
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Picker error: ' + e.message, 'error');
+        return;
+      }
+
+      // Step 2 — render (can take as long as needed; handle is already held).
+      setExporting(true);
+      showProg(`Rendering page ${n}…`);
+      try {
+        const cv = await processPage(n);
+        setProg(70);
+        const blob = await canvasToBlob(cv);
+        setProg(90);
+        if (fileHandle) await writeBlobToHandle(fileHandle, blob);
+        else await downloadBlob(blob, fname);
+        setProg(100);
+        toast(`Saved: ${fname}`, 'success');
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Save failed: ' + e.message, 'error');
+      } finally {
+        setExporting(false);
+        hideProg();
+        updateUI();
+      }
+    };
+
+    // ═══════════════════════════════════════
+    // EXPORT: CLIPBOARD
+    // Falls back to downloading the page as PNG when the Clipboard API is blocked
+    // (requires HTTPS + permissions in modern browsers; often unavailable in
+    // restricted/sandboxed environments).
+    // ═══════════════════════════════════════
+    $('btnClipboard').onclick = async () => {
+      const [n] = [...selectedPages];
+      setExporting(true);
+      showProg(`Rendering page ${n}…`);
+      try {
+        const cv = await processPage(n);
+        setProg(70);
+        const blob = await canvasToBlob(cv, 'image/png', 1);
+        setProg(90);
+
+        // Try modern Clipboard API first
+        if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+          try {
+            await navigator.clipboard.write([new ClipboardItem({
+              'image/png': blob
+            })]);
+            toast('Page copied to clipboard ✓', 'success');
+            return;
+          } catch (_) {
+            // Clipboard write blocked — fall through to download fallback
+          }
+        }
+
+        // Fallback: download the PNG so the user still gets the rendered image
+        await downloadBlob(blob, buildName(n).replace(/\.\w+$/, '.png'));
+        toast('Clipboard unavailable — saved as PNG instead', 'warn', 4500);
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Copy failed: ' + e.message, 'error');
+      } finally {
+        setExporting(false);
+        hideProg();
+        updateUI();
+      }
+    };
+
+    // ═══════════════════════════════════════
+    // EXPORT: SAVE ALL
+    // showDirectoryPicker is opened first (picker needs the live user gesture).
+    // After the user picks a folder, all rendering happens then files are written
+    // one by one into that folder — no more gesture needed at that point.
+    // Falls back to sequential anchor downloads when FSAPI is unavailable.
+    // ═══════════════════════════════════════
+    $('btnSaveSep').onclick = async () => {
+      const pages = [...selectedPages].sort((a, b) => a - b);
+      const split = $('splitMode').value;
+      if (pages.length === 1 && split === 'none') {
+        $('btnSaveSingle').click();
+        return;
+      }
+
+      const suffixes = split !== 'none' ? ['_A', '_B'] : [''];
+      const totalFiles = pages.length * suffixes.length;
+
+      // Step 1 — open directory picker while user gesture is live.
+      let dirHandle = null;
+      try {
+        if ('showDirectoryPicker' in window) {
+          dirHandle = await window.showDirectoryPicker({
+            mode: 'readwrite'
+          });
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Picker error: ' + e.message, 'error');
+        return;
+      }
+
+      // Step 2 — render and save.
+      setExporting(true);
+      let fileIdx = 0;
+      try {
+        for (let i = 0; i < pages.length; i++) {
+          const p = pages[i];
+          showProg(`Rendering page ${p} (${i+1} / ${pages.length})…`);
+          const cv = await processPage(p);
+          const canvases = split !== 'none' ? splitCanvas(cv, split) : [cv];
+
+          for (let s = 0; s < canvases.length; s++) {
+            const fname = buildName(p).replace(/(\.\w+)$/, suffixes[s] + '$1');
+            const blob = await canvasToBlob(canvases[s]);
+            if (dirHandle) {
+              const fh = await dirHandle.getFileHandle(fname, {
+                create: true
+              });
+              await writeBlobToHandle(fh, blob);
+            } else {
+              await downloadBlob(blob, fname);
+              if (fileIdx < totalFiles - 1) await sleep(150);
+            }
+            fileIdx++;
+            setProg((fileIdx / totalFiles) * 100);
+          }
+        }
+        toast(`Saved ${totalFiles} file${totalFiles !== 1 ? 's' : ''} ✓`, 'success');
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Export failed: ' + e.message, 'error');
+      } finally {
+        setExporting(false);
+        hideProg();
+        updateUI();
+      }
+    };
+
+    // ═══════════════════════════════════════
+    // EXPORT: ZIP
+    // ═══════════════════════════════════════
+    $('btnZip').onclick = async () => {
+      const pages = [...selectedPages].sort((a, b) => a - b);
+      const split = $('splitMode').value;
+      const prefix = ($('prefixInput').value.trim() || 'pages').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const fname = `${prefix}_export.zip`;
+
+      // Step 1 — open picker while user gesture is live.
+      let fileHandle = null;
+      try {
+        if ('showSaveFilePicker' in window) {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: fname,
+            types: [{
+              description: 'ZIP Archive',
+              accept: {
+                'application/zip': ['.zip']
+              }
+            }]
+          });
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Picker error: ' + e.message, 'error');
+        return;
+      }
+
+      // Step 2 — render pages and build ZIP.
+      setExporting(true);
+      const zip = new JSZip();
+      try {
+        const suffixes = split !== 'none' ? ['_A', '_B'] : [''];
+        for (let i = 0; i < pages.length; i++) {
+          const p = pages[i];
+          showProg(`Rendering page ${p} (${i+1} / ${pages.length})…`);
+          const cv = await processPage(p);
+          const canvases = split !== 'none' ? splitCanvas(cv, split) : [cv];
+          for (let s = 0; s < canvases.length; s++) {
+            const fn = buildName(p).replace(/(\.\w+)$/, suffixes[s] + '$1');
+            const blob = await canvasToBlob(canvases[s]);
+            zip.file(fn, await blob.arrayBuffer());
+          }
+          setProg((i + 1) / pages.length * 88);
+        }
+        showProg('Building ZIP…');
+        const zipBlob = await zip.generateAsync({
+            type: 'blob',
+            compression: 'DEFLATE'
+          },
+          m => setProg(88 + m.percent * 0.12));
+        if (fileHandle) await writeBlobToHandle(fileHandle, zipBlob);
+        else await downloadBlob(zipBlob, fname);
+        toast(`Saved ${pages.length} page(s) as ZIP ✓`, 'success');
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('ZIP failed: ' + e.message, 'error');
+      } finally {
+        setExporting(false);
+        hideProg();
+        updateUI();
+      }
+    };
+
+    // ═══════════════════════════════════════
+    // EXPORT: PDF (pdf-lib)
+    // ═══════════════════════════════════════
+    $('btnPdf').onclick = async () => {
+      const pages = [...selectedPages].sort((a, b) => a - b);
+      const prefix = ($('prefixInput').value.trim() || 'export').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const fname = `${prefix}_export.pdf`;
+
+      // Step 1 — open picker while user gesture is live.
+      let fileHandle = null;
+      try {
+        if ('showSaveFilePicker' in window) {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: fname,
+            types: [{
+              description: 'PDF Document',
+              accept: {
+                'application/pdf': ['.pdf']
+              }
+            }]
+          });
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Picker error: ' + e.message, 'error');
+        return;
+      }
+
+      // Step 2 — render pages and build PDF.
+      setExporting(true);
+      try {
+        const {
+          PDFDocument
+        } = PDFLib;
+        const newPdf = await PDFDocument.create();
+        for (let i = 0; i < pages.length; i++) {
+          const p = pages[i];
+          showProg(`Rendering page ${p} (${i+1} / ${pages.length})…`);
+          const cv = await processPage(p);
+          // Always embed as PNG for lossless quality in PDF
+          const pngBlob = await canvasToBlob(cv, 'image/png', 1);
+          const pngBuf = await pngBlob.arrayBuffer();
+          const img = await newPdf.embedPng(pngBuf);
+          const pg = newPdf.addPage([img.width, img.height]);
+          pg.drawImage(img, {
+            x: 0,
+            y: 0,
+            width: img.width,
+            height: img.height
+          });
+          setProg((i + 1) / pages.length * 90);
+        }
+        showProg('Building PDF…');
+        const pdfBytes = await newPdf.save();
+        setProg(98);
+        const blob = new Blob([pdfBytes], {
+          type: 'application/pdf'
+        });
+        if (fileHandle) await writeBlobToHandle(fileHandle, blob);
+        else await downloadBlob(blob, fname);
+        toast(`Saved ${pages.length} page(s) as PDF ✓`, 'success');
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('PDF failed: ' + e.message, 'error');
+      } finally {
+        setExporting(false);
+        hideProg();
+        updateUI();
+      }
+    };
+
+    // ═══════════════════════════════════════
+    // EXPORT: STITCH
+    // ═══════════════════════════════════════
+    $('btnStitch').onclick = async () => {
+      const pages = [...selectedPages].sort((a, b) => a - b);
+      const dir = $('stitchDir').value;
+      const prefix = ($('prefixInput').value.trim() || 'stitch').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const fname = `${prefix}_stitched.${fileExt()}`;
+
+      // Step 1 — open picker while user gesture is live.
+      let fileHandle = null;
+      try {
+        if ('showSaveFilePicker' in window) {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: fname,
+            types: [{
+              description: getFormat().toUpperCase() + ' Image',
+              accept: {
+                [mimeStr()]: ['.' + fileExt()]
+              }
+            }]
+          });
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Picker error: ' + e.message, 'error');
+        return;
+      }
+
+      // Step 2 — render and stitch.
+      setExporting(true);
+      try {
+        const canvases = [];
+        for (let i = 0; i < pages.length; i++) {
+          showProg(`Rendering page ${pages[i]} (${i+1} / ${pages.length})…`);
+          canvases.push(await processPage(pages[i]));
+          setProg((i + 1) / pages.length * 80);
+        }
+        showProg('Stitching pages…');
+        const totalW = dir === 'h' ? canvases.reduce((s, c) => s + c.width, 0) : Math.max(...canvases.map(c => c.width));
+        const totalH = dir === 'v' ? canvases.reduce((s, c) => s + c.height, 0) : Math.max(...canvases.map(c => c.height));
+        const out = document.createElement('canvas');
+        out.width = totalW;
+        out.height = totalH;
+        const ctx = out.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, totalW, totalH);
+        let x = 0,
+          y = 0;
+        for (const c of canvases) {
+          ctx.drawImage(c, x, y);
+          if (dir === 'h') x += c.width;
+          else y += c.height;
+        }
+        setProg(92);
+        const blob = await canvasToBlob(out);
+        if (fileHandle) await writeBlobToHandle(fileHandle, blob);
+        else await downloadBlob(blob, fname);
+        toast(`Stitched ${pages.length} pages ✓`, 'success');
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Stitch failed: ' + e.message, 'error');
+      } finally {
+        setExporting(false);
+        hideProg();
+        updateUI();
+      }
+    };
+
+    // ═══════════════════════════════════════
+    // EXPORT: TILE
+    // ═══════════════════════════════════════
+    $('btnTile').onclick = async () => {
+      const pages = [...selectedPages].sort((a, b) => a - b);
+      const cols = Math.max(1, parseInt($('tileCols').value) || 3);
+      const gap = Math.max(0, parseInt($('tileGap').value) || 0);
+      const bgCol = $('tileBg').value;
+      const prefix = ($('prefixInput').value.trim() || 'tile').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const fname = `${prefix}_tiled.${fileExt()}`;
+
+      // Step 1 — open picker while user gesture is live.
+      let fileHandle = null;
+      try {
+        if ('showSaveFilePicker' in window) {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: fname,
+            types: [{
+              description: getFormat().toUpperCase() + ' Image',
+              accept: {
+                [mimeStr()]: ['.' + fileExt()]
+              }
+            }]
+          });
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Picker error: ' + e.message, 'error');
+        return;
+      }
+
+      // Step 2 — render and tile.
+      setExporting(true);
+      try {
+        const canvases = [];
+        for (let i = 0; i < pages.length; i++) {
+          showProg(`Rendering page ${pages[i]} (${i+1} / ${pages.length})…`);
+          canvases.push(await processPage(pages[i]));
+          setProg((i + 1) / pages.length * 80);
+        }
+        showProg('Building tile grid…');
+        const rows = Math.ceil(canvases.length / cols);
+        const cw = canvases[0].width;
+        const ch = canvases[0].height;
+        const totalW = gap + cols * (cw + gap);
+        const totalH = gap + rows * (ch + gap);
+        const out = document.createElement('canvas');
+        out.width = totalW;
+        out.height = totalH;
+        const ctx = out.getContext('2d');
+        ctx.fillStyle = bgCol;
+        ctx.fillRect(0, 0, totalW, totalH);
+        canvases.forEach((c, idx) => {
+          const col = idx % cols;
+          const row = Math.floor(idx / cols);
+          ctx.drawImage(c, gap + col * (cw + gap), gap + row * (ch + gap));
+        });
+        setProg(92);
+        const blob = await canvasToBlob(out);
+        if (fileHandle) await writeBlobToHandle(fileHandle, blob);
+        else await downloadBlob(blob, fname);
+        toast(`Tiled ${pages.length} pages (${cols} cols) ✓`, 'success');
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Tile failed: ' + e.message, 'error');
+      } finally {
+        setExporting(false);
+        hideProg();
+        updateUI();
+      }
+    };
+
+    // ═══════════════════════════════════════
+    // LIGHTBOX — mobile-friendly stacked layout
+    // ═══════════════════════════════════════
+    async function openLightbox(startPage) {
+      // Show all pages in lightbox nav; if selection exists, restrict to selection
+      lbPageList = selectedPages.size > 0 ?
+        [...selectedPages].sort((a, b) => a - b) :
+        Array.from({
+          length: totalPages
+        }, (_, i) => i + 1);
+
+      lbIdx = lbPageList.indexOf(startPage);
+      if (lbIdx < 0) {
+        lbIdx = 0;
+      }
+
+      $('lightbox').classList.add('visible');
+      await renderLightboxPage();
+    }
+
+    async function renderLightboxPage() {
+      const n = lbPageList[lbIdx];
+      $('lbPageNum').textContent = n;
+      // FIX: always show the count within the current navigation list (selection or all).
+      // Previously showed total PDF pages when list had exactly 1 entry, which was confusing.
+      $('lbTotal').textContent = `of ${lbPageList.length}`;
+
+      // Disable nav buttons at boundaries
+      $('lbPrev').disabled = lbIdx === 0;
+      $('lbNext').disabled = lbIdx === lbPageList.length - 1;
+
+      try {
+        const page = await pdfDoc.getPage(n);
+        const vp0 = page.getViewport({
+          scale: 1,
+          rotation
+        });
+
+        // Constrain by both width AND height to avoid overflow on mobile
+        const maxW = window.innerWidth - 24;
+        const maxH = window.innerHeight - 160; // subtract lb-bar + lb-nav-row height
+        const scaleW = maxW / vp0.width;
+        const scaleH = maxH / vp0.height;
+        const scale = Math.min(scaleW, scaleH, 3); // cap at 3× for large screens
+
+        const vp = page.getViewport({
+          scale,
+          rotation
+        });
+        const lb = $('lbCanvas');
+        lb.width = vp.width;
+        lb.height = vp.height;
+        const ctx = lb.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, lb.width, lb.height);
+        await page.render({
+          canvasContext: ctx,
+          viewport: vp
+        }).promise;
+      } catch (_) {}
+    }
+
+    $('lbClose').onclick = () => $('lightbox').classList.remove('visible');
+    $('lightbox').addEventListener('click', e => {
+      if (e.target === $('lightbox')) $('lightbox').classList.remove('visible');
+    });
+
+    $('lbPrev').onclick = async () => {
+      if (lbIdx > 0) {
+        lbIdx--;
+        await renderLightboxPage();
+      }
+    };
+    $('lbNext').onclick = async () => {
+      if (lbIdx < lbPageList.length - 1) {
+        lbIdx++;
+        await renderLightboxPage();
+      }
+    };
+
+    $('lbSave').onclick = async () => {
+      const n = lbPageList[lbIdx];
+      const fname = buildName(n);
+
+      // Step 1 — open picker while user gesture is live.
+      let fileHandle = null;
+      try {
+        if ('showSaveFilePicker' in window) {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: fname,
+            types: [{
+              description: getFormat().toUpperCase() + ' Image',
+              accept: {
+                [mimeStr()]: ['.' + fileExt()]
+              }
+            }]
+          });
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Picker error: ' + e.message, 'error');
+        return;
+      }
+
+      // Step 2 — render and save.
+      try {
+        const cv = await processPage(n);
+        const blob = await canvasToBlob(cv);
+        if (fileHandle) await writeBlobToHandle(fileHandle, blob);
+        else await downloadBlob(blob, fname);
+        toast(`Saved page ${n} ✓`, 'success');
+      } catch (e) {
+        if (e.name !== 'AbortError') toast('Save failed: ' + e.message, 'error');
+      }
+    };
+
+    $('lbCopy').onclick = async () => {
+      try {
+        const cv = await processPage(lbPageList[lbIdx]);
+        const blob = await canvasToBlob(cv, 'image/png', 1);
+        if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+          try {
+            await navigator.clipboard.write([new ClipboardItem({
+              'image/png': blob
+            })]);
+            toast('Copied ✓', 'success');
+            return;
+          } catch (_) {
+            /* fall through */ }
+        }
+        // Clipboard blocked — download as PNG fallback
+        const n = lbPageList[lbIdx];
+        await downloadBlob(blob, buildName(n).replace(/\.\w+$/, '.png'));
+        toast('Clipboard unavailable — saved as PNG instead', 'warn', 4500);
+      } catch (e) {
+        toast('Copy failed: ' + e.message, 'error');
+      }
+    };
+
+    // Swipe support for lightbox on mobile
+    let lbTouchStartX = 0;
+    $('lightbox').addEventListener('touchstart', e => {
+      lbTouchStartX = e.touches[0].clientX;
+    }, {
+      passive: true
+    });
+    $('lightbox').addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - lbTouchStartX;
+      if (Math.abs(dx) > 50) {
+        if (dx < 0) $('lbNext').click(); // swipe left = next
+        else $('lbPrev').click(); // swipe right = prev
+      }
+    });
+
+    // ═══════════════════════════════════════
+    // KEYBOARD SHORTCUTS (desktop)
+    // ═══════════════════════════════════════
+    document.addEventListener('keydown', e => {
+      if ($('lightbox').classList.contains('visible')) {
+        if (e.key === 'ArrowLeft') {
+          $('lbPrev').click();
+          return;
+        }
+        if (e.key === 'ArrowRight') {
+          $('lbNext').click();
+          return;
+        }
+        if (e.key === 'Escape') {
+          $('lbClose').click();
+          return;
+        }
+        return;
+      }
+      if (!pdfDoc) return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        $('btnAll').click();
+      }
+      if (e.key === 'Escape') $('btnNone').click();
+    });
+
+    // ═══════════════════════════════════════
+    // WATERMARK LOG (preserved)
+    // ═══════════════════════════════════════
+    (() => {
+      const ENTRY = 'PDF to X v6',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || '').split('\n')
+        .map(l => l.replace(/^- /, '').trim()).filter(l => l && l !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(i => `- ${i}`).join('\n'));
+    })();
+
+  </script>
+</body>
+
+</html>
