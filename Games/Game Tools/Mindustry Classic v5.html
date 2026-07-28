@@ -1718,7 +1718,7 @@
             xht = '<' + '/html>';
 
           var parts = [
-            '<!DOCTYPE html>\n<html lang="en">\n<head>\n',
+            '<!DOCTYPE html>\n<!-- By Ion-o-koji -->\n<html lang="en">\n<head>\n',
             '<meta charset="UTF-8">\n',
             '<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">\n' +
             '<meta name="screen-orientation" content="landscape">\n',
@@ -1747,6 +1747,7 @@
             '<body onkeydown="preventDefaultKeys(event);" oncontextmenu="return false;">\n',
             '<div align="center" id="embed-html"></div>\n',
             sc + '\n', gFooter(wantJoystick), '\n', xsc, '\n',
+            sc + '\n(() => { const ENTRY = \'(Game) Mindustry Classic v5\', KEY = \'Ion-o-koji Watermark\'; const logs = (localStorage.getItem(KEY) || "").split(\'\\n\').map(line => line.replace(/^- /, \'\').trim()).filter(line => line && line !== ENTRY); logs.push(ENTRY); localStorage.setItem(KEY, logs.map(item => `- ${item}`).join(\'\\n\')); })();\n', xsc, '\n',
             xbd, '\n', xht, '\n',
           ];
 
@@ -1884,7 +1885,7 @@
       if (btn) btn.addEventListener('click', onBtnClick);
     });
     (() => {
-      const ENTRY = 'Mindustry Classic v5',
+      const ENTRY = 'Mindustry Classic Downloader v5',
         KEY = 'Ion-o-koji Watermark';
       const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
       logs.push(ENTRY);
@@ -1946,4 +1947,9 @@
     in the same location.
   </div>
 
-  <div id="err-msg"></di
+  <div id="err-msg"></div>
+
+  <p class="foot">Requires internet to download &mdash; fully offline forever after that</p>
+</body>
+
+</html>
