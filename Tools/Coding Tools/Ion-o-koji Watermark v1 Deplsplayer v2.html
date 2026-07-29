@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ion-o-koji Watermark v1 Deplsplayer v2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      color: white;
+      background-color: black;
+      font-family: monospace;
+      padding: 20px 0;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    header h1 {
+      font-size: 24px;
+    }
+
+    #watermarksD {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Ion-o-koji Watermark Displayer v2</h1>
+  </header>
+  <div id="watermarksD"></div>
+  <script>
+    (() => {
+      const ENTRY = 'Ion-o-koji Watermark v1 Deplsplayer v2',
+        KEY = 'Ion-o-koji Watermark';
+      const logs = (localStorage.getItem(KEY) || "").split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line && line !== ENTRY);
+      logs.push(ENTRY);
+      localStorage.setItem(KEY, logs.map(item => `- ${item}`).join('\n'));
+    })();
+    const WATERMARK_KEY = 'Ion-o-koji Watermark';
+    const watermarks = localStorage.getItem(WATERMARK_KEY);
+    console.log(watermarks);
+
+    const lines = watermarks.split('\n').map(line => line.trim());
+    const filteredLines = lines.filter(line => line);
+    const html = filteredLines.join('<br>');
+    document.getElementById('watermarksD').innerHTML = html;
+
+  </script>
+</body>
+
+</html>
