@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<!-- By Ion-o-koji -->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pocket Tier List</title>
+  <style>
+    :root {
+      --bg: #0d1118;
+      --panel: #151c27;
+      --panel-2: #1a2230;
+      --card: #232c39;
+      --text: #f5f1e8;
+      --muted: #91a0ad;
+      --line: rgba(255, 255, 255, 0.13);
+      --teal: #1d7786;
+      --warm: #e09a4e;
+      --danger: #ff9c8b;
+      --radius: 6px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-width: 320px;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid #65c2bd;
+      outline-offset: 2px;
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(13, 17, 24, 0.93);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .header-inner,
+    .page-wrap {
+      width: min(1240px, calc(100% - 24px));
+      margin: auto;
+    }
+
+    .header-inner {
+      display: flex;
+      height: 54px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      font-size: 0.9rem;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+    }
+
+    .icon-button {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 1.15rem;
+    }
+
+    .page-wrap {
+      padding: 16px 0 42px;
+    }
+
+    .board-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(20, 26, 35, 0.94);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
+    }
+
+    .board-scroll {
+      padding: 8px;
+    }
+
+    .tier-row {
+      display: grid;
+      grid-template-columns: 62px minmax(0, 1fr);
+      min-height: 142px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+    }
+
+    .tier-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .tier-label-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px;
+      background: var(--tier-color);
+      color: #fff9eb;
+    }
+
+    .tier-label {
+      display: block;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-align: center;
+      font: 700 1.3rem sans-serif;
+    }
+
+    .tier-items {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      align-items: flex-start;
+      gap: 8px;
+      min-height: 140px;
+      padding: 8px;
+      background-color: var(--panel-2);
+      background-image: radial-gradient(rgba(255, 255, 255, 0.085) 1px,
+          transparent 1px);
+      background-size: 12px 12px;
+      transition: background-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .tier-items:has(.tile.selected) {
+      background-color: #1e2a39;
+    }
+
+    .empty-tier {
+      align-self: center;
+      width: 100%;
+      color: #7e8a9a;
+      text-align: center;
+      font: 0.68rem monospace;
+    }
+
+    .tile {
+      position: relative;
+      width: 94px;
+      flex: 0 0 94px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.17);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .tile.selected {
+      outline: 2px solid var(--warm);
+      outline-offset: 2px;
+    }
+
+    .tile-image {
+      display: block;
+      width: 100%;
+      height: 79px;
+      object-fit: cover;
+      background: #303b4a;
+      pointer-events: none;
+    }
+
+    .tile-caption {
+      display: block;
+      width: 100%;
+      min-height: 35px;
+      padding: 6px;
+      border: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      resize: none;
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.65rem;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .pool-section {
+      margin-top: 15px;
+    }
+
+    .section-label {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #f0ece2;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .section-label span {
+      color: var(--muted);
+      font: 0.65rem monospace;
+      font-weight: 400;
+    }
+
+    .pool {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 120px;
+      padding: 10px;
+      border: 1px dashed rgba(138, 163, 174, 0.42);
+      border-radius: var(--radius);
+      background: rgba(20, 28, 39, 0.86);
+      transition: background-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .pool-empty {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      min-height: 100px;
+      color: #7e8a9a;
+      font-size: 0.72rem;
+    }
+
+    .selected-bar {
+      position: sticky;
+      bottom: 10px;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      margin: 13px auto 0;
+      padding: 9px;
+      border: 1px solid rgba(68, 177, 180, 0.35);
+      border-radius: var(--radius);
+      background: rgba(22, 31, 42, 0.96);
+      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.42);
+    }
+
+    .selected-bar strong {
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.7rem;
+    }
+
+    .selected-bar span {
+      color: var(--muted);
+      font: 0.62rem monospace;
+    }
+
+    .tier-choice {
+      width: 31px;
+      height: 31px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .tier-choice[data-move="pool"] {
+      background: #596676;
+    }
+
+    .tier-choice.delete-choice {
+      width: auto;
+      padding: 0 10px;
+      background: rgba(207, 76, 61, 0.12);
+      border-color: rgba(229, 102, 84, 0.32);
+      color: var(--danger);
+    }
+
+    .settings-panel {
+      position: fixed;
+      top: 62px;
+      right: 12px;
+      z-index: 30;
+      width: min(420px, calc(100vw - 24px));
+      max-height: calc(100dvh - 72px);
+      overflow: auto;
+      padding: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.52);
+    }
+
+    .settings-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .settings-head h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .settings-status {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font: 0.62rem monospace;
+    }
+
+    .settings-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .button {
+      min-height: 38px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .button.primary {
+      border-color: #155967;
+      background: var(--teal);
+    }
+
+    .button.warm {
+      border-color: #bd7131;
+      background: var(--warm);
+      color: #1c1820;
+    }
+
+    .button.danger {
+      border-color: rgba(229, 102, 84, 0.32);
+      background: rgba(207, 76, 61, 0.12);
+      color: var(--danger);
+    }
+
+    .help-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      margin-top: 10px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .help-strip div {
+      padding: 9px;
+      background: #1a222e;
+    }
+
+    .help-strip b,
+    .help-strip span {
+      display: block;
+    }
+
+    .help-strip b {
+      font-size: 0.66rem;
+    }
+
+    .help-strip span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.59rem;
+    }
+
+    .settings-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      background: rgba(3, 6, 10, 0.78);
+    }
+
+    .crop-modal,
+    .confirm-modal {
+      width: min(480px, 100%);
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius);
+      background: #171f2b;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.55);
+    }
+
+    .crop-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .crop-head span {
+      color: #65c2bd;
+      font: 0.62rem monospace;
+    }
+
+    .crop-head h2,
+    .confirm-modal h2 {
+      margin: 4px 0 0;
+      font-size: 1.2rem;
+    }
+
+    .crop-caption {
+      display: grid;
+      gap: 5px;
+      color: #aeb8c3;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .crop-caption input {
+      min-height: 37px;
+      padding: 0 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #202a38;
+      color: var(--text);
+    }
+
+    .crop-preview {
+      height: auto;
+      margin: 14px 0;
+      padding: 0;
+      overflow: visible;
+      border: 0;
+      background: transparent;
+    }
+
+    .crop-stage {
+      position: relative;
+      width: min(76vw, 360px);
+      aspect-ratio: 1;
+      margin: auto;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius);
+      background: #080b10;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .crop-source {
+      position: absolute;
+      max-width: none;
+      max-height: none;
+      object-fit: fill;
+      pointer-events: none;
+    }
+
+    .crop-selection {
+      position: absolute;
+      z-index: 2;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.68),
+        0 0 0 1px rgba(0, 0, 0, 0.55);
+      cursor: move;
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    .crop-selection::after {
+      position: absolute;
+      inset: 33.333% 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.35);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+      content: "";
+      pointer-events: none;
+    }
+
+    .crop-selection::before {
+      position: absolute;
+      inset: 0 33.333%;
+      border-right: 1px solid rgba(255, 255, 255, 0.35);
+      border-left: 1px solid rgba(255, 255, 255, 0.35);
+      content: "";
+      pointer-events: none;
+    }
+
+    .crop-handle {
+      position: absolute;
+      z-index: 3;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #fff;
+      border-radius: 3px;
+      background: #65c2bd;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.6);
+      touch-action: none;
+    }
+
+    .crop-handle[data-crop-handle="nw"] {
+      top: -9px;
+      left: -9px;
+      cursor: nwse-resize;
+    }
+
+    .crop-handle[data-crop-handle="ne"] {
+      top: -9px;
+      right: -9px;
+      cursor: nesw-resize;
+    }
+
+    .crop-handle[data-crop-handle="sw"] {
+      bottom: -9px;
+      left: -9px;
+      cursor: nesw-resize;
+    }
+
+    .crop-handle[data-crop-handle="se"] {
+      right: -9px;
+      bottom: -9px;
+      cursor: nwse-resize;
+    }
+
+    .crop-hint {
+      max-width: 360px;
+      margin: 9px auto 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.65rem;
+      line-height: 1.4;
+    }
+
+    .crop-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .confirm-modal p {
+      color: #aab3be;
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
+    .tier-items.drop-active,
+    .pool.drop-active {
+      background-color: rgba(49, 139, 150, 0.2);
+      box-shadow: inset 0 0 0 2px rgba(101, 194, 189, 0.8);
+    }
+
+    .tile.dragging {
+      opacity: 0.38;
+      transform: scale(0.97);
+    }
+
+    .tile.drop-before {
+      box-shadow: -4px 0 0 #65c2bd, 0 3px 0 rgba(0, 0, 0, 0.35);
+    }
+
+    #toast {
+      position: fixed;
+      right: 15px;
+      bottom: 15px;
+      z-index: 60;
+      padding: 9px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: var(--radius);
+      background: #202a38;
+      color: var(--text);
+      font: 0.68rem monospace;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    @media (max-width: 640px) {
+
+      .header-inner,
+      .page-wrap {
+        width: calc(100% - 16px);
+      }
+
+      .header-inner {
+        height: 48px;
+      }
+
+      .settings-panel {
+        top: 54px;
+        right: 8px;
+        width: calc(100vw - 16px);
+      }
+
+      .tier-row {
+        grid-template-columns: 52px minmax(0, 1fr);
+        min-height: 132px;
+      }
+
+      .tier-items {
+        min-height: 130px;
+        gap: 7px;
+        padding: 7px;
+      }
+
+      .tile {
+        width: 82px;
+        flex-basis: 82px;
+      }
+
+      .tile-image {
+        height: 69px;
+      }
+
+      .tile-caption {
+        min-height: 33px;
+        padding: 5px;
+        font-size: 0.59rem;
+      }
+
+      .settings-footer {
+        flex-direction: column;
+      }
+
+      .settings-footer .button {
+        width: 100%;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script>
+    var APP_VERSION = "2";
+    const STORAGE_KEY = 'pocket-tier-list-project-v2';
+    const tiersDefault = [{
+        id: 'S',
+        label: 'S',
+        color: '#d45f45'
+      },
+      {
+        id: 'A',
+        label: 'A',
+        color: '#d98e3d'
+      },
+      {
+        id: 'B',
+        label: 'B',
+        color: '#4e8d76'
+      },
+      {
+        id: 'C',
+        label: 'C',
+        color: '#3e7c91'
+      },
+      {
+        id: 'D',
+        label: 'D',
+        color: '#65728c'
+      },
+      {
+        id: 'F',
+        label: 'F',
+        color: '#6e5d78'
+      },
+    ];
+
+    const root = document.querySelector('#root');
+    let settingsOpen = false;
+    let helpOpen = false;
+    let selectedId = null;
+    let draggingId = null;
+    let dragOverTarget = null;
+    let pointerDrag = null;
+    let suppressClick = false;
+    let pointerEventsBound = false;
+    let cropInteraction = null;
+    let toastTimer;
+    let pendingImages = [];
+    let cropIndex = 0;
+    let confirmClear = false;
+    let importInput;
+    let projectInput;
+    let state = loadProject();
+
+    const id = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    function defaultCrop() {
+      return {
+        x: 12,
+        y: 12,
+        width: 76,
+        height: 76,
+        zoom: 1,
+        panX: 0,
+        panY: 0
+      };
+    }
+
+    function cropFor(item) {
+      const crop = item.crop || {};
+      item.crop = crop;
+      Object.assign(crop, {
+        ...defaultCrop(),
+        ...crop
+      });
+      const width = Number(crop.width);
+      const height = Number(crop.height);
+      const size = clamp(
+        Math.min(
+          Number.isFinite(width) ? width : 76,
+          Number.isFinite(height) ? height : 76,
+        ),
+        14,
+        100,
+      );
+      crop.width = size;
+      crop.height = size;
+      const x = Number(crop.x);
+      const y = Number(crop.y);
+      const zoom = Number(crop.zoom);
+      const panX = Number(crop.panX);
+      const panY = Number(crop.panY);
+      crop.x = clamp(Number.isFinite(x) ? x : 12, 0, 100 - size);
+      crop.y = clamp(Number.isFinite(y) ? y : 12, 0, 100 - size);
+      crop.zoom = clamp(Number.isFinite(zoom) ? zoom : 1, 1, 3);
+      crop.panX = Number.isFinite(panX) ? panX : 0;
+      crop.panY = Number.isFinite(panY) ? panY : 0;
+      return crop;
+    }
+
+    function svgImage(background, foreground, word, detail) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="560"><rect width="720" height="560" fill="${background}"/><circle cx="590" cy="112" r="150" fill="${foreground}" opacity=".18"/><path d="M0 440Q180 335 340 430T720 370V560H0Z" fill="${foreground}" opacity=".42"/><path d="M80 115 210 50l105 80-67 112-136-22Z" fill="none" stroke="${foreground}" stroke-width="14" opacity=".7"/><circle cx="530" cy="395" r="54" fill="${foreground}" opacity=".72"/><text x="54" y="370" fill="#fff7e8" font-family="sans-serif" font-size="58" font-weight="700">${word}</text><text x="58" y="424" fill="#fff7e8" opacity=".7" font-family="monospace" font-size="18">${detail}</text></svg>`;
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+
+    function sampleProject() {
+      const items = [{
+          id: 'sample-night',
+          caption: 'Night market',
+          src: svgImage('#163f4b', '#ec9b47', 'NIGHT', 'GOOD LIGHT'),
+          position: '50% 50%',
+          createdAt: 1
+        },
+        {
+          id: 'sample-radio',
+          caption: 'Tiny radio',
+          src: svgImage('#b84f43', '#f5cd76', 'RADIO', 'A LITTLE STATIC'),
+          position: '50% 50%',
+          createdAt: 2
+        },
+        {
+          id: 'sample-pasta',
+          caption: 'Pasta night',
+          src: svgImage('#e0933f', '#2f5f68', 'PASTA', 'SLOW SUNDAY'),
+          position: '50% 50%',
+          createdAt: 3
+        },
+        {
+          id: 'sample-blue',
+          caption: 'Blue hour',
+          src: svgImage('#536080', '#e4b45f', 'BLUE', 'BETWEEN DAY'),
+          position: '50% 50%',
+          createdAt: 4
+        },
+        {
+          id: 'sample-cinema',
+          caption: 'Last screening',
+          src: svgImage('#684e6b', '#f0a65c', 'CINEMA', 'ONE MORE REEL'),
+          position: '50% 50%',
+          createdAt: 5
+        },
+      ];
+      return {
+        title: 'My pocket ranking board',
+        tiers: tiersDefault.map((tier) => ({
+          ...tier
+        })),
+        items,
+        placements: {
+          'sample-night': 'S',
+          'sample-radio': 'A',
+          'sample-pasta': 'B',
+          'sample-blue': 'pool',
+          'sample-cinema': 'pool'
+        },
+      };
+    }
+
+    function loadProject() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (saved?.tiers && saved?.items && saved?.placements) {
+          saved.items = saved.items.map((item) => ({
+            ...item,
+            position: item.position || item.objectPosition || '50% 50%'
+          }));
+          return saved;
+        }
+      } catch {}
+      return sampleProject();
+    }
+
+    function esc(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      } [char]));
+    }
+
+    function positionValue(value) {
+      const [x = 50, y = 50] = String(value || '50% 50%').split(/\s+/).map((part) => Number.parseFloat(part));
+      return {
+        x: Number.isFinite(x) ? x : 50,
+        y: Number.isFinite(y) ? y : 50
+      };
+    }
+
+    function saveLocal() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        showToast('This board is too large for local storage. Save a project copy instead.');
+      }
+    }
+
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      const node = document.querySelector('#toast');
+      if (!node) return;
+      node.textContent = message;
+      node.hidden = false;
+      toastTimer = setTimeout(() => {
+        node.hidden = true;
+      }, 2800);
+    }
+
+    function download(blob, filename) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 500);
+    }
+
+    async function saveBlob(blob, filename, description, extension) {
+      try {
+        if (window.showSaveFilePicker) {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+              description,
+              accept: {
+                [blob.type]: [extension]
+              }
+            }]
+          });
+          const writer = await handle.createWritable();
+          await writer.write(blob);
+          await writer.close();
+          showToast('Saved');
+          return;
+        }
+      } catch {}
+      download(blob, filename);
+      showToast('Downloaded instead');
+    }
+
+    async function openProject() {
+      try {
+        let file;
+        if (window.showOpenFilePicker) {
+          const [handle] = await window.showOpenFilePicker({
+            multiple: false,
+            types: [{
+              description: 'Pocket Tiers project',
+              accept: {
+                'application/json': ['.json']
+              }
+            }]
+          });
+          file = await handle.getFile();
+        } else {
+          projectInput.click();
+          return;
+        }
+        applyProject(JSON.parse(await file.text()));
+      } catch {
+        showToast('Could not open that project');
+      }
+    }
+
+    function applyProject(next) {
+      if (!next?.tiers || !next?.items || !next?.placements) throw new Error('Invalid project');
+      state = {
+        ...next,
+        items: next.items.map((item) => ({
+          ...item,
+          position: item.position || item.objectPosition || '50% 50%'
+        }))
+      };
+      selectedId = null;
+      saveLocal();
+      render();
+      showToast('Project opened');
+    }
+
+    async function readImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function importFiles(files) {
+      const images = [...files].filter((file) => file.type.startsWith('image/'));
+      if (!images.length) {
+        showToast('Choose image files');
+        return;
+      }
+      const imported = [];
+      for (const file of images) {
+        try {
+          imported.push({
+            id: id(),
+            caption: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' '),
+            src: await readImage(file),
+            position: '50% 50%',
+            crop: defaultCrop(),
+            createdAt: Date.now() + imported.length
+          });
+        } catch {}
+      }
+      if (!imported.length) {
+        showToast('Could not read those images');
+        return;
+      }
+      pendingImages = imported;
+      cropIndex = 0;
+      selectedId = null;
+      render();
+      showToast(`${imported.length} image${imported.length === 1 ? '' : 's'} ready to crop`);
+    }
+
+    async function finishImport() {
+      if (!pendingImages.length) return;
+      const importedItems = [];
+      for (const item of pendingImages) {
+        try {
+          const src = await cropImage(item);
+          const {
+            crop,
+            ...savedItem
+          } = item;
+          importedItems.push({
+            ...savedItem,
+            src,
+            position: '50% 50%'
+          });
+        } catch {
+          importedItems.push(item);
+        }
+      }
+      state.items.push(...importedItems);
+      importedItems.forEach((item) => {
+        state.placements[item.id] = 'pool';
+      });
+      const count = importedItems.length;
+      pendingImages = [];
+      cropInteraction = null;
+      saveLocal();
+      render();
+      showToast(`${count} image${count === 1 ? '' : 's'} added to the pool`);
+    }
+
+    function moveItem(itemId, target, beforeId) {
+      const item = state.items.find((entry) => entry.id === itemId);
+      if (!item) return;
+      state.placements[itemId] = target;
+      const targetItems = state.items.filter((entry) => state.placements[entry.id] === target && entry.id !== itemId).sort((a, b) => a.createdAt - b.createdAt);
+      if (beforeId && beforeId !== itemId) {
+        const beforeIndex = targetItems.findIndex((entry) => entry.id === beforeId);
+        if (beforeIndex >= 0) {
+          const previous = targetItems[beforeIndex - 1];
+          const next = targetItems[beforeIndex];
+          item.createdAt = previous ? (previous.createdAt + next.createdAt) / 2 : next.createdAt - 1;
+        }
+      } else {
+        const last = targetItems[targetItems.length - 1];
+        item.createdAt = last ? last.createdAt + 1 : Date.now();
+      }
+      selectedId = null;
+      dragOverTarget = null;
+      saveLocal();
+      render();
+      showToast(target === 'pool' ? 'Returned to the pool' : `Moved to ${state.tiers.find((tier) => tier.id === target)?.label || target} tier`);
+    }
+
+    function deleteItem(itemId) {
+      if (!itemId) return;
+      const item = state.items.find((entry) => entry.id === itemId);
+      if (!item) return;
+
+      state.items = state.items.filter((entry) => entry.id !== itemId);
+      delete state.placements[itemId];
+      selectedId = null;
+      saveLocal();
+      render();
+      showToast(`Removed ${item.caption || 'card'}`);
+    }
+
+    function itemCard(item) {
+      const selected = selectedId === item.id ? ' selected' : '';
+      return `<div class="tile${selected}" data-item="${esc(item.id)}" role="button" tabindex="0"><img class="tile-image" src="${esc(item.src)}" alt="" style="object-position:${esc(item.position || '50% 50%')}"><textarea class="tile-caption" rows="2" data-caption="${esc(item.id)}" aria-label="Caption for ${esc(item.caption)}">${esc(item.caption)}</textarea></div>`;
+    }
+
+    function renderSettings() {
+      if (!settingsOpen) return '';
+      return `<aside class="settings-panel" aria-label="Settings">
+    <div class="settings-head"><div><h2>Settings</h2><span class="settings-status">Local board</span></div><button class="icon-button" data-action="settings" aria-label="Close settings">×</button></div>
+    <div class="settings-actions">
+      <button class="button primary" data-action="import">Import images</button>
+      <button class="button" data-action="open">Open project</button>
+      <button class="button" data-action="save">Save project</button>
+      <button class="button" data-action="help">Help</button>
+      <button class="button" data-action="text">Export text</button>
+      <button class="button warm" data-action="image">Export image</button>
+    </div>
+    ${helpOpen ? '<div class="help-strip"><div><b>Drag cards</b><span>Move cards between tiers.</span></div><div><b>Tap cards</b><span>Select one, then choose a tier.</span></div><div><b>Crop first</b><span>Import opens the crop editor.</span></div><div><b>Export</b><span>Save an image or text list.</span></div></div>' : ''}
+    <div class="settings-footer"><button class="button" data-action="samples">Restore samples</button><button class="button danger" data-action="clear">Clear list</button></div>
+  </aside>`;
+    }
+
+    function renderCrop() {
+      if (!pendingImages.length) return '';
+      const current = pendingImages[cropIndex];
+      const crop = cropFor(current);
+      return `<div class="modal-backdrop"><section class="crop-modal" aria-label="Adjust image crop" role="dialog" aria-modal="true">
+    <div class="crop-head"><div><span>Image ${cropIndex + 1} of ${pendingImages.length}</span><h2>Adjust crop</h2></div><button class="icon-button" data-action="cancel-crop" aria-label="Cancel import">×</button></div>
+    <div class="crop-preview">
+      <div class="crop-stage" data-crop-stage>
+        <img class="crop-source" data-crop-source src="${esc(current.src)}" alt="Crop preview">
+        <div class="crop-selection" data-crop-selection aria-label="Crop area">
+          <span class="crop-handle" data-crop-handle="nw"></span><span class="crop-handle" data-crop-handle="ne"></span><span class="crop-handle" data-crop-handle="sw"></span><span class="crop-handle" data-crop-handle="se"></span>
+        </div>
+      </div>
+      <div class="crop-hint">Drag the image to reposition it. Drag the square to move it, drag a corner to resize it, or pinch to zoom.</div>
+    </div>
+    <label class="crop-caption">Caption<input value="${esc(current.caption)}" data-crop-caption></label>
+    <div class="crop-actions">${cropIndex > 0 ? '<button class="button" data-action="previous-crop">Previous</button>' : ''}${cropIndex < pendingImages.length - 1 ? '<button class="button primary" data-action="next-crop">Next image</button>' : '<button class="button primary" data-action="finish-crop">Add to pool</button>'}</div>
+  </section></div>`;
+    }
+
+    function render() {
+      const poolItems = state.items.filter((item) => !state.placements[item.id] || state.placements[item.id] === 'pool').sort((a, b) => a.createdAt - b.createdAt);
+      root.innerHTML = `<header class="app-header"><div class="header-inner"><div class="brand">Pocket Tiers</div><button class="icon-button" data-action="settings" aria-label="${settingsOpen ? 'Close settings' : 'Open settings'}">☷</button></div></header>
+    <main class="page-wrap"><section class="board-card"><div class="board-scroll">${state.tiers.map((tier) => {
+      const tierItems = state.items.filter((item) => state.placements[item.id] === tier.id).sort((a, b) => a.createdAt - b.createdAt);
+      return `<div class="tier-row"><div class="tier-label-wrap" style="--tier-color:${esc(tier.color)}"><span class="tier-label" aria-label="${esc(tier.label)} tier">${esc(tier.label)}</span></div><div class="tier-items" data-target="${esc(tier.id)}">${tierItems.length ? tierItems.map(itemCard).join('') : '<span class="empty-tier">No cards yet</span>'}</div></div>`;
+    }).join('')}</div></section>
+    <section class="pool-section"><div class="section-label">Unranked pool <span>${poolItems.length} waiting</span></div><div class="pool" data-target="pool">${poolItems.length ? poolItems.map(itemCard).join('') : '<div class="pool-empty">Your pool is clear.</div>'}</div></section>
+     ${selectedId ? `<div class="selected-bar"><strong>${esc(state.items.find((item) => item.id === selectedId)?.caption || '')}</strong><span>move to</span>${state.tiers.map((tier) => `<button class="tier-choice" style="background:${esc(tier.color)}" data-move="${esc(tier.id)}">${esc(tier.label)}</button>`).join('')}<button class="tier-choice" data-move="pool">—</button><button class="tier-choice delete-choice" data-move="delete" aria-label="Delete selected card">Delete</button></div>` : ''}
+     </main>${renderSettings()}${renderCrop()}${confirmClear ? '<div class="modal-backdrop"><section class="confirm-modal"><h2>Clear this board?</h2><p>Every card will be removed. Your tier settings will stay.</p><div class="crop-actions"><button class="button" data-action="cancel-clear">Keep cards</button><button class="button danger" data-action="confirm-clear">Clear board</button></div></section></div>' : ''}<div id="toast" role="status" hidden></div>`;
+      bindEvents();
+    }
+
+    function clamp(value, minimum, maximum) {
+      return Math.min(maximum, Math.max(minimum, value));
+    }
+
+    function updateCropEditor() {
+      const stage = document.querySelector('[data-crop-stage]');
+      const source = document.querySelector('[data-crop-source]');
+      const selection = document.querySelector('[data-crop-selection]');
+      const item = pendingImages[cropIndex];
+      if (!stage || !source || !selection || !item) return;
+      const crop = cropFor(item);
+      const stageWidth = stage.clientWidth;
+      const stageHeight = stage.clientHeight;
+      const naturalWidth = source.naturalWidth || 1;
+      const naturalHeight = source.naturalHeight || 1;
+      const fitScale = Math.max(stageWidth / naturalWidth, stageHeight / naturalHeight);
+      const scale = fitScale * crop.zoom;
+      const imageWidth = naturalWidth * scale;
+      const imageHeight = naturalHeight * scale;
+      const imageLeft = (stageWidth - imageWidth) / 2 + crop.panX;
+      const imageTop = (stageHeight - imageHeight) / 2 + crop.panY;
+      source.style.left = `${imageLeft}px`;
+      source.style.top = `${imageTop}px`;
+      source.style.width = `${imageWidth}px`;
+      source.style.height = `${imageHeight}px`;
+      selection.style.left = `${crop.x}%`;
+      selection.style.top = `${crop.y}%`;
+      selection.style.width = `${crop.width}%`;
+      selection.style.height = `${crop.height}%`;
+    }
+
+    function bindCropEditor() {
+      const stage = document.querySelector('[data-crop-stage]');
+      const source = document.querySelector('[data-crop-source]');
+      const item = pendingImages[cropIndex];
+      if (!stage || !source || !item) return;
+
+      const crop = cropFor(item);
+      const activePointers = new Map();
+      let pinchStart = null;
+
+      const distanceBetween = (first, second) =>
+        Math.hypot(first.x - second.x, first.y - second.y);
+
+      const setPointerCapture = (pointerId) => {
+        try {
+          stage.setPointerCapture(pointerId);
+        } catch {
+          // The pointer may already have been released by the browser.
+        }
+      };
+
+      const releasePointerCapture = (pointerId) => {
+        try {
+          if (stage.hasPointerCapture?.(pointerId)) {
+            stage.releasePointerCapture(pointerId);
+          }
+        } catch {
+          // The pointer may already have been released by the browser.
+        }
+      };
+
+      source.addEventListener('load', updateCropEditor, {
+        once: true
+      });
+
+      stage.addEventListener('pointerdown', (event) => {
+        activePointers.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY
+        });
+        setPointerCapture(event.pointerId);
+
+        if (activePointers.size === 2) {
+          const points = [...activePointers.values()];
+          pinchStart = {
+            distance: distanceBetween(points[0], points[1]),
+            zoom: crop.zoom
+          };
+          cropInteraction = null;
+          event.preventDefault();
+          return;
+        }
+
+        const handle = event.target.closest('[data-crop-handle]')?.dataset.cropHandle;
+        const selection = event.target.closest('[data-crop-selection]');
+        cropInteraction = {
+          type: handle ? 'resize' : selection ? 'move' : 'pan',
+          handle,
+          startX: event.clientX,
+          startY: event.clientY,
+          startCrop: {
+            ...crop
+          },
+        };
+        event.preventDefault();
+      });
+
+      document.addEventListener('pointermove', (event) => {
+        activePointers.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY
+        });
+
+        if (activePointers.size >= 2 && pinchStart) {
+          const points = [...activePointers.values()];
+          const distance = distanceBetween(points[0], points[1]);
+          crop.zoom = clamp(
+            pinchStart.zoom * distance / Math.max(1, pinchStart.distance),
+            1,
+            3,
+          );
+          updateCropEditor();
+          event.preventDefault();
+          return;
+        }
+
+        if (!cropInteraction) return;
+
+        const start = cropInteraction.startCrop;
+        const dx = event.clientX - cropInteraction.startX;
+        const dy = event.clientY - cropInteraction.startY;
+        const dxPercent = (dx / stage.clientWidth) * 100;
+        const dyPercent = (dy / stage.clientHeight) * 100;
+
+        if (cropInteraction.type === 'pan') {
+          crop.panX = start.panX + dx;
+          crop.panY = start.panY + dy;
+        } else if (cropInteraction.type === 'move') {
+          crop.x = clamp(start.x + dxPercent, 0, 100 - start.width);
+          crop.y = clamp(start.y + dyPercent, 0, 100 - start.height);
+        } else {
+          const minimum = 14;
+          let size = start.width;
+          let left = start.x;
+          let top = start.y;
+
+          if (cropInteraction.handle === 'nw') {
+            size = start.width - Math.max(dxPercent, dyPercent);
+            size = clamp(size, minimum, Math.min(start.x + start.width, start.y + start.height));
+            left = start.x + start.width - size;
+            top = start.y + start.height - size;
+          } else if (cropInteraction.handle === 'ne') {
+            size = start.width + Math.max(dxPercent, -dyPercent);
+            size = clamp(size, minimum, Math.min(100 - start.x, start.y + start.height));
+            top = start.y + start.height - size;
+          } else if (cropInteraction.handle === 'sw') {
+            size = start.width + Math.max(-dxPercent, dyPercent);
+            size = clamp(size, minimum, Math.min(start.x + start.width, 100 - start.y));
+            left = start.x + start.width - size;
+          } else {
+            size = start.width + Math.max(dxPercent, dyPercent);
+            size = clamp(size, minimum, Math.min(100 - start.x, 100 - start.y));
+          }
+
+          crop.x = left;
+          crop.y = top;
+          crop.width = size;
+          crop.height = size;
+        }
+        updateCropEditor();
+        event.preventDefault();
+      });
+
+      const endInteraction = (event) => {
+        activePointers.delete(event.pointerId);
+        if (activePointers.size < 2) pinchStart = null;
+        cropInteraction = null;
+        releasePointerCapture(event.pointerId);
+      };
+
+      document.addEventListener('pointerup', endInteraction);
+      document.addEventListener('pointercancel', endInteraction);
+
+      stage.addEventListener('wheel', (event) => {
+        crop.zoom = clamp(crop.zoom + (event.deltaY < 0 ? 0.08 : -0.08), 1, 3);
+        updateCropEditor();
+        event.preventDefault();
+      }, {
+        passive: false
+      });
+
+      updateCropEditor();
+    }
+
+    async function cropImage(item) {
+      const stage = document.querySelector('[data-crop-stage]');
+      const source = document.querySelector('[data-crop-source]');
+      const crop = cropFor(item);
+      if (!stage || !source) return item.src;
+      if (!source.complete) {
+        await new Promise((resolve) => {
+          source.addEventListener('load', resolve, {
+            once: true
+          });
+          source.addEventListener('error', resolve, {
+            once: true
+          });
+        });
+      }
+      if (!source.naturalWidth) return item.src;
+      const stageWidth = stage.clientWidth;
+      const stageHeight = stage.clientHeight;
+      const fitScale = Math.max(stageWidth / source.naturalWidth, stageHeight / source.naturalHeight);
+      const scale = fitScale * crop.zoom;
+      const imageLeft = (stageWidth - source.naturalWidth * scale) / 2 + crop.panX;
+      const imageTop = (stageHeight - source.naturalHeight * scale) / 2 + crop.panY;
+      const selectionX = crop.x / 100 * stageWidth;
+      const selectionY = crop.y / 100 * stageHeight;
+      const selectionWidth = crop.width / 100 * stageWidth;
+      const selectionHeight = crop.height / 100 * stageHeight;
+      const sx = clamp((selectionX - imageLeft) / scale, 0, source.naturalWidth);
+      const sy = clamp((selectionY - imageTop) / scale, 0, source.naturalHeight);
+      const sw = clamp(selectionWidth / scale, 1, source.naturalWidth - sx);
+      const sh = clamp(selectionHeight / scale, 1, source.naturalHeight - sy);
+      const outputWidth = 720;
+      const outputHeight = Math.max(1, Math.round(outputWidth * sh / sw));
+      const canvas = document.createElement('canvas');
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(source, sx, sy, sw, sh, 0, 0, outputWidth, outputHeight);
+      return canvas.toDataURL('image/png');
+    }
+
+    function dropInfoAtPoint(clientX, clientY, itemId) {
+      const element = document.elementFromPoint(clientX, clientY);
+      const target = element?.closest('[data-target]');
+      if (!target) return null;
+      const hoveredTile = element?.closest('.tile');
+      if (hoveredTile?.dataset.item === itemId) return {
+        target,
+        same: true,
+        beforeId: null
+      };
+      let beforeId = null;
+      if (hoveredTile && target.contains(hoveredTile)) {
+        const rect = hoveredTile.getBoundingClientRect();
+        if (clientX <= rect.left + rect.width / 2) {
+          beforeId = hoveredTile.dataset.item;
+        } else {
+          const nextTile = hoveredTile.nextElementSibling?.matches('.tile') ? hoveredTile.nextElementSibling : null;
+          beforeId = nextTile?.dataset.item || null;
+        }
+      }
+      return {
+        target,
+        same: false,
+        beforeId
+      };
+    }
+
+    function clearPointerDropState() {
+      dragOverTarget?.classList.remove('drop-active');
+      dragOverTarget = null;
+      document.querySelectorAll('.drop-before').forEach((node) => node.classList.remove('drop-before'));
+    }
+
+    function bindPointerDragEvents() {
+      if (pointerEventsBound) return;
+      pointerEventsBound = true;
+      document.addEventListener('pointermove', (event) => {
+        if (!pointerDrag) return;
+        const distance = Math.hypot(event.clientX - pointerDrag.startX, event.clientY - pointerDrag.startY);
+        if (!pointerDrag.active && distance < 6) return;
+        if (!pointerDrag.active) {
+          pointerDrag.active = true;
+          draggingId = pointerDrag.id;
+          pointerDrag.tile.classList.add('dragging');
+        }
+        event.preventDefault();
+        const info = dropInfoAtPoint(event.clientX, event.clientY, pointerDrag.id);
+        clearPointerDropState();
+        if (!info) return;
+        dragOverTarget = info.target;
+        info.target.classList.add('drop-active');
+        if (info.beforeId) document.querySelector(`[data-item="${CSS.escape(info.beforeId)}"]`)?.classList.add('drop-before');
+      }, {
+        passive: false
+      });
+      document.addEventListener('pointerup', (event) => {
+        if (!pointerDrag) return;
+        const drag = pointerDrag;
+        pointerDrag = null;
+        if (!drag.active) return;
+        suppressClick = true;
+        setTimeout(() => {
+          suppressClick = false;
+        }, 0);
+        const info = dropInfoAtPoint(event.clientX, event.clientY, drag.id);
+        drag.tile.classList.remove('dragging');
+        clearPointerDropState();
+        draggingId = null;
+        if (info && !info.same) moveItem(drag.id, info.target.dataset.target, info.beforeId);
+      });
+      document.addEventListener('pointercancel', () => {
+        if (!pointerDrag) return;
+        pointerDrag.tile.classList.remove('dragging');
+        pointerDrag = null;
+        draggingId = null;
+        clearPointerDropState();
+      });
+    }
+
+    function bindEvents() {
+      if (!importInput) {
+        importInput = document.createElement('input');
+        importInput.type = 'file';
+        importInput.accept = 'image/*';
+        importInput.multiple = true;
+        importInput.id = 'image-input';
+        importInput.hidden = true;
+        importInput.addEventListener('change', () => {
+          const files = Array.from(importInput.files || []);
+          importInput.value = '';
+          if (files?.length) importFiles(files);
+        });
+        document.body.append(importInput);
+      }
+      if (!projectInput) {
+        projectInput = document.createElement('input');
+        projectInput.type = 'file';
+        projectInput.accept = '.json,application/json';
+        projectInput.id = 'project-input';
+        projectInput.hidden = true;
+        projectInput.addEventListener('change', async () => {
+          const file = projectInput.files?.[0];
+          projectInput.value = '';
+          if (!file) return;
+          try {
+            applyProject(JSON.parse(await file.text()));
+          } catch {
+            showToast('Could not open that project');
+          }
+        });
+        document.body.append(projectInput);
+      }
+      bindPointerDragEvents();
+      bindCropEditor();
+
+      document.querySelectorAll('.tile').forEach((tile) => {
+        tile.addEventListener('click', (event) => {
+          if (suppressClick || event.target.closest('textarea,button')) return;
+          selectedId = selectedId === tile.dataset.item ? null : tile.dataset.item;
+          render();
+        });
+        tile.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            selectedId = selectedId === tile.dataset.item ? null : tile.dataset.item;
+            render();
+          }
+        });
+        tile.addEventListener('pointerdown', (event) => {
+          if (event.target.closest('textarea,button') || (event.pointerType === 'mouse' && event.button !== 0)) return;
+          pointerDrag = {
+            id: tile.dataset.item,
+            tile,
+            startX: event.clientX,
+            startY: event.clientY,
+            active: false
+          };
+        });
+      });
+      document.querySelectorAll('[data-caption]').forEach((input) => input.addEventListener('change', () => {
+        const item = state.items.find((entry) => entry.id === input.dataset.caption);
+        if (item) {
+          item.caption = input.value;
+          saveLocal();
+        }
+      }));
+      document.querySelectorAll('[data-move]').forEach((button) => button.addEventListener('click', () => {
+        if (button.dataset.move === 'delete') {
+          deleteItem(selectedId);
+          return;
+        }
+        moveItem(selectedId, button.dataset.move);
+      }));
+      document.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', () => action(button.dataset.action)));
+      document.querySelector('[data-crop-caption]')?.addEventListener('input', (event) => {
+        pendingImages[cropIndex].caption = event.target.value;
+      });
+    }
+
+    async function action(name) {
+      if (name === 'settings') settingsOpen = !settingsOpen;
+      if (name === 'help') helpOpen = !helpOpen;
+      if (name === 'import') {
+        importInput.value = '';
+        importInput.click();
+      }
+      if (name === 'open') await openProject();
+      if (name === 'save') await saveBlob(new Blob([JSON.stringify(state, null, 2)], {
+        type: 'application/json'
+      }), 'pocket-tiers.json', 'Pocket Tiers project', '.json');
+      if (name === 'samples') {
+        state = sampleProject();
+        selectedId = null;
+        saveLocal();
+        showToast('Samples restored');
+      }
+      if (name === 'clear') confirmClear = true;
+      if (name === 'cancel-clear') confirmClear = false;
+      if (name === 'confirm-clear') {
+        state.items = [];
+        state.placements = {};
+        selectedId = null;
+        confirmClear = false;
+        saveLocal();
+        showToast('Board cleared');
+      }
+      if (name === 'cancel-crop') {
+        pendingImages = [];
+        cropIndex = 0;
+      }
+      if (name === 'previous-crop') cropIndex = Math.max(0, cropIndex - 1);
+      if (name === 'next-crop') cropIndex = Math.min(pendingImages.length - 1, cropIndex + 1);
+      if (name === 'finish-crop') await finishImport();
+      if (name === 'text') {
+        const lines = [state.title, ''];
+        state.tiers.forEach((tier) => {
+          lines.push(`${tier.label}:`);
+          state.items.filter((item) => state.placements[item.id] === tier.id).forEach((item) => lines.push(`- ${item.caption}`));
+          lines.push('');
+        });
+        lines.push('Unranked:');
+        state.items.filter((item) => !state.placements[item.id] || state.placements[item.id] === 'pool').forEach((item) => lines.push(`- ${item.caption}`));
+        await saveBlob(new Blob([lines.join('\n')], {
+          type: 'text/plain'
+        }), 'pocket-tiers.txt', 'Tier list text', '.txt');
+      }
+      if (name === 'image') await exportImage();
+      render();
+    }
+
+    async function exportImage() {
+      const scale = 2,
+        width = 1500,
+        rowHeight = 190;
+      const canvas = document.createElement('canvas');
+      canvas.width = width * scale;
+      canvas.height = (160 + (state.tiers.length + 1) * rowHeight) * scale;
+      const context = canvas.getContext('2d');
+      context.scale(scale, scale);
+      context.fillStyle = '#0d1118';
+      context.fillRect(0, 0, width, canvas.height / scale);
+      const rounded = (x, y, w, h, color) => {
+        context.fillStyle = color;
+        context.fillRect(x, y, w, h);
+      };
+      for (let index = 0; index < state.tiers.length; index += 1) {
+        const tier = state.tiers[index],
+          y = 20 + index * rowHeight;
+        rounded(35, y, width - 70, rowHeight - 12, '#1a2230');
+        rounded(35, y, 100, rowHeight - 12, tier.color);
+        context.fillStyle = '#fff8e9';
+        context.font = '700 42px sans-serif';
+        context.fillText(tier.label, 68, y + 70);
+        const items = state.items.filter((item) => state.placements[item.id] === tier.id);
+        for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
+          const item = items[itemIndex],
+            image = new Image();
+          image.src = item.src;
+          await new Promise((resolve) => {
+            image.onload = resolve;
+            image.onerror = resolve;
+          });
+          const x = 150 + itemIndex * 157;
+          context.fillStyle = '#232c39';
+          context.fillRect(x, y + 15, 140, 135);
+          if (image.naturalWidth) {
+            const ratio = Math.max(140 / image.naturalWidth, 108 / image.naturalHeight),
+              sw = image.naturalWidth * ratio,
+              sh = image.naturalHeight * ratio,
+              p = positionValue(item.position);
+            context.save();
+            context.beginPath();
+            context.rect(x, y + 15, 140, 103);
+            context.clip();
+            context.drawImage(image, x + (140 - sw) * p.x / 100, y + 15 + (103 - sh) * p.y / 100, sw, sh);
+            context.restore();
+          }
+          context.fillStyle = '#f3eee4';
+          context.font = '700 12px sans-serif';
+          context.fillText(item.caption.slice(0, 20), x + 8, y + 136);
+        }
+      }
+      canvas.toBlob((blob) => blob && saveBlob(blob, 'pocket-tiers.png', 'Tier list board image', '.png'), 'image/png', 1);
+    }
+
+    render();
+
+    (() => {
+      const NAME = "Pocket Tier List" + (typeof APP_VERSION !== "undefined" ? " " + APP_VERSION : ""),
+        VERSION = "v4",
+        KEY = "Ion-o-koji's Watermark " + VERSION,
+        TITLES_KEY = "Ion-o-koji's Watermark Titles " + VERSION;
+
+      function ls(k, v) {
+        try {
+          if (v === undefined) return localStorage.getItem(k);
+          localStorage.setItem(k, v)
+        } catch (e) {}
+        return null
+      }
+
+      function now() {
+        return new Date().toISOString()
+      }
+
+      function fmt(iso) {
+        try {
+          return new Date(iso).toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit"
+          })
+        } catch (e) {
+          return iso
+        }
+      }
+
+      function getLoadTime() {
+        try {
+          const n = performance.getEntriesByType("navigation")[0];
+          if (n && n.loadEventEnd > 0) return Math.round(n.loadEventEnd);
+          const t = performance.timing;
+          if (t && t.loadEventEnd > 0) return t.loadEventEnd - t.navigationStart
+        } catch (e) {}
+        return null
+      }
+
+      function entryName(b) {
+        const m = b.match(/^> (.+)/);
+        return m ? m[1].trim() : null
+      }
+
+      function buildEntry(first, last, count, lt, avg) {
+        let s = "> " + NAME + "\n  - First opened: " + first + "\n  - Last opened: " + last + "\n  - Opened: " + count + " times";
+        if (lt != null) s += "\n  - Load time: " + lt + "ms";
+        if (avg != null) s += "\n  - Avg load time: " + avg + "ms";
+        return s
+      }
+
+      function parseEntries(raw) {
+        if (!raw) return [];
+        const res = [];
+        let cur = [];
+        for (const line of raw.split("\n")) {
+          if (/^> /.test(line) && cur.length > 0) {
+            const b = cur.join("\n").trimEnd();
+            if (b) res.push(b);
+            cur = [];
+          }
+          cur.push(line);
+        }
+        if (cur.length > 0) {
+          const b = cur.join("\n").trimEnd();
+          if (b && /^> /.test(b)) res.push(b);
+        }
+        return res
+      }
+
+      function parseEntry(b) {
+        if (!b) return null;
+        const lines = b.split("\n"),
+          get = f => {
+            const l = lines.find(l => l.trim().startsWith("- " + f + ": "));
+            return l ? l.trim().slice(f.length + 3).trim() : null
+          },
+          first = get("First opened"),
+          opened = get("Opened");
+        if (!first || !opened) return null;
+        const count = parseInt(opened, 10),
+          avgStr = get("Avg load time");
+        return {
+          first,
+          count: isNaN(count) ? 0 : count,
+          avgLoad: avgStr ? parseInt(avgStr, 10) : null
+        }
+      }
+
+      function updateTitles() {
+        try {
+          const raw = ls(TITLES_KEY) || "",
+            others = raw.split("\n").map(l => l.trim().replace(/^> /, "")).filter(l => l && l !== NAME);
+          ls(TITLES_KEY, ["> " + NAME, ...others.map(l => "> " + l)].join("\n"));
+        } catch (e) {}
+      }
+      try {
+        const nowFmt = fmt(now()),
+          lt = getLoadTime(),
+          entries = parseEntries(ls(KEY)),
+          existingIdx = entries.findIndex(b => entryName(b) === NAME),
+          existing = parseEntry(existingIdx >= 0 ? entries[existingIdx] : null),
+          others = entries.filter((_, i) => i !== existingIdx),
+          oldCount = existing?.count ?? 0,
+          newCount = oldCount + 1,
+          prevAvg = existing?.avgLoad ?? null;
+        let newAvg = null;
+        if (lt != null) newAvg = (prevAvg != null && oldCount > 0) ? Math.round((prevAvg * oldCount + lt) / newCount) : lt;
+        else newAvg = prevAvg;
+        const first = existing?.first ?? nowFmt;
+        ls(KEY, [buildEntry(first, nowFmt, newCount, lt, newAvg), ...others].join("\n\n"));
+        updateTitles();
+      } catch (e) {}
+    })();
+
+  </script>
+</body>
+
+</html>
